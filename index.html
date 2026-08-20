@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#031524">
+<title>إشتراكات نشابة</title>
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="style.css">
+<script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div class="grid-bg"></div><div class="glow g1"></div><div class="glow g2"></div>
+
+
+<section id="authScreen" class="auth-screen">
+  <div class="auth-card">
+    <img src="assets/nashabeh-logo.png" class="auth-logo" alt="">
+    <h1>إشتراكات نشابة</h1><p>منصة الطاقة الذكية · طرابلس</p>
+    <div id="authMessage" class="auth-message hidden"></div>
+    <div id="loginPane">
+      <label>البريد الإلكتروني<input id="loginEmail" type="email"></label>
+      <label>كلمة المرور<input id="loginPassword" type="password"></label>
+      <button class="action-btn auth-main" onclick="login()">تسجيل الدخول</button>
+      <button class="auth-link" onclick="showFirstAdmin()">إنشاء أول حساب مدير</button>
+    </div>
+    <div id="firstAdminPane" class="hidden">
+      <div class="auth-note">يُستخدم هذا الخيار مرة واحدة فقط لأول مدير للنظام.</div>
+      <label>الاسم الكامل<input id="adminName"></label><label>البريد الإلكتروني<input id="adminEmail" type="email"></label>
+      <label>رقم الهاتف<input id="adminPhone"></label><label>كلمة المرور<input id="adminPassword" type="password" minlength="8"></label>
+      <button class="action-btn auth-main" onclick="createFirstAdmin()">إنشاء المدير</button>
+      <button class="auth-link" onclick="showLogin()">رجوع</button>
+    </div>
+  </div>
+</section>
+<header id="topbar" class="topbar hidden">
+  <div class="brand">
+    <img src="assets/nashabeh-logo.png" alt="إشتراكات نشابة">
+    <div><h1>إشتراكات نشابة</h1><span>منصة إدارة الطاقة الذكية · طرابلس</span></div>
+  </div>
+  <div class="top-controls">
+    <span id="loggedUser" class="logged-user"></span><button class="mode-btn" onclick="logout()"><i data-lucide="log-out"></i><span>خروج</span></button>
+  </div>
+</header>
+
+<main id="appRoot" class="hidden">
+<section id="customerApp" class="customer-app hidden">
+  <div class="customer-shell">
+    <section class="customer-head">
+      <div><small>مرحبًا بك</small><h2 id="customerName">أحمد محمود</h2><p>إدارة اشتراكك وبلاغاتك وتنبيهاتك من مكان واحد.</p></div>
+      <button class="notification-button" onclick="showCustomerTab('notifications')"><i data-lucide="bell-ring"></i><span id="notifCount">1</span></button>
+    </section>
+
+    <section class="customer-main-grid">
+      <article class="panel meter-card">
+        <div class="meter-device">
+          <div class="meter-screen">0123456</div>
+          <div class="meter-dials"><i></i><i></i><i></i></div><small>kWh</small>
+        </div>
+        <div class="meter-copy">
+          <span class="label">العلبة / المنطقة</span>
+          <h2><i data-lucide="map-pin"></i><span id="customerArea">النجمة</span></h2>
+          <span class="label">رقم العداد</span>
+          <b id="customerMeter">NS-2024-00158</b>
+          <span id="customerStatus" class="status active"><i data-lucide="circle-check-big"></i> اشتراك فعّال</span>
+        </div>
+      </article>
+
+      <article id="networkCard" class="panel network-card stable">
+        <div class="network-icon"><i data-lucide="radio-tower"></i></div>
+        <div><small>حالة الشبكة في منطقتك</small><h3 id="networkStateText">الشبكة مستقرة</h3><p id="networkMessage">لا يوجد عطل عام حاليًا في منطقة النجمة</p></div>
+        <i class="shield" data-lucide="shield-check"></i>
+      </article>
+
+      <article class="panel bill-card">
+        <div class="bill-icon"><i data-lucide="receipt-text"></i><span><i data-lucide="circle-dollar-sign"></i></span></div>
+        <div><small>قيمة الفاتورة الحالية</small><h2 id="currentBill">$ 32.50</h2><p><i data-lucide="calendar-days"></i> الاستحقاق 25-08-2026</p></div>
+        <button onclick="showCustomerTab('invoice')">عرض تفاصيل الفاتورة <i data-lucide="chevron-left"></i></button>
+      </article>
+    </section>
+
+    <h3 class="quick-title">الخدمات</h3>
+    <section class="quick-actions">
+      <button onclick="showCustomerTab('invoice')" class="qa invoice"><i data-lucide="files"></i><div><b>فاتورتي</b><small>عرض الفاتورة والاستحقاق</small></div></button>
+      <button onclick="openFaultDialog()" class="qa fault"><i data-lucide="wrench"></i><div><b>الإبلاغ عن عطل</b><small>إرسال بلاغ صيانة جديد</small></div></button>
+      <button onclick="showCustomerTab('payments')" class="qa payments"><i data-lucide="wallet-cards"></i><div><b>دفعاتي</b><small>سجل الدفعات السابقة</small></div></button>
+      <button onclick="showCustomerTab('readings')" class="qa readings"><i data-lucide="gauge"></i><div><b>قراءات العداد</b><small>القراءة والاستهلاك الشهري</small></div></button>
+      <button onclick="showCustomerTab('account')" class="qa account"><i data-lucide="user-round-cog"></i><div><b>حسابي</b><small>بيانات العداد والاشتراك</small></div></button>
+    </section>
+
+    <section id="customerContent" class="panel customer-content"></section>
+  </div>
+
+  <nav class="customer-bottom-nav">
+    <button class="active" onclick="showCustomerHome(this)"><i data-lucide="house"></i><span>الرئيسية</span></button>
+    <button onclick="showCustomerTab('faults',this)"><i data-lucide="wrench"></i><span>أعطالي</span></button>
+    <button onclick="showCustomerTab('notifications',this)"><i data-lucide="bell"></i><span>التنبيهات</span></button>
+    <button onclick="showCustomerTab('account',this)"><i data-lucide="user-round"></i><span>حسابي</span></button>
+  </nav>
+</section>
+
+<section id="adminApp" class="admin-app hidden">
+  <button id="mobileMenuBtn" class="mobile-menu-btn"><i data-lucide="menu"></i></button>
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-brand"><img src="assets/nashabeh-logo.png"><div><b>إشتراكات نشابة</b><small>لوحة الإدارة</small></div></div>
+    <button class="side active" data-page="dashboard"><i data-lucide="house"></i><span>لوحة التحكم</span></button>
+    <button class="side" data-page="subscribers"><i data-lucide="users-round"></i><span>المشتركون</span></button>
+    <button class="side" data-page="areas"><i data-lucide="boxes"></i><span>العلب والمناطق</span></button>
+    <button class="side" data-page="meters"><i data-lucide="gauge"></i><span>العدادات</span></button>
+    <button class="side" data-page="invoices"><i data-lucide="file-text"></i><span>الفواتير</span></button>
+    <button class="side" data-page="payments"><i data-lucide="wallet-cards"></i><span>الدفعات</span></button>
+    <button class="side" data-page="faults"><i data-lucide="wrench"></i><span>الأعطال</span></button>
+    <button class="side" data-page="notifications"><i data-lucide="bell"></i><span>التنبيهات</span></button>
+    <button class="side" data-page="settings"><i data-lucide="settings"></i><span>الإعدادات</span></button>
+  </aside>
+  <div id="adminContent" class="admin-content"></div>
+</section>
+</main>
+
+<dialog id="faultDialog">
+<form method="dialog">
+  <div class="dialog-title"><div><i data-lucide="wrench"></i></div><div><small>بلاغ صيانة</small><h3>الإبلاغ عن عطل</h3></div></div>
+  <label>نوع العطل<select id="faultType"><option value="">اختر نوع العطل</option><option>انقطاع كهرباء</option><option>ضعف في التغذية</option><option>مشكلة في العداد</option><option>تذبذب في الجهد</option><option>عطل آخر</option></select></label>
+  <label>وصف المشكلة<textarea id="faultDescription" rows="4" placeholder="اكتب تفاصيل المشكلة..."></textarea></label>
+  <label class="upload"><input type="file" accept="image/*"><i data-lucide="camera"></i><b>إرفاق صورة للعداد أو العطل</b><small>اختياري</small></label>
+  <div class="dialog-actions"><button value="cancel" class="cancel">إلغاء</button><button type="button" class="send" onclick="submitFault()">إرسال البلاغ</button></div>
+</form>
+</dialog>
+
+<dialog id="notificationDialog">
+<form method="dialog">
+  <div class="dialog-title"><div><i data-lucide="bell-ring"></i></div><div><small>تنبيه المشتركين</small><h3>إرسال تنبيه</h3></div></div>
+  <label>العلبة / المنطقة<select id="notifArea"></select></label>
+  <label>عنوان التنبيه<input id="notifTitle" placeholder="مثال: عطل عام في المنطقة"></label>
+  <label>الرسالة<textarea id="notifMessage" rows="4" placeholder="اكتب الرسالة التي ستظهر للمشتركين..."></textarea></label>
+  <div class="dialog-actions"><button value="cancel" class="cancel">إلغاء</button><button type="button" class="send gold-send" onclick="sendNotification()">إرسال التنبيه</button></div>
+</form>
+</dialog>
+
+<script src="supabase-config.js"></script>
+<script src="app.js"></script>
+</body></html>

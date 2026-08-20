@@ -1,0 +1,10 @@
+{
+  "name": "إشتراكات نشابة",
+  "short_name": "نشابة",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#020d16",
+  "theme_color": "#031524",
+  "lang": "ar",
+  "dir": "rtl"
+}
