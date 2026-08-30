@@ -581,50 +581,143 @@ function injectEnhancedStyles(){
 
   }
 
-  @media(max-width:700px){
+@media(max-width:700px){
 
-    .nashabeh-meter-slot{
-      width:160px!important;
-      min-width:160px!important;
-      max-width:160px!important;
+  .nashabeh-meter-slot{
+    width:112px!important;
+    min-width:112px!important;
+    max-width:112px!important;
+    flex:0 0 112px!important;
+    margin:0 auto!important;
+    overflow:visible!important;
+  }
+
+  .nashabeh-smart-meter{
+    width:108px!important;
+    padding:24px 7px 7px!important;
+    border-radius:15px!important;
+
+    border-width:1px!important;
+
+    box-shadow:
+      0 0 0 2px rgba(0,221,255,.07),
+      0 0 13px rgba(0,221,255,.25),
+      0 8px 18px rgba(0,0,0,.50),
+      inset 0 0 10px rgba(255,255,255,.10),
+      inset 0 -10px 16px rgba(0,0,0,.70)!important;
+  }
+
+  .nashabeh-smart-meter:before,
+  .nashabeh-smart-meter:after{
+    top:61px!important;
+    width:14px!important;
+    height:30px!important;
+  }
+
+  .nashabeh-smart-meter:before{
+    right:-14px!important;
+    border-radius:0 9px 9px 0!important;
+  }
+
+  .nashabeh-smart-meter:after{
+    left:-14px!important;
+    border-radius:9px 0 0 9px!important;
+  }
+
+  .nsh-meter-scale{
+    padding:0 2px 2px!important;
+    font-size:4px!important;
+  }
+
+  .nsh-meter-display{
+    min-height:37px!important;
+    padding:5px 3px 11px!important;
+
+    border-radius:6px!important;
+
+    font-size:14px!important;
+    letter-spacing:.07em!important;
+  }
+
+  .nsh-kwh{
+    right:4px!important;
+    bottom:2px!important;
+    font-size:5px!important;
+  }
+
+  .nsh-meter-face{
+    margin-top:4px!important;
+    padding:5px!important;
+    border-radius:7px!important;
+  }
+
+  .nsh-meter-main{
+    grid-template-columns:39px 1fr!important;
+    gap:5px!important;
+  }
+
+  .nsh-logo{
+    width:37px!important;
+    height:37px!important;
+  }
+
+  .nsh-logo img{
+    max-width:33px!important;
+    max-height:33px!important;
+  }
+
+  .nsh-meter-specs{
+    line-height:1.45!important;
+  }
+
+  .nsh-meter-specs .voltage{
+    font-size:6px!important;
+    white-space:nowrap!important;
+  }
+
+  .nsh-meter-specs .amp{
+    font-size:7px!important;
+  }
+
+  .nsh-meter-specs .brand{
+    margin-top:1px!important;
+    font-size:4px!important;
+    letter-spacing:.02em!important;
+  }
+
+  .nsh-power-strip{
+    height:25px!important;
+    margin-top:5px!important;
+    border-radius:6px!important;
+  }
+
+  .nsh-power-strip svg{
+    left:4px!important;
+    top:3px!important;
+    width:39px!important;
+    height:19px!important;
+  }
+
+  .nsh-power-led{
+    right:5px!important;
+    top:9px!important;
+    width:6px!important;
+    height:6px!important;
+  }
+
+  @keyframes nshMeterFloat{
+
+    0%,100%{
+      transform:translateY(0);
     }
 
-    .nashabeh-smart-meter{
-      width:150px;
-      padding:
-        31px 9px 9px;
-    }
-
-    .nsh-meter-display{
-      font-size:18px;
-    }
-
-    .nsh-meter-main{
-      grid-template-columns:
-        53px 1fr;
-    }
-
-    .nsh-logo{
-      width:50px;
-      height:50px;
-    }
-
-    .nsh-logo img{
-      max-width:45px;
-      max-height:45px;
-    }
-
-    .nsh-meter-specs .voltage{
-      font-size:8px;
-    }
-
-    .nsh-meter-specs .amp{
-      font-size:9px;
+    50%{
+      transform:translateY(-2px);
     }
 
   }
 
-  `;
+}
 
   document.head.appendChild(st);
 
@@ -669,20 +762,13 @@ function enhanceMeter(){
     " nashabeh-meter-slot";
 
   /*
-    حذف كامل الديزاين القديم:
-    - الثلاث دوائر
-    - النص القديم
-    - kWh القديم
-    - أي meter body قديم
+    حذف تصميم العداد القديم بالكامل
+    وإعادة بناء العداد الجديد.
   */
 
   oldHost.innerHTML=`
 
     <div class="nashabeh-smart-meter">
-
-      <div class="nsh-meter-top">
-        AC SINGLE PHASE TWO WIRE STATIC kWh METER
-      </div>
 
       <div class="nsh-meter-scale">
 
@@ -763,10 +849,6 @@ function enhanceMeter(){
             </polyline>
 
           </svg>
-
-          <span class="nsh-smart-label">
-            SMART ENERGY METER
-          </span>
 
           <span class="nsh-power-led"></span>
 
