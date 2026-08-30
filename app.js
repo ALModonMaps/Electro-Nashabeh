@@ -766,7 +766,7 @@ function enhanceMeter(){
     وإعادة بناء العداد الجديد.
   */
 
-  oldHost.innerHTML=`
+oldHost.innerHTML = `
 
     <div class="nashabeh-smart-meter">
 
