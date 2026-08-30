@@ -1,2425 +1,2594 @@
 let session=null,profile=null,currentPage="dashboard",customer={};
-
-const A=id=>document.getElementById(id);
-function icons(){if(window.lucide)lucide.createIcons()}
-
-function money(n){
-  return "$"+Number(n||0).toFixed(2)
-}
-
-function statusAr(s){
-  return ({
-    unpaid:"غير مدفوعة",
-    partial:"مدفوعة جزئيًا",
-    paid:"مدفوعة"
-  })[s]||s
-}
-
-function receiptNo(){
-  let d=new Date(),z=n=>String(n).padStart(2,"0");
-  return `NSH-${d.getFullYear()}${z(d.getMonth()+1)}${z(d.getDate())}-${z(d.getHours())}${z(d.getMinutes())}${z(d.getSeconds())}`
-}
+const A=id=>document.getElementById(id);function icons(){if(window.lucide)lucide.createIcons()}
+function money(n){return "$"+Number(n||0).toFixed(2)}function statusAr(s){return({unpaid:"غير مدفوعة",partial:"مدفوعة جزئيًا",paid:"مدفوعة"})[s]||s}function receiptNo(){let d=new Date(),z=n=>String(n).padStart(2,"0");return `NSH-${d.getFullYear()}${z(d.getMonth()+1)}${z(d.getDate())}-${z(d.getHours())}${z(d.getMinutes())}${z(d.getSeconds())}`}function getNashabehLogoSrc(){let imgs=[...document.querySelectorAll("img")],x=imgs.find(i=>/nashabeh|logo/i.test(i.src||""));return x?.src||new URL("assets/nashabeh-logo.png",location.href).href}
 
 function injectEnhancedStyles(){
-  if(A("nashabehEnhancedStyles"))return;
+if(A("nashabehEnhancedStyles"))return;
+let st=document.createElement("style");
+st.id="nashabehEnhancedStyles";
+st.textContent=`
+.nashabeh-smart-meter{position:relative!important;width:210px!important;min-height:300px!important;margin:auto!important;padding:42px 18px 18px!important;border-radius:24px!important;background:linear-gradient(145deg,#dde5e8 0%,#87949b 18%,#18242a 25%,#071017 88%)!important;border:2px solid #7bf6ff!important;box-shadow:0 0 0 4px #90f7ff22,0 0 28px #00d9ff66,inset 0 0 30px #000!important;overflow:visible!important;animation:meterFloat 4.8s ease-in-out infinite}
+.nashabeh-smart-meter:before,.nashabeh-smart-meter:after{content:"";position:absolute;top:105px;width:28px;height:54px;background:linear-gradient(#aeb9bd,#455158);border:2px solid #728188;z-index:-1}
+.nashabeh-smart-meter:before{right:-29px;border-radius:0 17px 17px 0}
+.nashabeh-smart-meter:after{left:-29px;border-radius:17px 0 0 17px}
+.nashabeh-meter-title{position:absolute;top:16px;left:15px;right:15px;text-align:center;color:#eefcff;font:700 8px Arial;letter-spacing:.08em;opacity:.95}
 
-  let st=document.createElement("style");
-  st.id="nashabehEnhancedStyles";
+.nashabeh-smart-meter .meter-screen{
+position:relative!important;
+display:block!important;
+width:100%!important;
+box-sizing:border-box!important;
+font-family:"Courier New",monospace!important;
+font-size:25px!important;
+font-weight:800!important;
+letter-spacing:.12em!important;
+text-align:center!important;
+background:linear-gradient(180deg,#030a07,#06120a)!important;
+color:#a9ff67!important;
+border:2px solid #126a74!important;
+box-shadow:inset 0 0 18px #000,0 0 18px #5cff3e33!important;
+text-shadow:0 0 5px #6aff3f,0 0 12px #49ff2a!important;
+padding:15px 6px 19px!important;
+border-radius:10px!important;
+overflow:hidden!important;
+animation:screenPulse 2.4s ease-in-out infinite
+}
 
-  st.textContent=`
-  .meter-screen{
-    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace!important;
-    letter-spacing:.18em!important;
-    background:linear-gradient(180deg,#07130d,#0b1b12)!important;
-    color:#b8ff9d!important;
-    border:3px inset #6d7b72!important;
-    box-shadow:inset 0 0 18px #000,0 0 20px #1ce37a22!important;
-    text-shadow:0 0 8px #63ff9b!important;
-    padding:10px 8px!important;
-    border-radius:4px!important
-  }
+.nashabeh-smart-meter .meter-screen:before{
+content:"";
+position:absolute;
+inset:0;
+background:linear-gradient(180deg,transparent 0 42%,#aaff8815 50%,transparent 58%);
+transform:translateY(-120%);
+animation:meterScan 3.1s linear infinite;
+pointer-events:none
+}
 
-  .meter-screen:after{
-    content:" kWh";
-    font-size:8px;
-    letter-spacing:0;
-    color:#9bb5aa;
-    margin-inline-start:4px
-  }
+.nashabeh-smart-meter .meter-screen:after{
+content:"kWh"!important;
+position:absolute;
+right:9px;
+bottom:5px;
+font:800 10px Arial!important;
+letter-spacing:.03em!important;
+color:#f2fff5!important;
+text-shadow:0 0 7px #59ff78!important;
+opacity:1!important
+}
 
-  .meter-real-badge{
-    display:block;
-    font-size:8px;
-    color:#9bb5aa;
-    text-align:center;
-    margin-top:5px;
-    letter-spacing:.08em
-  }
+.meter-scale{display:flex;justify-content:space-between;padding:5px 5px 0;color:#b9c8cd;font:700 7px Arial;direction:ltr}
+.meter-scale span:last-child{color:#12dcff}
 
-  .payment-actions,.invoice-actions{
-    display:flex;
-    gap:6px;
-    flex-wrap:wrap
-  }
+.meter-indicators{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:10px 4px 5px;direction:ltr}
+.meter-indicator{text-align:center;color:#d6e3e7;font:700 8px Arial}
+.meter-dot{width:11px;height:11px;margin:4px auto;border-radius:50%;border:1px solid #73848a;background:#071014;box-shadow:inset 0 0 4px #000}
+.meter-indicator:first-child .meter-dot{background:#55f43f;border-color:#9cff90;box-shadow:0 0 9px #55f43f;animation:powerBlink 1.3s ease-in-out infinite}
 
-  .row-btn.print{
-    border-color:#12d8ff;
-    color:#12d8ff
-  }
+.meter-middle{display:grid;grid-template-columns:78px 1fr;gap:10px;align-items:center;margin:7px 0 8px;padding:8px;border-radius:12px;background:linear-gradient(90deg,#050a0e,#0b151b);border:1px solid #263943}
 
-  .row-btn.pay{
-    border-color:#40ef58;
-    color:#40ef58
-  }
+.meter-logo-wrap{
+width:70px;
+height:70px;
+border-radius:50%;
+display:grid;
+place-items:center;
+background:#05080b;
+border:1px solid #d9a900;
+box-shadow:0 0 15px #ffc40038
+}
 
-  .badge.partial{
-    color:#ffc72c;
-    border-color:#ffc72c
-  }
+.meter-logo-wrap img{
+max-width:62px;
+max-height:62px;
+object-fit:contain;
+filter:drop-shadow(0 0 6px #ffc40077)
+}
 
-  .badge.paid{
-    color:#40ef58;
-    border-color:#40ef58
-  }
+.meter-specs{
+direction:ltr;
+text-align:left;
+color:#e8f4f7;
+font:700 9px Arial;
+line-height:1.75
+}
 
-  .badge.unpaid{
-    color:#ff6b72;
-    border-color:#ff6b72
-  }
-  `;
+.meter-specs b{color:#7cf7ff}
 
-  document.head.appendChild(st)
+.meter-current-strip{
+position:relative;
+height:44px;
+border:1px solid #00c6e5;
+border-radius:10px;
+background:linear-gradient(180deg,#061016,#030a0f);
+overflow:hidden;
+box-shadow:inset 0 0 12px #00b5d522
+}
+
+.meter-current-strip svg{
+position:absolute;
+left:7px;
+top:7px;
+width:70px;
+height:30px;
+overflow:visible
+}
+
+.meter-current-line{
+fill:none;
+stroke:#33f4ff;
+stroke-width:2;
+stroke-linecap:round;
+stroke-linejoin:round;
+stroke-dasharray:10 6;
+animation:flowCurrent .7s linear infinite;
+filter:drop-shadow(0 0 4px #20eaff)
+}
+
+.meter-current-text{
+position:absolute;
+right:28px;
+top:13px;
+color:#e9fbff;
+font:700 9px Arial;
+letter-spacing:.05em
+}
+
+.meter-current-led{
+position:absolute;
+right:9px;
+top:16px;
+width:9px;
+height:9px;
+border-radius:50%;
+background:#64ff75;
+box-shadow:0 0 12px #64ff75;
+animation:powerBlink 1s ease-in-out infinite
+}
+
+.meter-real-badge{
+display:block!important;
+margin-top:7px!important;
+text-align:center!important;
+color:#7f9ea7!important;
+font:700 7px Arial!important;
+letter-spacing:.12em!important
+}
+
+.payment-actions,.invoice-actions{display:flex;gap:6px;flex-wrap:wrap}
+.row-btn.print{border-color:#12d8ff;color:#12d8ff}
+.row-btn.pay{border-color:#40ef58;color:#40ef58}
+.badge.partial{color:#ffc72c;border-color:#ffc72c}
+.badge.paid{color:#40ef58;border-color:#40ef58}
+.badge.unpaid{color:#ff6b72;border-color:#ff6b72}
+
+@keyframes meterFloat{
+0%,100%{transform:translateY(0)}
+50%{transform:translateY(-5px)}
+}
+
+@keyframes meterScan{
+0%{transform:translateY(-130%)}
+100%{transform:translateY(130%)}
+}
+
+@keyframes screenPulse{
+0%,100%{box-shadow:inset 0 0 18px #000,0 0 13px #5cff3e22}
+50%{box-shadow:inset 0 0 18px #000,0 0 23px #5cff3e55}
+}
+
+@keyframes powerBlink{
+0%,100%{opacity:.55;transform:scale(.85)}
+50%{opacity:1;transform:scale(1.13)}
+}
+
+@keyframes flowCurrent{
+to{stroke-dashoffset:-32}
+}
+
+@media(max-width:700px){
+.nashabeh-smart-meter{width:175px!important;min-height:270px!important}
+.nashabeh-smart-meter .meter-screen{font-size:20px!important}
+.meter-middle{grid-template-columns:62px 1fr}
+.meter-logo-wrap{width:56px;height:56px}
+.meter-logo-wrap img{max-width:50px;max-height:50px}
+}
+`;
+document.head.appendChild(st)
 }
 
 function enhanceMeter(){
-  let s=document.querySelector(".meter-screen");
-  if(!s)return;
+let s=document.querySelector(".meter-screen");
+if(!s)return;
 
-  let host=s.parentElement;
+let host=s.parentElement;
+if(!host)return;
 
-  if(host&&!host.querySelector(".meter-real-badge")){
-    let b=document.createElement("span");
-    b.className="meter-real-badge";
-    b.textContent="SMART ENERGY METER · 230V · 50Hz";
-    host.appendChild(b)
-  }
+host.classList.add("nashabeh-smart-meter");
+
+if(host.querySelector(".nashabeh-meter-title"))return;
+
+let title=document.createElement("div");
+title.className="nashabeh-meter-title";
+title.textContent="AC SINGLE PHASE TWO WIRE STATIC kWh METER";
+host.insertBefore(title,s);
+
+let scale=document.createElement("div");
+scale.className="meter-scale";
+scale.innerHTML="<span>10K</span><span>1K</span><span>100</span><span>10</span><span>1</span><span>0.1</span>";
+s.insertAdjacentElement("afterend",scale);
+
+let inds=document.createElement("div");
+inds.className="meter-indicators";
+inds.innerHTML=
+'<div class="meter-indicator">Ph<div class="meter-dot"></div></div>'+
+'<div class="meter-indicator">E<div class="meter-dot"></div></div>'+
+'<div class="meter-indicator">R<div class="meter-dot"></div></div>'+
+'<div class="meter-indicator">Cal<div class="meter-dot"></div></div>';
+scale.insertAdjacentElement("afterend",inds);
+
+let mid=document.createElement("div");
+mid.className="meter-middle";
+mid.innerHTML=`
+<div class="meter-logo-wrap">
+<img src="${getNashabehLogoSrc()}" alt="نشابة">
+</div>
+<div class="meter-specs">
+<div><b>230V ~ 50Hz</b></div>
+<div>10-60A</div>
+<div>Class 1.0</div>
+<div>NASHABEH ENERGY</div>
+</div>
+`;
+inds.insertAdjacentElement("afterend",mid);
+
+let strip=document.createElement("div");
+strip.className="meter-current-strip";
+strip.innerHTML=
+'<svg viewBox="0 0 80 30" aria-hidden="true">'+
+'<polyline class="meter-current-line" points="0,15 12,15 17,4 24,27 31,8 38,21 46,15 60,15 66,10 72,20 80,15"/>'+
+'</svg>'+
+'<span class="meter-current-text">SMART ENERGY METER</span>'+
+'<span class="meter-current-led"></span>';
+
+mid.insertAdjacentElement("afterend",strip);
+
+let b=document.createElement("span");
+b.className="meter-real-badge";
+b.textContent="NASHABEH · 230V · 50Hz";
+strip.insertAdjacentElement("afterend",b)
 }
 
 function printHtml(title,body){
-  let w=window.open("","_blank","width=900,height=1000");
+let w=window.open("","_blank","width=900,height=1000");
 
-  if(!w)
-    return alert("اسمح بفتح النوافذ المنبثقة للطباعة");
+if(!w)return alert("اسمح بفتح النوافذ المنبثقة للطباعة");
 
-  let logo=new URL("assets/nashabeh-logo.png",location.href).href;
+let logo=new URL("assets/nashabeh-logo.png",location.href).href;
 
-  w.document.write(`
-  <!doctype html>
-  <html dir="rtl" lang="ar">
-  <head>
-  <meta charset="utf-8">
-  <title>${title}</title>
-  <style>
-  body{
-    font-family:Arial,Tahoma,sans-serif;
-    color:#111;
-    background:#fff;
-    padding:28px
-  }
+w.document.write(`
+<!doctype html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="utf-8">
+<title>${title}</title>
+<style>
+body{font-family:Arial,Tahoma,sans-serif;color:#111;background:#fff;padding:28px}
+.sheet{max-width:760px;margin:auto;border:1px solid #ddd;border-radius:16px;padding:28px}
+.head{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #d6a51e;padding-bottom:16px;margin-bottom:22px}
+.head img{width:86px;height:86px;object-fit:contain}
+.brand h1{margin:0;color:#b88200}
+.brand p{margin:5px 0;color:#666}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.cell{border:1px solid #e5e5e5;border-radius:10px;padding:10px}
+.cell small{display:block;color:#777;margin-bottom:4px}
+.total{font-size:28px;font-weight:700;color:#b88200;margin:22px 0}
+.status{display:inline-block;padding:7px 13px;border-radius:20px;background:#f3f3f3}
+.foot{margin-top:28px;padding-top:15px;border-top:1px solid #ddd;font-size:12px;color:#777}
+@media print{body{padding:0}.sheet{border:0}}
+</style>
+</head>
+<body>
+<div class="sheet">
 
-  .sheet{
-    max-width:760px;
-    margin:auto;
-    border:1px solid #ddd;
-    border-radius:16px;
-    padding:28px
-  }
+<div class="head">
+<div class="brand">
+<h1>إشتراكات نشابة</h1>
+<p>خدمة الكهرباء والطاقة - طرابلس</p>
+</div>
+<img src="${logo}">
+</div>
 
-  .head{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    border-bottom:2px solid #d6a51e;
-    padding-bottom:16px;
-    margin-bottom:22px
-  }
+${body}
 
-  .head img{
-    width:86px;
-    height:86px;
-    object-fit:contain
-  }
+<div class="foot">
+تم إصدار هذه الوثيقة إلكترونيًا من نظام إشتراكات نشابة.
+</div>
 
-  .brand h1{
-    margin:0;
-    color:#b88200
-  }
+</div>
 
-  .brand p{
-    margin:5px 0;
-    color:#666
-  }
+<script>
+window.onload=()=>setTimeout(()=>window.print(),300)
+<\/script>
 
-  .grid{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:12px
-  }
+</body>
+</html>
+`);
 
-  .cell{
-    border:1px solid #e5e5e5;
-    border-radius:10px;
-    padding:10px
-  }
-
-  .cell small{
-    display:block;
-    color:#777;
-    margin-bottom:4px
-  }
-
-  .total{
-    font-size:28px;
-    font-weight:700;
-    color:#b88200;
-    margin:22px 0
-  }
-
-  .status{
-    display:inline-block;
-    padding:7px 13px;
-    border-radius:20px;
-    background:#f3f3f3
-  }
-
-  .foot{
-    margin-top:28px;
-    padding-top:15px;
-    border-top:1px solid #ddd;
-    font-size:12px;
-    color:#777
-  }
-
-  @media print{
-    body{padding:0}
-    .sheet{border:0}
-  }
-  </style>
-  </head>
-
-  <body>
-  <div class="sheet">
-
-    <div class="head">
-      <div class="brand">
-        <h1>إشتراكات نشابة</h1>
-        <p>خدمة الكهرباء والطاقة - طرابلس</p>
-      </div>
-
-      <img src="${logo}">
-    </div>
-
-    ${body}
-
-    <div class="foot">
-      تم إصدار هذه الوثيقة إلكترونيًا من نظام إشتراكات نشابة.
-    </div>
-
-  </div>
-
-  <script>
-  window.onload=()=>setTimeout(()=>window.print(),300)
-  <\/script>
-
-  </body>
-  </html>
-  `);
-
-  w.document.close()
+w.document.close()
 }
 
 function authMsg(t,ok=false){
-  let e=A("authMessage");
-  e.textContent=t;
-  e.classList.remove("hidden");
-  e.style.background=ok?"#0d3b20":"#3a1016";
-  e.style.color=ok?"#8dff9b":"#ff9499"
+let e=A("authMessage");
+e.textContent=t;
+e.classList.remove("hidden");
+e.style.background=ok?"#0d3b20":"#3a1016";
+e.style.color=ok?"#8dff9b":"#ff9499"
 }
 
 function showFirstAdmin(){
-  A("loginPane").classList.add("hidden");
-  A("firstAdminPane").classList.remove("hidden")
+A("loginPane").classList.add("hidden");
+A("firstAdminPane").classList.remove("hidden")
 }
 
 function showLogin(){
-  A("firstAdminPane").classList.add("hidden");
-  A("loginPane").classList.remove("hidden")
+A("firstAdminPane").classList.add("hidden");
+A("loginPane").classList.remove("hidden")
 }
 
 async function login(){
-  try{
-    let {error}=await sb.auth.signInWithPassword({
-      email:A("loginEmail").value.trim(),
-      password:A("loginPassword").value
-    });
+try{
+let {error}=await sb.auth.signInWithPassword({
+email:A("loginEmail").value.trim(),
+password:A("loginPassword").value
+});
 
-    if(error)return authMsg(error.message);
+if(error)return authMsg(error.message);
 
-    await boot()
-  }
-  catch(e){
-    authMsg(e?.message||"تعذر الاتصال بالخدمة. جرّب مجددًا.")
-  }
+await boot()
+}
+catch(e){
+authMsg(e?.message||"تعذر الاتصال بالخدمة. جرّب مجددًا.")
+}
 }
 
 async function createFirstAdmin(){
-  let full_name=A("adminName").value.trim(),
-      email=A("adminEmail").value.trim(),
-      phone=A("adminPhone").value.trim(),
-      password=A("adminPassword").value;
+let full_name=A("adminName").value.trim(),
+email=A("adminEmail").value.trim(),
+phone=A("adminPhone").value.trim(),
+password=A("adminPassword").value;
 
-  if(!full_name||!email||password.length<8)
-    return authMsg("أدخل الاسم والإيميل وكلمة مرور 8 أحرف على الأقل");
+if(!full_name||!email||password.length<8)
+return authMsg("أدخل الاسم والإيميل وكلمة مرور 8 أحرف على الأقل");
 
-  let {data,error}=await sb.auth.signUp({
-    email,
-    password,
-    options:{data:{full_name,phone}}
-  });
+let {data,error}=await sb.auth.signUp({
+email,
+password,
+options:{data:{full_name,phone}}
+});
 
-  if(error)return authMsg(error.message);
+if(error)return authMsg(error.message);
 
-  if(!data.session)
-    return authMsg("تم إنشاء الحساب. أكد البريد إذا طلب Supabase ذلك ثم سجّل الدخول.",true);
+if(!data.session)
+return authMsg("تم إنشاء الحساب. أكد البريد إذا طلب Supabase ذلك ثم سجّل الدخول.",true);
 
-  let r=await sb.functions.invoke("bootstrap-admin",{body:{}});
+let r=await sb.functions.invoke("bootstrap-admin",{body:{}});
 
-  if(r.error)
-    return authMsg("تم الحساب لكن لم يترقّ للمدير: "+r.error.message);
+if(r.error)
+return authMsg("تم الحساب لكن لم يترقّ للمدير: "+r.error.message);
 
-  boot()
+boot()
 }
 
 async function logout(){
-  await sb.auth.signOut();
-  location.reload()
+await sb.auth.signOut();
+location.reload()
 }
 
 async function boot(){
-  let s=(await sb.auth.getSession()).data.session;
+let s=(await sb.auth.getSession()).data.session;
 
-  if(!s)return;
+if(!s)return;
 
-  session=s;
+session=s;
 
-  let q=await sb
-    .from("profiles")
-    .select("*,areas(*)")
-    .eq("id",s.user.id)
-    .single();
+let q=await sb
+.from("profiles")
+.select("*,areas(*)")
+.eq("id",s.user.id)
+.single();
 
-  if(q.error)return authMsg(q.error.message);
+if(q.error)return authMsg(q.error.message);
 
-  profile=q.data;
+profile=q.data;
 
-  A("authScreen").classList.add("hidden");
-  A("topbar").classList.remove("hidden");
-  A("appRoot").classList.remove("hidden");
+A("authScreen").classList.add("hidden");
+A("topbar").classList.remove("hidden");
+A("appRoot").classList.remove("hidden");
 
-  A("loggedUser").textContent=
-    profile.full_name+" · "+(profile.role==="admin"?"مدير":"مشترك");
+A("loggedUser").textContent=
+profile.full_name+" · "+(profile.role==="admin"?"مدير":"مشترك");
 
-  if(profile.role==="admin"){
-    A("adminApp").classList.remove("hidden");
-    A("customerApp").classList.add("hidden");
-    renderAdmin("dashboard")
-  }
-  else{
-    A("customerApp").classList.remove("hidden");
-    A("adminApp").classList.add("hidden");
-    loadCustomer()
-  }
+if(profile.role==="admin"){
+A("adminApp").classList.remove("hidden");
+A("customerApp").classList.add("hidden");
+renderAdmin("dashboard")
+}else{
+A("customerApp").classList.remove("hidden");
+A("adminApp").classList.add("hidden");
+loadCustomer()
+}
 
-  icons()
+icons()
 }
 
 function stateAr(s){
-  return ({
-    stable:"الشبكة مستقرة",
-    monitoring:"قيد المتابعة",
-    high_load:"ضغط مرتفع",
-    outage:"انقطاع عام"
-  })[s]||"غير محدد"
+return({
+stable:"الشبكة مستقرة",
+monitoring:"قيد المتابعة",
+high_load:"ضغط مرتفع",
+outage:"انقطاع عام"
+})[s]||"غير محدد"
 }
 
 function stateClass(s){
-  return s==="stable"
-    ?"stable"
-    :s==="high_load"||s==="outage"
-      ?"danger"
-      :"warning"
+return s==="stable"
+?"stable"
+:s==="high_load"||s==="outage"
+?"danger"
+:"warning"
 }
 
 async function loadCustomer(){
-  let uid=session.user.id;
+let uid=session.user.id;
 
-  let [m,i,p,f,n]=await Promise.all([
-    sb.from("meters")
-      .select("*")
-      .eq("customer_id",uid)
-      .eq("active",true)
-      .maybeSingle(),
+let [m,i,p,f,n]=await Promise.all([
 
-    sb.from("invoices")
-      .select("*")
-      .eq("customer_id",uid)
-      .order("billing_month",{ascending:false})
-      .limit(1)
-      .maybeSingle(),
+sb.from("meters")
+.select("*")
+.eq("customer_id",uid)
+.eq("active",true)
+.maybeSingle(),
 
-    sb.from("payments")
-      .select("*,invoices(billing_month,amount,status)")
-      .eq("customer_id",uid)
-      .order("paid_at",{ascending:false}),
+sb.from("invoices")
+.select("*")
+.eq("customer_id",uid)
+.order("created_at",{ascending:false})
+.limit(1)
+.maybeSingle(),
 
-    sb.from("fault_reports")
-      .select("*")
-      .eq("customer_id",uid)
-      .order("created_at",{ascending:false}),
+sb.from("payments")
+.select("*,invoices(billing_month,amount,status)")
+.eq("customer_id",uid)
+.order("paid_at",{ascending:false}),
 
-    sb.from("notifications")
-      .select("*")
-      .order("created_at",{ascending:false})
-  ]);
+sb.from("fault_reports")
+.select("*")
+.eq("customer_id",uid)
+.order("created_at",{ascending:false}),
 
-  customer={
-    profile,
-    area:profile.areas,
-    meter:m.data,
-    invoice:i.data,
-    payments:p.data||[],
-    faults:f.data||[],
-    notifications:(n.data||[]).filter(
-      x=>!x.area_id||
-      x.area_id===profile.area_id||
-      x.customer_id===uid
-    ),
-    readings:[]
-  };
+sb.from("notifications")
+.select("*")
+.order("created_at",{ascending:false})
 
-  if(customer.meter){
-    customer.readings=(
-      await sb.from("meter_readings")
-        .select("*")
-        .eq("meter_id",customer.meter.id)
-        .order("reading_date",{ascending:false})
-    ).data||[]
-  }
+]);
 
-  renderCustomer()
+customer={
+profile,
+area:profile.areas,
+meter:m.data,
+invoice:i.data,
+payments:p.data||[],
+faults:f.data||[],
+notifications:(n.data||[]).filter(
+x=>!x.area_id||
+x.area_id===profile.area_id||
+x.customer_id===uid
+),
+readings:[]
+};
+
+if(customer.meter){
+customer.readings=(
+await sb.from("meter_readings")
+.select("*")
+.eq("meter_id",customer.meter.id)
+.order("reading_date",{ascending:false})
+).data||[]
+}
+
+renderCustomer()
 }
 
 function renderCustomer(){
-  injectEnhancedStyles();
+injectEnhancedStyles();
 
-  let c=customer.profile,
-      a=customer.area,
-      m=customer.meter,
-      inv=customer.invoice,
-      r=customer.readings[0];
+let c=customer.profile,
+a=customer.area,
+m=customer.meter,
+inv=customer.invoice,
+r=customer.readings[0];
 
-  A("customerName").textContent=c.full_name;
-  A("customerArea").textContent=a?.name||"غير محددة";
-  A("customerMeter").textContent=m?.meter_number||"غير مربوط";
+A("customerName").textContent=c.full_name;
+A("customerArea").textContent=a?.name||"غير محددة";
+A("customerMeter").textContent=m?.meter_number||"غير مربوط";
 
-  let meterScreen=document.querySelector(".meter-screen");
+let screen=document.querySelector(".meter-screen");
 
-  if(meterScreen)
-    meterScreen.textContent=
-      String(r?.reading_value??0).padStart(7,"0");
+if(screen){
+screen.textContent=String(r?.reading_value??0).padStart(7,"0")
+}
 
-  enhanceMeter();
+enhanceMeter();
 
-  let st=A("customerStatus");
+let st=A("customerStatus");
 
-  st.className="status "+(c.active?"active":"inactive");
+st.className="status "+(c.active?"active":"inactive");
 
-  st.innerHTML=c.active
-    ?'<i data-lucide="circle-check-big"></i> اشتراك فعّال'
-    :'<i data-lucide="circle-x"></i> اشتراك غير فعّال';
+st.innerHTML=c.active
+?'<i data-lucide="circle-check-big"></i> اشتراك فعّال'
+:'<i data-lucide="circle-x"></i> اشتراك غير فعّال';
 
-  A("networkCard").className=
-    "panel network-card "+stateClass(a?.network_status);
+A("networkCard").className=
+"panel network-card "+stateClass(a?.network_status);
 
-  A("networkStateText").textContent=
-    stateAr(a?.network_status);
+A("networkStateText").textContent=
+stateAr(a?.network_status);
 
-  A("networkMessage").textContent=
-    a?.status_message||("حالة شبكة "+(a?.name||""));
+A("networkMessage").textContent=
+a?.status_message||("حالة شبكة "+(a?.name||""));
 
-  A("currentBill").textContent=
-    inv?money(inv.amount):"$ 0.00";
+A("currentBill").textContent=
+inv?money(inv.amount):"$ 0.00";
 
-  document.querySelector(".bill-card p").innerHTML=
-    '<i data-lucide="calendar-days"></i> '+
-    (inv?.due_date||"لا توجد فاتورة");
+document.querySelector(".bill-card p").innerHTML=
+'<i data-lucide="calendar-days"></i> '+
+(inv?.due_date||"لا توجد فاتورة");
 
-  A("notifCount").textContent=customer.notifications.length;
+A("notifCount").textContent=
+customer.notifications.length;
 
-  icons()
+icons()
 }
 
 function setBottom(btn){
-  if(!btn)return;
+if(!btn)return;
 
-  document.querySelectorAll(".customer-bottom-nav button")
-    .forEach(x=>x.classList.remove("active"));
+document.querySelectorAll(".customer-bottom-nav button")
+.forEach(x=>x.classList.remove("active"));
 
-  btn.classList.add("active")
+btn.classList.add("active")
 }
 
 function showCustomerHome(btn){
-  A("customerContent").innerHTML="";
-  setBottom(btn)
+A("customerContent").innerHTML="";
+setBottom(btn)
 }
 
 async function showCustomerTab(type,btn){
-  setBottom(btn);
+setBottom(btn);
 
-  let p=A("customerContent"),
-      c=customer.profile,
-      inv=customer.invoice,
-      m=customer.meter;
+let p=A("customerContent"),
+c=customer.profile,
+inv=customer.invoice,
+m=customer.meter;
 
-  if(type==="invoice"){
-    p.innerHTML=inv?`
-      <h3>فاتورتي</h3>
+if(type==="invoice"){
+p.innerHTML=inv?`
+<h3>فاتورتي</h3>
 
-      <div class="detail-row">
-        <span>القراءة السابقة</span>
-        <b>${inv.previous_reading}</b>
-      </div>
+<div class="detail-row">
+<span>القراءة السابقة</span>
+<b>${inv.previous_reading}</b>
+</div>
 
-      <div class="detail-row">
-        <span>القراءة الحالية</span>
-        <b>${inv.current_reading}</b>
-      </div>
+<div class="detail-row">
+<span>القراءة الحالية</span>
+<b>${inv.current_reading}</b>
+</div>
 
-      <div class="detail-row">
-        <span>الاستهلاك</span>
-        <b style="color:#12d8ff">
-          ${inv.consumption_kwh??
-          Math.max(0,Number(inv.current_reading)-Number(inv.previous_reading))}
-          kWh
-        </b>
-      </div>
+<div class="detail-row">
+<span>الاستهلاك</span>
+<b style="color:#12d8ff">
+${inv.consumption_kwh??
+Math.max(
+0,
+Number(inv.current_reading)-
+Number(inv.previous_reading)
+)}
+kWh
+</b>
+</div>
 
-      <div class="detail-row">
-        <span>سعر الكيلوواط</span>
-        <b>
-          $${Number(inv.price_per_kwh||inv.kwh_price||0).toFixed(2)} / kWh
-        </b>
-      </div>
+<div class="detail-row">
+<span>سعر الكيلوواط</span>
+<b>
+$${Number(inv.price_per_kwh||inv.kwh_price||0).toFixed(2)} / kWh
+</b>
+</div>
 
-      <div class="detail-row">
-        <span>القيمة</span>
-        <b style="color:#ffc72c">${money(inv.amount)}</b>
-      </div>
+<div class="detail-row">
+<span>القيمة</span>
+<b style="color:#ffc72c">
+${money(inv.amount)}
+</b>
+</div>
 
-      <div class="detail-row">
-        <span>الحالة</span>
-        <b>${statusAr(inv.status)}</b>
-      </div>
+<div class="detail-row">
+<span>الحالة</span>
+<b>${statusAr(inv.status)}</b>
+</div>
 
-      <div class="detail-row">
-        <span>الاستحقاق</span>
-        <b>${inv.due_date||"-"}</b>
-      </div>
+<div class="detail-row">
+<span>الاستحقاق</span>
+<b>${inv.due_date||"-"}</b>
+</div>
 
-      <button class="action-btn" onclick="printCustomerInvoice()">
-        طباعة الفاتورة
-      </button>
-    `:
-    "<h3>فاتورتي</h3><p>لا توجد فاتورة بعد.</p>"
-  }
+<button
+class="action-btn"
+onclick="printCustomerInvoice()">
+طباعة الفاتورة
+</button>
+`
+:"<h3>فاتورتي</h3><p>لا توجد فاتورة بعد.</p>"
+}
 
-  if(type==="payments"){
-    p.innerHTML=
-      "<h3>دفعاتي</h3>"+
-      (
-        customer.payments.length
-        ?customer.payments.map(x=>`
-          <div class="detail-row">
-            <span>
-              ${x.invoices?.billing_month||""}
-              ·
-              ${x.payment_method||"cash"}
-            </span>
+if(type==="payments"){
+p.innerHTML=
+"<h3>دفعاتي</h3>"+
+(
+customer.payments.length
+?customer.payments.map(x=>`
+<div class="detail-row">
+<span>
+${x.invoices?.billing_month||""}
+·
+${x.payment_method||"cash"}
+</span>
+<b style="color:#40ef58">
+${money(x.amount)}
+</b>
+</div>
+`).join("")
+:"<p>لا توجد دفعات.</p>"
+)
+}
 
-            <b style="color:#40ef58">
-              ${money(x.amount)}
-            </b>
-          </div>
-        `).join("")
-        :"<p>لا توجد دفعات.</p>"
-      )
-  }
+if(type==="readings"){
+p.innerHTML=
+"<h3>قراءات العداد</h3>"+
+(
+customer.readings.length
+?customer.readings.map(x=>`
+<div class="detail-row">
+<span>
+${x.billing_month} · ${x.reading_date}
+</span>
+<b>${x.reading_value}</b>
+</div>
+`).join("")
+:"<p>لا توجد قراءات.</p>"
+)
+}
 
-  if(type==="readings"){
-    p.innerHTML=
-      "<h3>قراءات العداد</h3>"+
-      (
-        customer.readings.length
-        ?customer.readings.map(x=>`
-          <div class="detail-row">
-            <span>
-              ${x.billing_month} · ${x.reading_date}
-            </span>
-            <b>${x.reading_value}</b>
-          </div>
-        `).join("")
-        :"<p>لا توجد قراءات.</p>"
-      )
-  }
+if(type==="account"){
+p.innerHTML=`
+<h3>حسابي</h3>
 
-  if(type==="account"){
-    p.innerHTML=`
-      <h3>حسابي</h3>
+<div class="detail-row">
+<span>الاسم</span>
+<b>${c.full_name}</b>
+</div>
 
-      <div class="detail-row">
-        <span>الاسم</span>
-        <b>${c.full_name}</b>
-      </div>
+<div class="detail-row">
+<span>الهاتف</span>
+<b>${c.phone||"-"}</b>
+</div>
 
-      <div class="detail-row">
-        <span>الهاتف</span>
-        <b>${c.phone||"-"}</b>
-      </div>
+<div class="detail-row">
+<span>رقم العداد</span>
+<b>${m?.meter_number||"-"}</b>
+</div>
 
-      <div class="detail-row">
-        <span>رقم العداد</span>
-        <b>${m?.meter_number||"-"}</b>
-      </div>
+<div class="detail-row">
+<span>العلبة</span>
+<b>${customer.area?.name||"-"}</b>
+</div>
+`
+}
 
-      <div class="detail-row">
-        <span>العلبة</span>
-        <b>${customer.area?.name||"-"}</b>
-      </div>
-    `
-  }
+if(type==="notifications"){
+p.innerHTML=
+"<h3>التنبيهات</h3>"+
+(
+customer.notifications.length
+?customer.notifications.map(x=>`
+<div class="notification-item">
+<b>${x.title}</b>
+<p>${x.message}</p>
+</div>
+`).join("")
+:"<p>لا توجد تنبيهات.</p>"
+)
+}
 
-  if(type==="notifications"){
-    p.innerHTML=
-      "<h3>التنبيهات</h3>"+
-      (
-        customer.notifications.length
-        ?customer.notifications.map(x=>`
-          <div class="notification-item">
-            <b>${x.title}</b>
-            <p>${x.message}</p>
-          </div>
-        `).join("")
-        :"<p>لا توجد تنبيهات.</p>"
-      )
-  }
+if(type==="faults"){
+let h="<h3>أعطالي</h3>";
 
-  if(type==="faults"){
-    let h="<h3>أعطالي</h3>";
+for(let f of customer.faults){
+let im="";
 
-    for(let f of customer.faults){
-      let im="";
+if(f.image_path){
+let u=await sb.storage
+.from("fault-images")
+.createSignedUrl(f.image_path,600);
 
-      if(f.image_path){
-        let u=await sb.storage
-          .from("fault-images")
-          .createSignedUrl(f.image_path,600);
+if(u.data?.signedUrl)
+im=`<img class="fault-thumb" src="${u.data.signedUrl}">`
+}
 
-        if(u.data?.signedUrl)
-          im=`<img class="fault-thumb" src="${u.data.signedUrl}">`
-      }
+h+=`
+<div class="fault-item">
+<b>#${f.id} · ${f.fault_type}</b>
+<p>${f.description||""}</p>
+<p>
+الحالة: ${f.status}
+${f.admin_note?" · "+f.admin_note:""}
+</p>
+${im}
+</div>
+`
+}
 
-      h+=`
-        <div class="fault-item">
-          <b>#${f.id} · ${f.fault_type}</b>
-          <p>${f.description||""}</p>
-          <p>
-            الحالة: ${f.status}
-            ${f.admin_note?" · "+f.admin_note:""}
-          </p>
-          ${im}
-        </div>
-      `
-    }
+p.innerHTML=h
+}
 
-    p.innerHTML=h
-  }
-
-  icons()
+icons()
 }
 
 function printCustomerInvoice(){
-  if(!customer.invoice)return;
+if(!customer.invoice)return;
 
-  printInvoiceData(
-    customer.invoice,
-    {
-      full_name:customer.profile.full_name,
-      phone:customer.profile.phone,
-      area:customer.area?.name,
-      meter_number:customer.meter?.meter_number
-    }
-  )
+printInvoiceData(
+customer.invoice,
+{
+full_name:customer.profile.full_name,
+phone:customer.profile.phone,
+area:customer.area?.name,
+meter_number:customer.meter?.meter_number
+}
+)
 }
 
 function openFaultDialog(){
-  A("faultDialog").showModal();
-  icons()
+A("faultDialog").showModal();
+icons()
 }
 
 async function submitFault(){
-  let type=A("faultType").value,
-      description=A("faultDescription").value,
-      file=document.querySelector(
-        '#faultDialog input[type="file"]'
-      ).files[0];
+let type=A("faultType").value,
+description=A("faultDescription").value,
+file=document.querySelector(
+'#faultDialog input[type="file"]'
+).files[0];
 
-  if(!type)return alert("اختر نوع العطل");
+if(!type)return alert("اختر نوع العطل");
 
-  let image_path=null;
+let image_path=null;
 
-  if(file){
-    image_path=
-      session.user.id+"/"+
-      Date.now()+"."+
-      file.name.split(".").pop();
+if(file){
+image_path=
+session.user.id+
+"/"+
+Date.now()+
+"."+
+file.name.split(".").pop();
 
-    let up=await sb.storage
-      .from("fault-images")
-      .upload(image_path,file);
+let up=await sb.storage
+.from("fault-images")
+.upload(image_path,file);
 
-    if(up.error)
-      return alert("فشل رفع الصورة: "+up.error.message)
-  }
+if(up.error)
+return alert("فشل رفع الصورة: "+up.error.message)
+}
 
-  let r=await sb.from("fault_reports").insert({
-    customer_id:session.user.id,
-    area_id:profile.area_id,
-    meter_id:customer.meter?.id||null,
-    fault_type:type,
-    description,
-    image_path
-  });
+let r=await sb.from("fault_reports").insert({
+customer_id:session.user.id,
+area_id:profile.area_id,
+meter_id:customer.meter?.id||null,
+fault_type:type,
+description,
+image_path
+});
 
-  if(r.error)return alert(r.error.message);
+if(r.error)return alert(r.error.message);
 
-  A("faultDialog").close();
+A("faultDialog").close();
 
-  await loadCustomer();
+await loadCustomer();
 
-  showCustomerTab("faults");
+showCustomerTab("faults");
 
-  alert("تم إرسال البلاغ للإدارة")
+alert("تم إرسال البلاغ للإدارة")
 }
 
 function header(t,d,a=""){
-  return `
-  <div class="admin-header">
-    <div>
-      <span class="eyebrow">
-        NASHABEH ENERGY CONTROL CENTER
-      </span>
-      <h2>${t}</h2>
-      <p>${d}</p>
-    </div>
-    ${a}
-  </div>
-  `
+return `
+<div class="admin-header">
+<div>
+<span class="eyebrow">
+NASHABEH ENERGY CONTROL CENTER
+</span>
+<h2>${t}</h2>
+<p>${d}</p>
+</div>
+${a}
+</div>
+`
 }
 
 async function renderAdmin(page="dashboard"){
-  currentPage=page;
+currentPage=page;
 
-  document.querySelectorAll(".side")
-    .forEach(
-      b=>b.classList.toggle(
-        "active",
-        b.dataset.page===page
-      )
-    );
+document.querySelectorAll(".side")
+.forEach(
+b=>b.classList.toggle(
+"active",
+b.dataset.page===page
+)
+);
 
-  let c=A("adminContent");
+let c=A("adminContent");
 
-  if(page==="dashboard"){
-    let [pr,ar,me,fa,iv,pay]=await Promise.all([
-      sb.from("profiles").select("id,active,role"),
-      sb.from("areas").select("*"),
-      sb.from("meters").select("id",{count:"exact"}),
-      sb.from("fault_reports").select("id,status"),
-      sb.from("invoices").select("id,amount,status"),
-      sb.from("payments").select("invoice_id,amount")
-    ]);
+if(page==="dashboard"){
+let [pr,ar,me,fa,iv,pay]=await Promise.all([
 
-    let ps=(pr.data||[])
-      .filter(x=>x.role==="customer");
+sb.from("profiles")
+.select("id,active,role"),
 
-    let open=(fa.data||[])
-      .filter(x=>x.status!=="resolved")
-      .length;
+sb.from("areas")
+.select("*"),
 
-    let paidMap={};
+sb.from("meters")
+.select("id",{count:"exact"}),
 
-    for(let x of(pay.data||[]))
-      paidMap[x.invoice_id]=
-        (paidMap[x.invoice_id]||0)+Number(x.amount);
+sb.from("fault_reports")
+.select("id,status"),
 
-    let unpaid=(iv.data||[])
-      .reduce(
-        (s,x)=>
-          s+Math.max(
-            0,
-            Number(x.amount)-
-            Number(paidMap[x.id]||0)
-          ),
-        0
-      );
+sb.from("invoices")
+.select("id,amount,status"),
 
-    c.innerHTML=
-      header(
-        "لوحة التحكم",
-        "بيانات حقيقية من Supabase."
-      )+
-      `
-      <div class="stats">
+sb.from("payments")
+.select("invoice_id,amount")
 
-        <article class="stat cyan">
-          <i data-lucide="users-round"></i>
-          <div>
-            <small>المشتركون</small>
-            <strong>${ps.length}</strong>
-          </div>
-        </article>
+]);
 
-        <article class="stat green">
-          <i data-lucide="circle-check-big"></i>
-          <div>
-            <small>فعّالة</small>
-            <strong>
-              ${ps.filter(x=>x.active).length}
-            </strong>
-          </div>
-        </article>
+let ps=(pr.data||[])
+.filter(x=>x.role==="customer");
 
-        <article class="stat red">
-          <i data-lucide="circle-x"></i>
-          <div>
-            <small>غير فعّالة</small>
-            <strong>
-              ${ps.filter(x=>!x.active).length}
-            </strong>
-          </div>
-        </article>
+let open=(fa.data||[])
+.filter(x=>x.status!=="resolved")
+.length;
 
-        <article class="stat gold">
-          <i data-lucide="receipt-text"></i>
-          <div>
-            <small>المستحق</small>
-            <strong>${money(unpaid)}</strong>
-          </div>
-        </article>
+let paidMap={};
 
-        <article class="stat blue">
-          <i data-lucide="wrench"></i>
-          <div>
-            <small>أعطال مفتوحة</small>
-            <strong>${open}</strong>
-          </div>
-        </article>
+for(let x of(pay.data||[]))
+paidMap[x.invoice_id]=
+(paidMap[x.invoice_id]||0)+
+Number(x.amount);
 
-        <article class="stat teal">
-          <i data-lucide="boxes"></i>
-          <div>
-            <small>العلب</small>
-            <strong>${(ar.data||[]).length}</strong>
-          </div>
-        </article>
+let unpaid=(iv.data||[])
+.reduce(
+(s,x)=>
+s+
+Math.max(
+0,
+Number(x.amount)-
+Number(paidMap[x.id]||0)
+),
+0
+);
 
-        <article class="stat lime">
-          <i data-lucide="gauge"></i>
-          <div>
-            <small>العدادات</small>
-            <strong>${me.count||0}</strong>
-          </div>
-        </article>
+c.innerHTML=
+header(
+"لوحة التحكم",
+"بيانات حقيقية من Supabase."
+)+
+`
+<div class="stats">
 
-      </div>
+<article class="stat cyan">
+<i data-lucide="users-round"></i>
+<div>
+<small>المشتركون</small>
+<strong>${ps.length}</strong>
+</div>
+</article>
 
-      <article class="panel admin-card">
-        <div class="section-title">
-          <div>
-            <h3>العلب والمناطق</h3>
-          </div>
-        </div>
+<article class="stat green">
+<i data-lucide="circle-check-big"></i>
+<div>
+<small>فعّالة</small>
+<strong>
+${ps.filter(x=>x.active).length}
+</strong>
+</div>
+</article>
 
-        <div class="boxes-grid">
-          ${(ar.data||[]).map(x=>`
-            <div class="area-card ${stateClass(x.network_status)}">
-              <h4>${x.name}</h4>
-              <p>${stateAr(x.network_status)}</p>
-            </div>
-          `).join("")}
-        </div>
-      </article>
-      `
-  }
+<article class="stat red">
+<i data-lucide="circle-x"></i>
+<div>
+<small>غير فعّالة</small>
+<strong>
+${ps.filter(x=>!x.active).length}
+</strong>
+</div>
+</article>
 
-  if(page==="subscribers")await subscribers(c);
-  if(page==="areas")await areas(c);
-  if(page==="meters")await meters(c);
-  if(page==="invoices")await invoices(c);
-  if(page==="payments")await payments(c);
-  if(page==="faults")await faults(c);
-  if(page==="notifications")await notifications(c);
-  if(page==="settings")await settings(c);
+<article class="stat gold">
+<i data-lucide="receipt-text"></i>
+<div>
+<small>المستحق</small>
+<strong>${money(unpaid)}</strong>
+</div>
+</article>
 
-  icons()
+<article class="stat blue">
+<i data-lucide="wrench"></i>
+<div>
+<small>أعطال مفتوحة</small>
+<strong>${open}</strong>
+</div>
+</article>
+
+<article class="stat teal">
+<i data-lucide="boxes"></i>
+<div>
+<small>العلب</small>
+<strong>${(ar.data||[]).length}</strong>
+</div>
+</article>
+
+<article class="stat lime">
+<i data-lucide="gauge"></i>
+<div>
+<small>العدادات</small>
+<strong>${me.count||0}</strong>
+</div>
+</article>
+
+</div>
+
+<article class="panel admin-card">
+
+<div class="section-title">
+<div>
+<h3>العلب والمناطق</h3>
+</div>
+</div>
+
+<div class="boxes-grid">
+
+${(ar.data||[]).map(x=>`
+<div class="area-card ${stateClass(x.network_status)}">
+<h4>${x.name}</h4>
+<p>${stateAr(x.network_status)}</p>
+</div>
+`).join("")}
+
+</div>
+
+</article>
+`
+}
+
+if(page==="subscribers")await subscribers(c);
+if(page==="areas")await areas(c);
+if(page==="meters")await meters(c);
+if(page==="invoices")await invoices(c);
+if(page==="payments")await payments(c);
+if(page==="faults")await faults(c);
+if(page==="notifications")await notifications(c);
+if(page==="settings")await settings(c);
+
+icons()
 }
 
 async function subscribers(c){
-  let areas=(
-    await sb.from("areas")
-      .select("*")
-      .order("name")
-  ).data||[];
+let areas=(
+await sb.from("areas")
+.select("*")
+.order("name")
+).data||[];
 
-  let ps=(
-    await sb.from("profiles")
-      .select("*,areas(name)")
-      .eq("role","customer")
-      .order("created_at",{ascending:false})
-  ).data||[];
+let ps=(
+await sb.from("profiles")
+.select("*,areas(name)")
+.eq("role","customer")
+.order("created_at",{ascending:false})
+).data||[];
 
-  c.innerHTML=
-    header(
-      "المشتركون",
-      "إنشاء حساب مشترك وربطه بالعداد والعلبة والقراءة الافتتاحية."
-    )+
-    `
-    <article class="panel admin-card">
-      <div class="admin-form">
+c.innerHTML=
+header(
+"المشتركون",
+"إنشاء حساب مشترك وربطه بالعداد والعلبة والقراءة الافتتاحية."
+)+
+`
+<article class="panel admin-card">
 
-        <label>
-          الاسم
-          <input id="newName">
-        </label>
+<div class="admin-form">
 
-        <label>
-          الإيميل
-          <input
-            id="newEmail"
-            type="email"
-            autocomplete="off">
-        </label>
+<label>
+الاسم
+<input id="newName">
+</label>
 
-        <label>
-          الهاتف
-          <input id="newPhone">
-        </label>
+<label>
+الإيميل
+<input
+id="newEmail"
+type="email"
+autocomplete="off">
+</label>
 
-        <label>
-          كلمة المرور
-          <input
-            id="newPassword"
-            type="password"
-            autocomplete="new-password"
-            placeholder="8 أحرف على الأقل">
-        </label>
+<label>
+الهاتف
+<input id="newPhone">
+</label>
 
-        <label>
-          العلبة
-          <select id="newArea">
-            ${areas.map(a=>`
-              <option value="${a.id}">
-                ${a.name}
-              </option>
-            `).join("")}
-          </select>
-        </label>
+<label>
+كلمة المرور
+<input
+id="newPassword"
+type="password"
+autocomplete="new-password"
+placeholder="8 أحرف على الأقل">
+</label>
 
-        <label>
-          رقم العداد
-          <input
-            id="newMeter"
-            autocomplete="off"
-            placeholder="مثال: 756">
-        </label>
+<label>
+العلبة
+<select id="newArea">
+${areas.map(a=>`
+<option value="${a.id}">
+${a.name}
+</option>
+`).join("")}
+</select>
+</label>
 
-        <label>
-          القراءة الحالية عند بدء النظام
-          <input
-            id="newInitialReading"
-            type="text"
-            inputmode="numeric"
-            autocomplete="off"
-            placeholder="مثال: 850">
-        </label>
+<label>
+رقم العداد
+<input
+id="newMeter"
+autocomplete="off"
+placeholder="مثال: 756">
+</label>
 
-        <div class="full">
-          <button
-            class="action-btn"
-            onclick="createCustomer()">
-            إنشاء حساب المشترك
-          </button>
-        </div>
+<label>
+القراءة الحالية عند بدء النظام
+<input
+id="newInitialReading"
+type="text"
+inputmode="numeric"
+autocomplete="off"
+placeholder="مثال: 850">
+</label>
 
-      </div>
-    </article>
+<div class="full">
+<button
+class="action-btn"
+onclick="createCustomer()">
+إنشاء حساب المشترك
+</button>
+</div>
 
-    <article class="panel admin-card">
-      <div class="table-wrap">
-        <table class="admin-table">
+</div>
+</article>
 
-          <thead>
-            <tr>
-              <th>الاسم</th>
-              <th>الهاتف</th>
-              <th>المنطقة</th>
-              <th>الحالة</th>
-              <th>تغيير</th>
-            </tr>
-          </thead>
+<article class="panel admin-card">
 
-          <tbody>
-            ${ps.map(p=>`
-              <tr>
-                <td>${p.full_name}</td>
-                <td>${p.phone||"-"}</td>
-                <td>${p.areas?.name||"-"}</td>
+<div class="table-wrap">
 
-                <td>
-                  <span class="badge ${p.active?"active":"inactive"}">
-                    ${p.active?"فعّال":"غير فعّال"}
-                  </span>
-                </td>
+<table class="admin-table">
 
-                <td>
-                  <button
-                    class="row-btn"
-                    onclick="toggleCustomer('${p.id}',${!p.active})">
-                    ${p.active?"تعطيل":"تفعيل"}
-                  </button>
-                </td>
-              </tr>
-            `).join("")}
-          </tbody>
+<thead>
+<tr>
+<th>الاسم</th>
+<th>الهاتف</th>
+<th>المنطقة</th>
+<th>الحالة</th>
+<th>تغيير</th>
+</tr>
+</thead>
 
-        </table>
-      </div>
-    </article>
-    `
+<tbody>
+
+${ps.map(p=>`
+<tr>
+
+<td>${p.full_name}</td>
+
+<td>${p.phone||"-"}</td>
+
+<td>${p.areas?.name||"-"}</td>
+
+<td>
+<span class="badge ${p.active?"active":"inactive"}">
+${p.active?"فعّال":"غير فعّال"}
+</span>
+</td>
+
+<td>
+<button
+class="row-btn"
+onclick="toggleCustomer('${p.id}',${!p.active})">
+${p.active?"تعطيل":"تفعيل"}
+</button>
+</td>
+
+</tr>
+`).join("")}
+
+</tbody>
+
+</table>
+
+</div>
+
+</article>
+`
 }
 
 async function createCustomer(){
-  let full_name=A("newName").value.trim(),
-      email=A("newEmail").value.trim(),
-      phone=A("newPhone").value.trim(),
-      password=A("newPassword").value,
-      area_id=A("newArea").value,
-      meter_number=A("newMeter").value.trim(),
-      initial_reading=A("newInitialReading").value.trim();
+let full_name=A("newName").value.trim(),
+email=A("newEmail").value.trim(),
+phone=A("newPhone").value.trim(),
+password=A("newPassword").value,
+area_id=A("newArea").value,
+meter_number=A("newMeter").value.trim(),
+initial_reading=A("newInitialReading").value.trim();
 
-  if(!full_name)
-    return alert("أدخل اسم المشترك");
+if(!full_name)return alert("أدخل اسم المشترك");
+if(!email)return alert("أدخل البريد الإلكتروني");
 
-  if(!email)
-    return alert("أدخل البريد الإلكتروني");
+if(!password||password.length<8)
+return alert("كلمة المرور يجب أن تكون 8 أحرف على الأقل");
 
-  if(!password||password.length<8)
-    return alert("كلمة المرور يجب أن تكون 8 أحرف على الأقل");
+if(!meter_number)
+return alert("أدخل رقم العداد");
 
-  if(!meter_number)
-    return alert("أدخل رقم العداد");
+if(
+initial_reading===""||
+isNaN(Number(initial_reading))||
+Number(initial_reading)<0
+)
+return alert("أدخل القراءة الحالية للعداد بشكل صحيح");
 
-  if(
-    initial_reading===""||
-    isNaN(Number(initial_reading))||
-    Number(initial_reading)<0
-  )
-    return alert("أدخل القراءة الحالية للعداد بشكل صحيح");
+let body={
+full_name,
+email,
+phone,
+password,
+area_id,
+meter_number,
+initial_reading
+};
 
-  let body={
-    full_name,
-    email,
-    phone,
-    password,
-    area_id,
-    meter_number,
-    initial_reading
-  };
+let r=await sb.functions.invoke(
+"create-customer",
+{body}
+);
 
-  let r=await sb.functions.invoke(
-    "create-customer",
-    {body}
-  );
+if(r.error)return alert(r.error.message);
 
-  if(r.error)return alert(r.error.message);
+alert(
+"تم إنشاء الحساب والعداد وحفظ القراءة الافتتاحية"
+);
 
-  alert(
-    "تم إنشاء الحساب والعداد وحفظ القراءة الافتتاحية"
-  );
-
-  renderAdmin("subscribers")
+renderAdmin("subscribers")
 }
 
 async function toggleCustomer(id,active){
-  let r=await sb.from("profiles")
-    .update({active})
-    .eq("id",id);
+let r=await sb.from("profiles")
+.update({active})
+.eq("id",id);
 
-  if(r.error)return alert(r.error.message);
+if(r.error)return alert(r.error.message);
 
-  renderAdmin("subscribers")
+renderAdmin("subscribers")
 }
 
 async function areas(c){
-  let ar=(
-    await sb.from("areas")
-      .select("*")
-      .order("name")
-  ).data||[];
+let ar=(
+await sb.from("areas")
+.select("*")
+.order("name")
+).data||[];
 
-  c.innerHTML=
-    header(
-      "العلب والمناطق",
-      "الحالة تظهر فورًا عند المشترك."
-    )+
-    `
-    <article class="panel admin-card">
-      <div class="boxes-grid">
+c.innerHTML=
+header(
+"العلب والمناطق",
+"الحالة تظهر فورًا عند المشترك."
+)+
+`
+<article class="panel admin-card">
 
-        ${ar.map(a=>`
-          <div class="area-card area-editor">
+<div class="boxes-grid">
 
-            <h4>${a.name}</h4>
+${ar.map(a=>`
+<div class="area-card area-editor">
 
-            <select id="as_${a.id}">
-              <option
-                value="stable"
-                ${a.network_status==="stable"?"selected":""}>
-                مستقرة
-              </option>
+<h4>${a.name}</h4>
 
-              <option
-                value="monitoring"
-                ${a.network_status==="monitoring"?"selected":""}>
-                متابعة
-              </option>
+<select id="as_${a.id}">
 
-              <option
-                value="high_load"
-                ${a.network_status==="high_load"?"selected":""}>
-                ضغط مرتفع
-              </option>
+<option
+value="stable"
+${a.network_status==="stable"?"selected":""}>
+مستقرة
+</option>
 
-              <option
-                value="outage"
-                ${a.network_status==="outage"?"selected":""}>
-                انقطاع عام
-              </option>
-            </select>
+<option
+value="monitoring"
+${a.network_status==="monitoring"?"selected":""}>
+متابعة
+</option>
 
-            <textarea
-              id="am_${a.id}"
-              rows="2">${a.status_message||""}</textarea>
+<option
+value="high_load"
+${a.network_status==="high_load"?"selected":""}>
+ضغط مرتفع
+</option>
 
-            <button
-              class="row-btn"
-              onclick="saveArea('${a.id}')">
-              حفظ
-            </button>
+<option
+value="outage"
+${a.network_status==="outage"?"selected":""}>
+انقطاع عام
+</option>
 
-          </div>
-        `).join("")}
+</select>
 
-      </div>
-    </article>
-    `
+<textarea
+id="am_${a.id}"
+rows="2">${a.status_message||""}</textarea>
+
+<button
+class="row-btn"
+onclick="saveArea('${a.id}')">
+حفظ
+</button>
+
+</div>
+`).join("")}
+
+</div>
+
+</article>
+`
 }
 
 async function saveArea(id){
-  let r=await sb.from("areas")
-    .update({
-      network_status:A("as_"+id).value,
-      status_message:A("am_"+id).value
-    })
-    .eq("id",id);
+let r=await sb.from("areas")
+.update({
+network_status:A("as_"+id).value,
+status_message:A("am_"+id).value
+})
+.eq("id",id);
 
-  if(r.error)return alert(r.error.message);
+if(r.error)return alert(r.error.message);
 
-  alert("تم تحديث العلبة")
+alert("تم تحديث العلبة")
 }
 
 async function meters(c){
-  let ms=(
-    await sb.from("meters")
-      .select("*,profiles(full_name),meter_readings(*)")
-      .order("created_at",{ascending:false})
-  ).data||[];
+let ms=(
+await sb.from("meters")
+.select("*,profiles(full_name),meter_readings(*)")
+.order("created_at",{ascending:false})
+).data||[];
 
-  c.innerHTML=
-    header(
-      "العدادات",
-      "رقم العداد والقراءة تدخل يدويًا."
-    )+
-    `
-    <article class="panel admin-card">
-      <div class="table-wrap">
-        <table class="admin-table">
+c.innerHTML=
+header(
+"العدادات",
+"رقم العداد والقراءة تدخل يدويًا."
+)+
+`
+<article class="panel admin-card">
 
-          <thead>
-            <tr>
-              <th>المشترك</th>
-              <th>رقم العداد</th>
-              <th>آخر قراءة</th>
-              <th>الإجراء</th>
-            </tr>
-          </thead>
+<div class="table-wrap">
 
-          <tbody>
-            ${ms.map(m=>{
-              let rr=(m.meter_readings||[])
-                .sort(
-                  (a,b)=>
-                    new Date(b.reading_date)-
-                    new Date(a.reading_date)
-                )[0];
+<table class="admin-table">
 
-              return `
-              <tr>
+<thead>
+<tr>
+<th>المشترك</th>
+<th>رقم العداد</th>
+<th>آخر قراءة</th>
+<th>الإجراء</th>
+</tr>
+</thead>
 
-                <td>
-                  ${m.profiles?.full_name||"-"}
-                </td>
+<tbody>
 
-                <td>
-                  <input
-                    class="meter-inline"
-                    id="mn_${m.id}"
-                    value="${m.meter_number}">
-                </td>
+${ms.map(m=>{
+let rr=(m.meter_readings||[])
+.sort(
+(a,b)=>
+new Date(b.reading_date)-
+new Date(a.reading_date)
+)[0];
 
-                <td>
-                  ${rr?.reading_value??"-"}
-                </td>
+return `
+<tr>
 
-                <td>
-                  <button
-                    class="row-btn"
-                    onclick="saveMeter('${m.id}')">
-                    حفظ الرقم
-                  </button>
+<td>
+${m.profiles?.full_name||"-"}
+</td>
 
-                  <button
-                    class="row-btn"
-                    onclick="addReading('${m.id}')">
-                    قراءة جديدة
-                  </button>
-                </td>
+<td>
+<input
+class="meter-inline"
+id="mn_${m.id}"
+value="${m.meter_number}">
+</td>
 
-              </tr>
-              `
-            }).join("")}
-          </tbody>
+<td>
+${rr?.reading_value??"-"}
+</td>
 
-        </table>
-      </div>
-    </article>
-    `
+<td>
+
+<button
+class="row-btn"
+onclick="saveMeter('${m.id}')">
+حفظ الرقم
+</button>
+
+<button
+class="row-btn"
+onclick="addReading('${m.id}')">
+قراءة جديدة
+</button>
+
+</td>
+
+</tr>
+`
+}).join("")}
+
+</tbody>
+
+</table>
+
+</div>
+
+</article>
+`
 }
 
 async function saveMeter(id){
-  let r=await sb.from("meters")
-    .update({
-      meter_number:A("mn_"+id).value
-    })
-    .eq("id",id);
+let r=await sb.from("meters")
+.update({
+meter_number:A("mn_"+id).value
+})
+.eq("id",id);
 
-  if(r.error)return alert(r.error.message);
+if(r.error)return alert(r.error.message);
 
-  alert("تم تغيير رقم العداد")
+alert("تم تغيير رقم العداد")
 }
 
 async function addReading(id){
-  let v=prompt(
-    "أدخل القراءة الحالية كما تظهر على العداد"
-  );
+let v=prompt(
+"أدخل القراءة الحالية كما تظهر على العداد"
+);
 
-  if(v===null)return;
+if(v===null)return;
 
-  let m=prompt(
-    "شهر القراءة YYYY-MM-01",
-    "2026-08-01"
-  );
+let m=prompt(
+"شهر القراءة YYYY-MM-01",
+"2026-08-01"
+);
 
-  let d=prompt(
-    "تاريخ القراءة YYYY-MM-DD",
-    new Date().toISOString().slice(0,10)
-  );
+let d=prompt(
+"تاريخ القراءة YYYY-MM-DD",
+new Date().toISOString().slice(0,10)
+);
 
-  let r=await sb.from("meter_readings").insert({
-    meter_id:id,
-    reading_value:Number(v),
-    billing_month:m,
-    reading_date:d
-  });
+let r=await sb.from("meter_readings").insert({
+meter_id:id,
+reading_value:Number(v),
+billing_month:m,
+reading_date:d
+});
 
-  if(r.error)return alert(r.error.message);
+if(r.error)return alert(r.error.message);
 
-  alert("تم حفظ القراءة");
+alert("تم حفظ القراءة");
 
-  renderAdmin("meters")
+renderAdmin("meters")
 }
 
 async function invoices(c){
-  let ms=(
-    await sb.from("meters")
-      .select(
-        "id,meter_number,customer_id,profiles(full_name,phone,area_id,areas(name)),meter_readings(reading_value,reading_date,billing_month)"
-      )
-  ).data||[];
+let ms=(
+await sb.from("meters")
+.select(
+"id,meter_number,customer_id,profiles(full_name,phone,area_id,areas(name)),meter_readings(reading_value,reading_date,billing_month)"
+)
+).data||[];
 
-  let iv=(
-    await sb.from("invoices")
-      .select(
-        "*,profiles(full_name,phone,areas(name)),meters(meter_number)"
-      )
-      .order("billing_month",{ascending:false})
-  ).data||[];
+let iv=(
+await sb.from("invoices")
+.select(
+"*,profiles(full_name,phone,areas(name)),meters(meter_number)"
+)
+.order("created_at",{ascending:false})
+).data||[];
 
-  let s=(
-    await sb.from("app_settings")
-      .select("kwh_price,currency")
-      .eq("id",1)
-      .single()
-  ).data||{
-    kwh_price:.65,
-    currency:"USD"
-  };
+let s=(
+await sb.from("app_settings")
+.select("kwh_price,currency")
+.eq("id",1)
+.single()
+).data||{
+kwh_price:.65,
+currency:"USD"
+};
 
-  window._invoices=iv;
+window._invoices=iv;
 
-  let options=ms.map(m=>{
-    let rr=(m.meter_readings||[])
-      .sort(
-        (a,b)=>
-          new Date(b.reading_date)-
-          new Date(a.reading_date)
-      )[0];
+let options=ms.map(m=>{
 
-    let last=rr?.reading_value??0;
+let rr=(m.meter_readings||[])
+.sort(
+(a,b)=>
+new Date(b.reading_date)-
+new Date(a.reading_date)
+)[0];
 
-    return `
-      <option
-        value="${m.id}"
-        data-customer="${m.customer_id}"
-        data-last="${last}">
-        ${m.profiles?.full_name||"-"} · ${m.meter_number}
-      </option>
-    `
-  }).join("");
+let last=rr?.reading_value??0;
 
-  c.innerHTML=
-    header(
-      "الفواتير",
-      "أدخل القراءة الحالية فقط، والنظام يحسب الاستهلاك والقيمة تلقائيًا."
-    )+
-    `
-    <article class="panel admin-card">
-      <div class="admin-form">
+return `
+<option
+value="${m.id}"
+data-customer="${m.customer_id}"
+data-last="${last}">
+${m.profiles?.full_name||"-"} · ${m.meter_number}
+</option>
+`
+}).join("");
 
-        <label>
-          العداد
-          <select
-            id="ivMeter"
-            onchange="setInvoiceMeterDefaults()">
-            ${options}
-          </select>
-        </label>
+c.innerHTML=
+header(
+"الفواتير",
+"أدخل القراءة الحالية فقط، والنظام يحسب الاستهلاك والقيمة تلقائيًا."
+)+
+`
+<article class="panel admin-card">
 
-        <label>
-          شهر الفاتورة
-          <input id="ivMonth" type="month">
-        </label>
+<div class="admin-form">
 
-        <label>
-          القراءة السابقة
-          <input
-            id="ivPrev"
-            type="text"
-            readonly>
-        </label>
+<label>
+العداد
+<select
+id="ivMeter"
+onchange="setInvoiceMeterDefaults()">
+${options}
+</select>
+</label>
 
-        <label>
-          القراءة الحالية
-          <input
-            id="ivCur"
-            type="text"
-            inputmode="numeric"
-            autocomplete="off"
-            placeholder="أدخل القراءة الحالية"
-            oninput="updateInvoicePreview()">
-        </label>
+<label>
+شهر الفاتورة
+<input id="ivMonth" type="month">
+</label>
 
-        <label>
-          الاستهلاك kWh
-          <input
-            id="ivConsumption"
-            type="text"
-            readonly>
-        </label>
+<label>
+القراءة السابقة
+<input
+id="ivPrev"
+type="text"
+readonly>
+</label>
 
-        <label>
-          سعر 1 kWh
-          <input
-            id="ivPrice"
-            type="text"
-            value="${Number(s.kwh_price).toFixed(2)}"
-            readonly>
-        </label>
+<label>
+القراءة الحالية
+<input
+id="ivCur"
+type="text"
+inputmode="numeric"
+autocomplete="off"
+placeholder="أدخل القراءة الحالية"
+oninput="updateInvoicePreview()">
+</label>
 
-        <label>
-          قيمة الفاتورة
-          <input
-            id="ivAmount"
-            type="text"
-            readonly>
-        </label>
+<label>
+الاستهلاك kWh
+<input
+id="ivConsumption"
+type="text"
+readonly>
+</label>
 
-        <label>
-          الاستحقاق
-          <input
-            id="ivDue"
-            type="date">
-        </label>
+<label>
+سعر 1 kWh
+<input
+id="ivPrice"
+type="text"
+value="${Number(s.kwh_price).toFixed(2)}"
+readonly>
+</label>
 
-        <div class="full">
-          <button
-            class="action-btn"
-            onclick="createInvoice()">
-            حفظ الفاتورة
-          </button>
-        </div>
+<label>
+قيمة الفاتورة
+<input
+id="ivAmount"
+type="text"
+readonly>
+</label>
 
-      </div>
-    </article>
+<label>
+الاستحقاق
+<input
+id="ivDue"
+type="date">
+</label>
 
-    <article class="panel admin-card">
-      <div class="table-wrap">
+<div class="full">
 
-        <table class="admin-table">
+<button
+class="action-btn"
+onclick="createInvoice()">
+حفظ الفاتورة
+</button>
 
-          <thead>
-            <tr>
-              <th>المشترك</th>
-              <th>العداد</th>
-              <th>الشهر</th>
-              <th>السابقة</th>
-              <th>الحالية</th>
-              <th>الاستهلاك</th>
-              <th>سعر kWh</th>
-              <th>القيمة</th>
-              <th>الحالة</th>
-              <th>الإجراء</th>
-            </tr>
-          </thead>
+</div>
 
-          <tbody>
-            ${iv.map(i=>`
-              <tr>
+</div>
 
-                <td>
-                  ${i.profiles?.full_name||"-"}
-                </td>
+</article>
 
-                <td>
-                  ${i.meters?.meter_number||"-"}
-                </td>
+<article class="panel admin-card">
 
-                <td>
-                  ${i.billing_month}
-                </td>
+<div class="table-wrap">
 
-                <td>
-                  ${i.previous_reading}
-                </td>
+<table class="admin-table">
 
-                <td>
-                  ${i.current_reading}
-                </td>
+<thead>
 
-                <td>
-                  ${i.consumption_kwh??
-                    i.consumption??
-                    0}
-                  kWh
-                </td>
+<tr>
 
-                <td>
-                  $${Number(
-                    i.price_per_kwh||
-                    i.kwh_price||
-                    0
-                  ).toFixed(2)}
-                </td>
+<th>المشترك</th>
+<th>العداد</th>
+<th>الشهر</th>
+<th>السابقة</th>
+<th>الحالية</th>
+<th>الاستهلاك</th>
+<th>سعر kWh</th>
+<th>القيمة</th>
+<th>الحالة</th>
+<th>الإجراء</th>
 
-                <td>
-                  ${money(i.amount)}
-                </td>
+</tr>
 
-                <td>
-                  <span class="badge ${i.status}">
-                    ${statusAr(i.status)}
-                  </span>
-                </td>
+</thead>
 
-                <td>
-                  <div class="invoice-actions">
+<tbody>
 
-                    <button
-                      class="row-btn print"
-                      onclick="printInvoice('${i.id}')">
-                      طباعة
-                    </button>
+${iv.map(i=>`
+<tr>
 
-                    ${
-                      i.status!=="paid"
-                      ?`
-                      <button
-                        class="row-btn pay"
-                        onclick="renderAdmin('payments')">
-                        تسديد
-                      </button>
-                      `
-                      :""
-                    }
+<td>
+${i.profiles?.full_name||"-"}
+</td>
 
-                  </div>
-                </td>
+<td>
+${i.meters?.meter_number||"-"}
+</td>
 
-              </tr>
-            `).join("")}
-          </tbody>
+<td>
+${i.billing_month}
+</td>
 
-        </table>
+<td>
+${i.previous_reading}
+</td>
 
-      </div>
-    </article>
-    `;
+<td>
+${i.current_reading}
+</td>
 
-  setInvoiceMeterDefaults()
+<td>
+${i.consumption_kwh??
+i.consumption??
+0}
+kWh
+</td>
+
+<td>
+$${Number(
+i.price_per_kwh||
+i.kwh_price||
+0
+).toFixed(2)}
+</td>
+
+<td>
+${money(i.amount)}
+</td>
+
+<td>
+<span class="badge ${i.status}">
+${statusAr(i.status)}
+</span>
+</td>
+
+<td>
+
+<div class="invoice-actions">
+
+<button
+class="row-btn print"
+onclick="printInvoice('${i.id}')">
+طباعة
+</button>
+
+${
+i.status!=="paid"
+?`
+<button
+class="row-btn pay"
+onclick="renderAdmin('payments')">
+تسديد
+</button>
+`
+:""
+}
+
+</div>
+
+</td>
+
+</tr>
+`).join("")}
+
+</tbody>
+
+</table>
+
+</div>
+
+</article>
+`;
+
+setInvoiceMeterDefaults()
 }
 
 function setInvoiceMeterDefaults(){
-  let sel=A("ivMeter");
+let sel=A("ivMeter");
 
-  if(!sel||!sel.options.length)return;
+if(!sel||!sel.options.length)return;
 
-  let o=sel.options[sel.selectedIndex];
+let o=sel.options[sel.selectedIndex];
 
-  A("ivPrev").value=o.dataset.last||"0";
-  A("ivCur").value="";
-  A("ivConsumption").value="0";
-  A("ivAmount").value="$0.00"
+A("ivPrev").value=o.dataset.last||"0";
+A("ivCur").value="";
+A("ivConsumption").value="0";
+A("ivAmount").value="$0.00"
 }
 
 function updateInvoicePreview(){
-  let prev=Number(A("ivPrev").value||0),
-      cur=Number(A("ivCur").value||0),
-      price=Number(A("ivPrice").value||0),
-      cons=cur>=prev?cur-prev:0;
+let prev=Number(A("ivPrev").value||0),
+cur=Number(A("ivCur").value||0),
+price=Number(A("ivPrice").value||0),
+cons=cur>=prev?cur-prev:0;
 
-  A("ivConsumption").value=cons;
-  A("ivAmount").value=money(cons*price)
+A("ivConsumption").value=cons;
+A("ivAmount").value=money(cons*price)
 }
 
 async function createInvoice(){
-  let sel=A("ivMeter"),
-      o=sel.options[sel.selectedIndex],
-      previous=Number(A("ivPrev").value),
-      currentRaw=A("ivCur").value.trim(),
-      price=Number(A("ivPrice").value),
-      month=A("ivMonth").value,
-      due=A("ivDue").value;
+let sel=A("ivMeter"),
+o=sel.options[sel.selectedIndex],
+previous=Number(A("ivPrev").value),
+currentRaw=A("ivCur").value.trim(),
+price=Number(A("ivPrice").value),
+month=A("ivMonth").value,
+due=A("ivDue").value;
 
-  if(!month)
-    return alert("اختر شهر الفاتورة");
+if(!month)
+return alert("اختر شهر الفاتورة");
 
-  if(currentRaw==="")
-    return alert("أدخل القراءة الحالية");
+if(currentRaw==="")
+return alert("أدخل القراءة الحالية");
 
-  let current=Number(currentRaw);
+let current=Number(currentRaw);
 
-  if(!Number.isFinite(current))
-    return alert("أدخل القراءة الحالية");
+if(!Number.isFinite(current))
+return alert("أدخل القراءة الحالية");
 
-  if(current<previous)
-    return alert(
-      "القراءة الحالية لا يمكن أن تكون أقل من القراءة السابقة"
-    );
+if(current<previous)
+return alert(
+"القراءة الحالية لا يمكن أن تكون أقل من القراءة السابقة"
+);
 
-  if(!due)
-    return alert("اختر تاريخ الاستحقاق");
+if(!due)
+return alert("اختر تاريخ الاستحقاق");
 
-  let consumption=current-previous,
-      amount=Number(
-        (consumption*price).toFixed(2)
-      ),
-      billing_month=month+"-01";
+let consumption=current-previous,
+amount=Number(
+(consumption*price).toFixed(2)
+),
+billing_month=month+"-01";
 
-  let r=await sb.from("invoices").insert({
-    customer_id:o.dataset.customer,
-    meter_id:sel.value,
-    billing_month,
-    previous_reading:previous,
-    current_reading:current,
-    consumption:consumption,
-    consumption_kwh:consumption,
-    kwh_price:price,
-    price_per_kwh:price,
-    amount,
-    due_date:due,
-    status:"unpaid"
-  });
+let r=await sb.from("invoices").insert({
+customer_id:o.dataset.customer,
+meter_id:sel.value,
+billing_month,
+previous_reading:previous,
+current_reading:current,
+consumption:consumption,
+consumption_kwh:consumption,
+kwh_price:price,
+price_per_kwh:price,
+amount,
+due_date:due,
+status:"unpaid"
+});
 
-  if(r.error)
-    return alert(r.error.message);
+if(r.error)
+return alert(r.error.message);
 
-  let reading=await sb.from("meter_readings").upsert({
-    meter_id:sel.value,
-    reading_value:current,
-    billing_month,
-    reading_date:new Date()
-      .toISOString()
-      .slice(0,10)
-  },{
-    onConflict:"meter_id,billing_month"
-  });
+let reading=await sb.from("meter_readings").upsert({
+meter_id:sel.value,
+reading_value:current,
+billing_month,
+reading_date:new Date()
+.toISOString()
+.slice(0,10)
+},{
+onConflict:"meter_id,billing_month"
+});
 
-  if(reading.error)
-    return alert(
-      "تم حفظ الفاتورة لكن تعذر تحديث قراءة العداد: "+
-      reading.error.message
-    );
+if(reading.error)
+return alert(
+"تم حفظ الفاتورة لكن تعذر تحديث قراءة العداد: "+
+reading.error.message
+);
 
-  alert(
-    `تم حفظ الفاتورة: ${consumption} kWh × $${price.toFixed(2)} = ${money(amount)}`
-  );
+alert(
+`تم حفظ الفاتورة: ${consumption} kWh × $${price.toFixed(2)} = ${money(amount)}`
+);
 
-  renderAdmin("invoices")
+renderAdmin("invoices")
 }
 
 function printInvoice(id){
-  let i=(window._invoices||[])
-    .find(x=>x.id===id);
+let i=(window._invoices||[])
+.find(x=>x.id===id);
 
-  if(!i)return;
+if(!i)return;
 
-  printInvoiceData(
-    i,
-    {
-      full_name:i.profiles?.full_name,
-      phone:i.profiles?.phone,
-      area:i.profiles?.areas?.name,
-      meter_number:i.meters?.meter_number
-    }
-  )
+printInvoiceData(
+i,
+{
+full_name:i.profiles?.full_name,
+phone:i.profiles?.phone,
+area:i.profiles?.areas?.name,
+meter_number:i.meters?.meter_number
+}
+)
 }
 
 function printInvoiceData(i,u){
-  let cons=
-    i.consumption_kwh??
-    i.consumption??
-    Math.max(
-      0,
-      Number(i.current_reading)-
-      Number(i.previous_reading)
-    );
+let cons=
+i.consumption_kwh??
+i.consumption??
+Math.max(
+0,
+Number(i.current_reading)-
+Number(i.previous_reading)
+);
 
-  let rate=Number(
-    i.price_per_kwh||
-    i.kwh_price||
-    0
-  );
+let rate=Number(
+i.price_per_kwh||
+i.kwh_price||
+0
+);
 
-  printHtml(
-    "فاتورة إشتراكات نشابة",
-    `
-    <h2>فاتورة كهرباء</h2>
+printHtml(
+"فاتورة إشتراكات نشابة",
+`
+<h2>فاتورة كهرباء</h2>
 
-    <div class="grid">
+<div class="grid">
 
-      <div class="cell">
-        <small>المشترك</small>
-        <b>${u.full_name||"-"}</b>
-      </div>
+<div class="cell">
+<small>المشترك</small>
+<b>${u.full_name||"-"}</b>
+</div>
 
-      <div class="cell">
-        <small>رقم العداد</small>
-        <b>${u.meter_number||"-"}</b>
-      </div>
+<div class="cell">
+<small>رقم العداد</small>
+<b>${u.meter_number||"-"}</b>
+</div>
 
-      <div class="cell">
-        <small>المنطقة / العلبة</small>
-        <b>${u.area||"-"}</b>
-      </div>
+<div class="cell">
+<small>المنطقة / العلبة</small>
+<b>${u.area||"-"}</b>
+</div>
 
-      <div class="cell">
-        <small>شهر الفاتورة</small>
-        <b>${i.billing_month}</b>
-      </div>
+<div class="cell">
+<small>شهر الفاتورة</small>
+<b>${i.billing_month}</b>
+</div>
 
-      <div class="cell">
-        <small>القراءة السابقة</small>
-        <b>${i.previous_reading}</b>
-      </div>
+<div class="cell">
+<small>القراءة السابقة</small>
+<b>${i.previous_reading}</b>
+</div>
 
-      <div class="cell">
-        <small>القراءة الحالية</small>
-        <b>${i.current_reading}</b>
-      </div>
+<div class="cell">
+<small>القراءة الحالية</small>
+<b>${i.current_reading}</b>
+</div>
 
-      <div class="cell">
-        <small>الاستهلاك</small>
-        <b>${cons} kWh</b>
-      </div>
+<div class="cell">
+<small>الاستهلاك</small>
+<b>${cons} kWh</b>
+</div>
 
-      <div class="cell">
-        <small>سعر 1 kWh</small>
-        <b>$${rate.toFixed(2)}</b>
-      </div>
+<div class="cell">
+<small>سعر 1 kWh</small>
+<b>$${rate.toFixed(2)}</b>
+</div>
 
-      <div class="cell">
-        <small>الاستحقاق</small>
-        <b>${i.due_date||"-"}</b>
-      </div>
+<div class="cell">
+<small>الاستحقاق</small>
+<b>${i.due_date||"-"}</b>
+</div>
 
-      <div class="cell">
-        <small>الحالة</small>
-        <b>${statusAr(i.status)}</b>
-      </div>
+<div class="cell">
+<small>الحالة</small>
+<b>${statusAr(i.status)}</b>
+</div>
 
-    </div>
+</div>
 
-    <div class="total">
-      الإجمالي: ${money(i.amount)}
-    </div>
-    `
-  )
+<div class="total">
+الإجمالي: ${money(i.amount)}
+</div>
+`
+)
 }
 
 async function payments(c){
-  let [p,iv]=await Promise.all([
+let [p,iv]=await Promise.all([
 
-    sb.from("payments")
-      .select(
-        "*,profiles(full_name),invoices(billing_month,amount,status)"
-      )
-      .order("paid_at",{ascending:false}),
+sb.from("payments")
+.select(
+"*,profiles(full_name),invoices(billing_month,amount,status)"
+)
+.order("paid_at",{ascending:false}),
 
-    sb.from("invoices")
-      .select(
-        "*,profiles(full_name),meters(meter_number)"
-      )
-      .neq("status","paid")
-      .order("billing_month",{ascending:false})
+sb.from("invoices")
+.select(
+"*,profiles(full_name),meters(meter_number)"
+)
+.neq("status","paid")
+.order("created_at",{ascending:false})
 
-  ]);
+]);
 
-  let pays=p.data||[],
-      invs=iv.data||[];
+let pays=p.data||[],
+invs=iv.data||[];
 
-  window._payments=pays;
+window._payments=pays;
 
-  let paidBy={};
+let paidBy={};
 
-  for(let x of pays){
-    paidBy[x.invoice_id]=
-      (paidBy[x.invoice_id]||0)+
-      Number(x.amount)
-  }
+for(let x of pays){
+paidBy[x.invoice_id]=
+(paidBy[x.invoice_id]||0)+
+Number(x.amount)
+}
 
-  let opts=invs.map(i=>{
-    let rem=Math.max(
-      0,
-      Number(i.amount)-
-      Number(paidBy[i.id]||0)
-    );
+let opts=invs.map(i=>{
 
-    return `
-      <option
-        value="${i.id}"
-        data-customer="${i.customer_id}"
-        data-total="${i.amount}"
-        data-paid="${paidBy[i.id]||0}"
-        data-remaining="${rem}">
-        ${i.profiles?.full_name||"-"}
-        ·
-        ${i.billing_month}
-        ·
-        متبقي ${money(rem)}
-      </option>
-    `
-  }).join("");
+let rem=Math.max(
+0,
+Number(i.amount)-
+Number(paidBy[i.id]||0)
+);
 
-  c.innerHTML=
-    header(
-      "الدفعات",
-      "تسجيل دفعة كاملة أو جزئية وإصدار إيصال."
-    )+
-    `
-    <article class="panel admin-card">
+return `
+<option
+value="${i.id}"
+data-customer="${i.customer_id}"
+data-total="${i.amount}"
+data-paid="${paidBy[i.id]||0}"
+data-remaining="${rem}">
+${i.profiles?.full_name||"-"}
+·
+${i.billing_month}
+·
+متبقي ${money(rem)}
+</option>
+`
+}).join("");
 
-      <div class="admin-form">
+c.innerHTML=
+header(
+"الدفعات",
+"تسجيل دفعة كاملة أو جزئية وإصدار إيصال."
+)+
+`
+<article class="panel admin-card">
 
-        <label>
-          الفاتورة
-          <select
-            id="payInvoice"
-            onchange="setPaymentDefaults()">
-            ${opts}
-          </select>
-        </label>
+<div class="admin-form">
 
-        <label>
-          المبلغ المدفوع
-          <input
-            id="payAmount"
-            type="text"
-            inputmode="decimal">
-        </label>
+<label>
+الفاتورة
+<select
+id="payInvoice"
+onchange="setPaymentDefaults()">
+${opts}
+</select>
+</label>
 
-        <label>
-          طريقة الدفع
-          <select id="payMethod">
-            <option value="cash">
-              نقدًا Cash
-            </option>
+<label>
+المبلغ المدفوع
+<input
+id="payAmount"
+type="text"
+inputmode="decimal">
+</label>
 
-            <option value="bank_transfer">
-              تحويل مصرفي
-            </option>
+<label>
+طريقة الدفع
 
-            <option value="other">
-              أخرى
-            </option>
-          </select>
-        </label>
+<select id="payMethod">
 
-        <label>
-          مرجع / رقم عملية
-          <input
-            id="payReference"
-            autocomplete="off">
-        </label>
+<option value="cash">
+نقدًا Cash
+</option>
 
-        <label class="full">
-          ملاحظة
-          <input
-            id="payNote"
-            autocomplete="off">
-        </label>
+<option value="bank_transfer">
+تحويل مصرفي
+</option>
 
-        <div class="full">
-          <button
-            class="action-btn"
-            onclick="recordPayment()">
-            تسجيل الدفعة وإصدار إيصال
-          </button>
-        </div>
+<option value="other">
+أخرى
+</option>
 
-      </div>
-    </article>
+</select>
+</label>
 
-    <article class="panel admin-card">
+<label>
+مرجع / رقم عملية
+<input
+id="payReference"
+autocomplete="off">
+</label>
 
-      <div class="table-wrap">
+<label class="full">
+ملاحظة
+<input
+id="payNote"
+autocomplete="off">
+</label>
 
-        <table class="admin-table">
+<div class="full">
 
-          <thead>
-            <tr>
-              <th>المشترك</th>
-              <th>الشهر</th>
-              <th>القيمة</th>
-              <th>الطريقة</th>
-              <th>الإيصال</th>
-              <th>التاريخ</th>
-              <th>الإجراء</th>
-            </tr>
-          </thead>
+<button
+class="action-btn"
+onclick="recordPayment()">
+تسجيل الدفعة وإصدار إيصال
+</button>
 
-          <tbody>
-            ${pays.map(x=>`
-              <tr>
+</div>
 
-                <td>
-                  ${x.profiles?.full_name||"-"}
-                </td>
+</div>
 
-                <td>
-                  ${x.invoices?.billing_month||"-"}
-                </td>
+</article>
 
-                <td>
-                  ${money(x.amount)}
-                </td>
+<article class="panel admin-card">
 
-                <td>
-                  ${x.payment_method||"cash"}
-                </td>
+<div class="table-wrap">
 
-                <td>
-                  ${x.receipt_no||"-"}
-                </td>
+<table class="admin-table">
 
-                <td>
-                  ${
-                    new Date(x.paid_at)
-                      .toLocaleString("ar-LB")
-                  }
-                </td>
+<thead>
 
-                <td>
-                  <button
-                    class="row-btn print"
-                    onclick="printReceipt('${x.id}')">
-                    طباعة إيصال
-                  </button>
-                </td>
+<tr>
 
-              </tr>
-            `).join("")}
-          </tbody>
+<th>المشترك</th>
+<th>الشهر</th>
+<th>القيمة</th>
+<th>الطريقة</th>
+<th>الإيصال</th>
+<th>التاريخ</th>
+<th>الإجراء</th>
 
-        </table>
+</tr>
 
-      </div>
-    </article>
-    `;
+</thead>
 
-  setPaymentDefaults()
+<tbody>
+
+${pays.map(x=>`
+<tr>
+
+<td>
+${x.profiles?.full_name||"-"}
+</td>
+
+<td>
+${x.invoices?.billing_month||"-"}
+</td>
+
+<td>
+${money(x.amount)}
+</td>
+
+<td>
+${x.payment_method||"cash"}
+</td>
+
+<td>
+${x.receipt_no||"-"}
+</td>
+
+<td>
+${new Date(x.paid_at).toLocaleString("ar-LB")}
+</td>
+
+<td>
+
+<button
+class="row-btn print"
+onclick="printReceipt('${x.id}')">
+طباعة إيصال
+</button>
+
+</td>
+
+</tr>
+`).join("")}
+
+</tbody>
+
+</table>
+
+</div>
+
+</article>
+`;
+
+setPaymentDefaults()
 }
 
 function setPaymentDefaults(){
-  let s=A("payInvoice");
+let s=A("payInvoice");
 
-  if(!s||!s.options.length)return;
+if(!s||!s.options.length)return;
 
-  A("payAmount").value=
-    Number(
-      s.options[
-        s.selectedIndex
-      ].dataset.remaining||0
-    ).toFixed(2)
+A("payAmount").value=
+Number(
+s.options[
+s.selectedIndex
+].dataset.remaining||0
+).toFixed(2)
 }
 
 async function recordPayment(){
-  let s=A("payInvoice");
+let s=A("payInvoice");
 
-  if(!s||!s.options.length)
-    return alert("لا توجد فواتير مستحقة");
+if(!s||!s.options.length)
+return alert("لا توجد فواتير مستحقة");
 
-  let o=s.options[s.selectedIndex],
-      amount=Number(A("payAmount").value),
-      remaining=Number(o.dataset.remaining),
-      method=A("payMethod").value,
-      reference=A("payReference").value.trim(),
-      note=A("payNote").value.trim();
+let o=s.options[s.selectedIndex],
+amount=Number(A("payAmount").value),
+remaining=Number(o.dataset.remaining),
+method=A("payMethod").value,
+reference=A("payReference").value.trim(),
+note=A("payNote").value.trim();
 
-  if(!Number.isFinite(amount)||amount<=0)
-    return alert("أدخل مبلغًا صحيحًا");
+if(!Number.isFinite(amount)||amount<=0)
+return alert("أدخل مبلغًا صحيحًا");
 
-  if(amount>remaining+.001)
-    return alert(
-      "المبلغ أكبر من الرصيد المتبقي"
-    );
+if(amount>remaining+.001)
+return alert(
+"المبلغ أكبر من الرصيد المتبقي"
+);
 
-  let rec=receiptNo();
+let rec=receiptNo();
 
-  let r=await sb.from("payments").insert({
-    invoice_id:s.value,
-    customer_id:o.dataset.customer,
-    amount,
-    payment_method:method,
-    receipt_no:rec,
-    reference:reference||null,
-    note:note||null
-  })
-  .select(
-    "*,profiles(full_name),invoices(billing_month,amount,status)"
-  )
-  .single();
+let r=await sb.from("payments").insert({
+invoice_id:s.value,
+customer_id:o.dataset.customer,
+amount,
+payment_method:method,
+receipt_no:rec,
+reference:reference||null,
+note:note||null
+})
+.select(
+"*,profiles(full_name),invoices(billing_month,amount,status)"
+)
+.single();
 
-  if(r.error)
-    return alert(r.error.message);
+if(r.error)
+return alert(r.error.message);
 
-  alert(
-    `تم تسجيل الدفعة بنجاح. رقم الإيصال: ${rec}`
-  );
+alert(
+`تم تسجيل الدفعة بنجاح. رقم الإيصال: ${rec}`
+);
 
-  window._lastPayment=r.data;
+window._lastPayment=r.data;
 
-  printReceiptData(r.data);
+printReceiptData(r.data);
 
-  renderAdmin("payments")
+renderAdmin("payments")
 }
 
 function printReceipt(id){
-  let x=(window._payments||[])
-    .find(y=>y.id===id);
+let x=(window._payments||[])
+.find(y=>y.id===id);
 
-  if(x)
-    printReceiptData(x)
+if(x)
+printReceiptData(x)
 }
 
 function printReceiptData(x){
-  printHtml(
-    "إيصال دفع - إشتراكات نشابة",
-    `
-    <h2>إيصال قبض</h2>
+printHtml(
+"إيصال دفع - إشتراكات نشابة",
+`
+<h2>إيصال قبض</h2>
 
-    <div class="grid">
+<div class="grid">
 
-      <div class="cell">
-        <small>رقم الإيصال</small>
-        <b>${x.receipt_no||"-"}</b>
-      </div>
+<div class="cell">
+<small>رقم الإيصال</small>
+<b>${x.receipt_no||"-"}</b>
+</div>
 
-      <div class="cell">
-        <small>المشترك</small>
-        <b>${x.profiles?.full_name||"-"}</b>
-      </div>
+<div class="cell">
+<small>المشترك</small>
+<b>${x.profiles?.full_name||"-"}</b>
+</div>
 
-      <div class="cell">
-        <small>شهر الفاتورة</small>
-        <b>${x.invoices?.billing_month||"-"}</b>
-      </div>
+<div class="cell">
+<small>شهر الفاتورة</small>
+<b>${x.invoices?.billing_month||"-"}</b>
+</div>
 
-      <div class="cell">
-        <small>طريقة الدفع</small>
-        <b>${x.payment_method||"cash"}</b>
-      </div>
+<div class="cell">
+<small>طريقة الدفع</small>
+<b>${x.payment_method||"cash"}</b>
+</div>
 
-      <div class="cell">
-        <small>المرجع</small>
-        <b>${x.reference||"-"}</b>
-      </div>
+<div class="cell">
+<small>المرجع</small>
+<b>${x.reference||"-"}</b>
+</div>
 
-      <div class="cell">
-        <small>التاريخ</small>
-        <b>
-          ${
-            new Date(
-              x.paid_at||Date.now()
-            ).toLocaleString("ar-LB")
-          }
-        </b>
-      </div>
+<div class="cell">
+<small>التاريخ</small>
+<b>
+${new Date(
+x.paid_at||Date.now()
+).toLocaleString("ar-LB")}
+</b>
+</div>
 
-    </div>
+</div>
 
-    <div class="total">
-      المبلغ المقبوض: ${money(x.amount)}
-    </div>
+<div class="total">
+المبلغ المقبوض: ${money(x.amount)}
+</div>
 
-    <p>
-      الحالة بعد الدفعة يتم تحديثها تلقائيًا حسب الرصيد المتبقي.
-    </p>
-    `
-  )
+<p>
+الحالة بعد الدفعة يتم تحديثها تلقائيًا حسب الرصيد المتبقي.
+</p>
+`
+)
 }
 
 async function faults(c){
-  let fs=(
-    await sb.from("fault_reports")
-      .select(
-        "*,profiles(full_name),areas(name),meters(meter_number)"
-      )
-      .order("created_at",{ascending:false})
-  ).data||[];
+let fs=(
+await sb.from("fault_reports")
+.select(
+"*,profiles(full_name),areas(name),meters(meter_number)"
+)
+.order("created_at",{ascending:false})
+).data||[];
 
-  window._faults=fs;
+window._faults=fs;
 
-  c.innerHTML=
-    header(
-      "الأعطال",
-      "بلاغات حقيقية مع الصور والحالة."
-    )+
-    `
-    <article class="panel admin-card">
+c.innerHTML=
+header(
+"الأعطال",
+"بلاغات حقيقية مع الصور والحالة."
+)+
+`
+<article class="panel admin-card">
 
-      <div class="table-wrap">
+<div class="table-wrap">
 
-        <table class="admin-table">
+<table class="admin-table">
 
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>المشترك</th>
-              <th>المنطقة</th>
-              <th>العطل</th>
-              <th>الحالة</th>
-              <th>الإجراء</th>
-            </tr>
-          </thead>
+<thead>
 
-          <tbody>
-            ${fs.map(f=>`
-              <tr>
+<tr>
+<th>#</th>
+<th>المشترك</th>
+<th>المنطقة</th>
+<th>العطل</th>
+<th>الحالة</th>
+<th>الإجراء</th>
+</tr>
 
-                <td>#${f.id}</td>
+</thead>
 
-                <td>
-                  ${f.profiles?.full_name}
-                </td>
+<tbody>
 
-                <td>
-                  ${f.areas?.name||"-"}
-                </td>
+${fs.map(f=>`
+<tr>
 
-                <td>
-                  ${f.fault_type}
-                </td>
+<td>#${f.id}</td>
 
-                <td>
-                  <span class="badge ${f.status}">
-                    ${f.status}
-                  </span>
-                </td>
+<td>
+${f.profiles?.full_name}
+</td>
 
-                <td>
-                  <button
-                    class="row-btn"
-                    onclick="openFaultAdmin(${f.id})">
-                    فتح
-                  </button>
-                </td>
+<td>
+${f.areas?.name||"-"}
+</td>
 
-              </tr>
-            `).join("")}
-          </tbody>
+<td>
+${f.fault_type}
+</td>
 
-        </table>
+<td>
+<span class="badge ${f.status}">
+${f.status}
+</span>
+</td>
 
-      </div>
-    </article>
-    `
+<td>
+<button
+class="row-btn"
+onclick="openFaultAdmin(${f.id})">
+فتح
+</button>
+</td>
+
+</tr>
+`).join("")}
+
+</tbody>
+
+</table>
+
+</div>
+
+</article>
+`
 }
 
 async function openFaultAdmin(id){
-  let f=window._faults.find(
-    x=>x.id===id
-  );
+let f=window._faults.find(
+x=>x.id===id
+);
 
-  let img="";
+let img="";
 
-  if(f.image_path){
-    let u=await sb.storage
-      .from("fault-images")
-      .createSignedUrl(
-        f.image_path,
-        600
-      );
+if(f.image_path){
+let u=await sb.storage
+.from("fault-images")
+.createSignedUrl(
+f.image_path,
+600
+);
 
-    if(u.data?.signedUrl)
-      img=`
-        <img
-          class="fault-thumb-large"
-          src="${u.data.signedUrl}">
-      `
-  }
+if(u.data?.signedUrl)
+img=`
+<img
+class="fault-thumb-large"
+src="${u.data.signedUrl}">
+`
+}
 
-  let old=A("faultAdminDialog");
+let old=A("faultAdminDialog");
 
-  if(old)old.remove();
+if(old)old.remove();
 
-  let d=document.createElement("dialog");
+let d=document.createElement("dialog");
 
-  d.id="faultAdminDialog";
+d.id="faultAdminDialog";
 
-  d.innerHTML=`
-  <form method="dialog">
+d.innerHTML=`
+<form method="dialog">
 
-    <div class="dialog-title">
-      <div>
-        <i data-lucide="wrench"></i>
-      </div>
+<div class="dialog-title">
 
-      <div>
-        <small>بلاغ #${f.id}</small>
-        <h3>${f.fault_type}</h3>
-      </div>
-    </div>
+<div>
+<i data-lucide="wrench"></i>
+</div>
 
-    <p>${f.description||""}</p>
+<div>
+<small>بلاغ #${f.id}</small>
+<h3>${f.fault_type}</h3>
+</div>
 
-    ${img}
+</div>
 
-    <label>
-      الحالة
+<p>${f.description||""}</p>
 
-      <select id="faStatus">
+${img}
 
-        <option
-          value="open"
-          ${f.status==="open"?"selected":""}>
-          مفتوح
-        </option>
+<label>
+الحالة
 
-        <option
-          value="scheduled"
-          ${f.status==="scheduled"?"selected":""}>
-          مجدول
-        </option>
+<select id="faStatus">
 
-        <option
-          value="repairing"
-          ${f.status==="repairing"?"selected":""}>
-          جاري الإصلاح
-        </option>
+<option
+value="open"
+${f.status==="open"?"selected":""}>
+مفتوح
+</option>
 
-        <option
-          value="resolved"
-          ${f.status==="resolved"?"selected":""}>
-          تم الحل
-        </option>
+<option
+value="scheduled"
+${f.status==="scheduled"?"selected":""}>
+مجدول
+</option>
 
-      </select>
-    </label>
+<option
+value="repairing"
+${f.status==="repairing"?"selected":""}>
+جاري الإصلاح
+</option>
 
-    <label>
-      ملاحظة للمشترك
+<option
+value="resolved"
+${f.status==="resolved"?"selected":""}>
+تم الحل
+</option>
 
-      <textarea
-        id="faNote"
-        rows="3">${f.admin_note||""}</textarea>
-    </label>
+</select>
 
-    <div class="dialog-actions">
+</label>
 
-      <button
-        value="cancel"
-        class="cancel">
-        إغلاق
-      </button>
+<label>
+ملاحظة للمشترك
 
-      <button
-        type="button"
-        class="send"
-        onclick="saveFaultAdmin(${f.id})">
-        حفظ
-      </button>
+<textarea
+id="faNote"
+rows="3">${f.admin_note||""}</textarea>
 
-    </div>
+</label>
 
-  </form>
-  `;
+<div class="dialog-actions">
 
-  document.body.appendChild(d);
+<button
+value="cancel"
+class="cancel">
+إغلاق
+</button>
 
-  d.showModal();
+<button
+type="button"
+class="send"
+onclick="saveFaultAdmin(${f.id})">
+حفظ
+</button>
 
-  icons()
+</div>
+
+</form>
+`;
+
+document.body.appendChild(d);
+
+d.showModal();
+
+icons()
 }
 
 async function saveFaultAdmin(id){
-  let r=await sb.from("fault_reports")
-    .update({
-      status:A("faStatus").value,
-      admin_note:A("faNote").value,
-      updated_at:new Date().toISOString()
-    })
-    .eq("id",id);
+let r=await sb.from("fault_reports")
+.update({
+status:A("faStatus").value,
+admin_note:A("faNote").value,
+updated_at:new Date().toISOString()
+})
+.eq("id",id);
 
-  if(r.error)
-    return alert(r.error.message);
+if(r.error)
+return alert(r.error.message);
 
-  A("faultAdminDialog").close();
+A("faultAdminDialog").close();
 
-  renderAdmin("faults")
+renderAdmin("faults")
 }
 
 async function notifications(c){
-  let ar=(
-    await sb.from("areas")
-      .select("*")
-  ).data||[];
+let ar=(
+await sb.from("areas")
+.select("*")
+).data||[];
 
-  let ns=(
-    await sb.from("notifications")
-      .select("*,areas(name)")
-      .order("created_at",{ascending:false})
-  ).data||[];
+let ns=(
+await sb.from("notifications")
+.select("*,areas(name)")
+.order("created_at",{ascending:false})
+).data||[];
 
-  window._areas=ar;
+window._areas=ar;
 
-  c.innerHTML=
-    header(
-      "التنبيهات",
-      "إرسال تنبيه عام أو لمنطقة.",
-      `
-      <button
-        class="primary"
-        onclick="openNotificationDialog()">
-        إرسال تنبيه
-      </button>
-      `
-    )+
-    `
-    <article class="panel admin-card">
+c.innerHTML=
+header(
+"التنبيهات",
+"إرسال تنبيه عام أو لمنطقة.",
+`
+<button
+class="primary"
+onclick="openNotificationDialog()">
+إرسال تنبيه
+</button>
+`
+)+
+`
+<article class="panel admin-card">
 
-      ${ns.map(n=>`
-        <div class="notification-item">
-          <b>
-            ${n.title}
-            ·
-            ${n.areas?.name||"الكل"}
-          </b>
+${ns.map(n=>`
+<div class="notification-item">
 
-          <p>${n.message}</p>
-        </div>
-      `).join("")}
+<b>
+${n.title}
+·
+${n.areas?.name||"الكل"}
+</b>
 
-    </article>
-    `
+<p>${n.message}</p>
+
+</div>
+`).join("")}
+
+</article>
+`
 }
 
 function openNotificationDialog(){
-  A("notifArea").innerHTML=
-    '<option value="">الكل</option>'+
-    window._areas.map(a=>`
-      <option value="${a.id}">
-        ${a.name}
-      </option>
-    `).join("");
+A("notifArea").innerHTML=
+'<option value="">الكل</option>'+
+window._areas.map(a=>`
+<option value="${a.id}">
+${a.name}
+</option>
+`).join("");
 
-  A("notificationDialog").showModal();
+A("notificationDialog").showModal();
 
-  icons()
+icons()
 }
 
 async function sendNotification(){
-  let r=await sb.from("notifications").insert({
-    area_id:A("notifArea").value||null,
-    title:A("notifTitle").value,
-    message:A("notifMessage").value,
-    severity:"warning"
-  });
+let r=await sb.from("notifications").insert({
+area_id:A("notifArea").value||null,
+title:A("notifTitle").value,
+message:A("notifMessage").value,
+severity:"warning"
+});
 
-  if(r.error)
-    return alert(r.error.message);
+if(r.error)
+return alert(r.error.message);
 
-  A("notificationDialog").close();
+A("notificationDialog").close();
 
-  alert("تم إرسال التنبيه");
+alert("تم إرسال التنبيه");
 
-  renderAdmin("notifications")
+renderAdmin("notifications")
 }
 
 async function settings(c){
-  let s=(
-    await sb.from("app_settings")
-      .select("*")
-      .eq("id",1)
-      .single()
-  ).data||{
-    kwh_price:.65,
-    currency:"USD"
-  };
+let s=(
+await sb.from("app_settings")
+.select("*")
+.eq("id",1)
+.single()
+).data||{
+kwh_price:.65,
+currency:"USD"
+};
 
-  c.innerHTML=
-    header(
-      "الإعدادات",
-      "إعدادات التسعير العامة للمنصة."
-    )+
-    `
-    <article class="panel admin-card">
+c.innerHTML=
+header(
+"الإعدادات",
+"إعدادات التسعير العامة للمنصة."
+)+
+`
+<article class="panel admin-card">
 
-      <div class="admin-form">
+<div class="admin-form">
 
-        <label>
-          سعر 1 kWh بالدولار
+<label>
+سعر 1 kWh بالدولار
 
-          <input
-            id="setKwhPrice"
-            type="text"
-            inputmode="decimal"
-            value="${Number(s.kwh_price).toFixed(2)}">
-        </label>
+<input
+id="setKwhPrice"
+type="text"
+inputmode="decimal"
+value="${Number(s.kwh_price).toFixed(2)}">
 
-        <label>
-          العملة
+</label>
 
-          <input
-            value="${s.currency||"USD"}"
-            readonly>
-        </label>
+<label>
+العملة
 
-        <div class="full">
+<input
+value="${s.currency||"USD"}"
+readonly>
 
-          <p style="color:#8fa7b8;font-size:10px">
-            كل فاتورة جديدة تحفظ سعر الكيلو المستخدم فيها،
-            لذلك تغيير السعر لاحقًا لا يغيّر الفواتير القديمة.
-          </p>
+</label>
 
-          <button
-            class="action-btn"
-            onclick="saveSettings()">
-            حفظ سعر الكيلوواط
-          </button>
+<div class="full">
 
-        </div>
+<p style="color:#8fa7b8;font-size:10px">
+كل فاتورة جديدة تحفظ سعر الكيلو المستخدم فيها،
+لذلك تغيير السعر لاحقًا لا يغيّر الفواتير القديمة.
+</p>
 
-      </div>
-    </article>
-    `
+<button
+class="action-btn"
+onclick="saveSettings()">
+حفظ سعر الكيلوواط
+</button>
+
+</div>
+
+</div>
+
+</article>
+`
 }
 
 async function saveSettings(){
-  let price=Number(
-    A("setKwhPrice").value
-  );
+let price=Number(
+A("setKwhPrice").value
+);
 
-  if(!Number.isFinite(price)||price<0)
-    return alert("أدخل سعرًا صحيحًا");
+if(!Number.isFinite(price)||price<0)
+return alert("أدخل سعرًا صحيحًا");
 
-  let r=await sb.from("app_settings")
-    .update({
-      kwh_price:price,
-      updated_at:new Date().toISOString()
-    })
-    .eq("id",1);
+let r=await sb.from("app_settings")
+.update({
+kwh_price:price,
+updated_at:new Date().toISOString()
+})
+.eq("id",1);
 
-  if(r.error)
-    return alert(r.error.message);
+if(r.error)
+return alert(r.error.message);
 
-  alert(
-    "تم تحديث سعر الكيلوواط إلى $"+
-    price.toFixed(2)
-  );
+alert(
+"تم تحديث سعر الكيلوواط إلى $"+
+price.toFixed(2)
+);
 
-  renderAdmin("settings")
+renderAdmin("settings")
 }
 
 document.querySelectorAll(".side")
-  .forEach(
-    b=>b.onclick=()=>{
-      renderAdmin(b.dataset.page);
-      A("sidebar").classList.remove("open")
-    }
-  );
+.forEach(
+b=>b.onclick=()=>{
+renderAdmin(b.dataset.page);
+A("sidebar").classList.remove("open")
+}
+);
 
 A("mobileMenuBtn").onclick=()=>
-  A("sidebar").classList.toggle("open");
+A("sidebar").classList.toggle("open");
 
 injectEnhancedStyles();
 
