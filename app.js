@@ -26,15 +26,16 @@ function receiptNo(){
 
 function getNashabehLogoSrc(){
   let imgs=[...document.querySelectorAll("img")];
-  let x=imgs.find(i=>/nashabeh|logo/i.test(i.src||""));
-  return x?.src||new URL("assets/nashabeh-logo.png",location.href).href;
+  let logo=imgs.find(i=>/nashabeh|logo/i.test(i.src||""));
+  return logo?.src||new URL("assets/nashabeh-logo.png",location.href).href;
 }
 
 /* =========================================================
-   SMART METER DESIGN
+   NASHABEH SMART METER
    ========================================================= */
 
 function injectEnhancedStyles(){
+
   if(A("nashabehEnhancedStyles"))return;
 
   let st=document.createElement("style");
@@ -42,137 +43,167 @@ function injectEnhancedStyles(){
 
   st.textContent=`
 
-  .nashabeh-smart-meter{
-    position:relative!important;
-    width:235px!important;
-    min-height:300px!important;
-    box-sizing:border-box!important;
-    margin:auto!important;
-    padding:43px 17px 17px!important;
-
-    background:
-      linear-gradient(145deg,
-        #f1f6f8 0%,
-        #a7b2b8 7%,
-        #536169 13%,
-        #10191f 19%,
-        #081117 100%)!important;
-
-    border:2px solid #8defff!important;
-    border-radius:26px!important;
-
-    box-shadow:
-      0 0 0 3px rgba(41,225,255,.10),
-      0 0 24px rgba(0,213,255,.38),
-      0 14px 35px rgba(0,0,0,.55),
-      inset 0 0 22px rgba(255,255,255,.12),
-      inset 0 -18px 32px rgba(0,0,0,.65)!important;
-
-    overflow:visible!important;
-
-    animation:
-      meterFloat 4.5s ease-in-out infinite,
-      meterGlow 3s ease-in-out infinite;
-  }
-
-  .nashabeh-smart-meter::before,
-  .nashabeh-smart-meter::after{
-    content:"";
-    position:absolute;
-    top:112px;
-    width:31px;
-    height:54px;
-
-    background:
-      linear-gradient(145deg,#d7dfe2,#7d898f 45%,#303b41);
-
-    border:2px solid #73838a;
-    z-index:-1;
-
-    box-shadow:
-      inset 0 0 7px rgba(255,255,255,.28),
-      0 5px 12px rgba(0,0,0,.4);
-  }
-
-  .nashabeh-smart-meter::before{
-    right:-31px;
-    border-radius:0 18px 18px 0;
-  }
-
-  .nashabeh-smart-meter::after{
-    left:-31px;
-    border-radius:18px 0 0 18px;
-  }
-
-  .nashabeh-meter-title{
-    position:absolute;
-    top:17px;
-    left:14px;
-    right:14px;
-
-    color:#f4fbff;
-    text-align:center;
-
-    font-family:Arial,sans-serif;
-    font-size:8px;
-    font-weight:800;
-
-    letter-spacing:.055em;
-    opacity:.94;
-
-    text-shadow:0 0 5px rgba(255,255,255,.22);
-  }
-
-  .nashabeh-smart-meter .meter-screen{
-    position:relative!important;
-
+  .nashabeh-meter-slot{
+    width:190px!important;
+    min-width:190px!important;
+    max-width:190px!important;
     display:flex!important;
     align-items:center!important;
     justify-content:center!important;
-
-    width:100%!important;
-    min-height:67px!important;
-
-    box-sizing:border-box!important;
-
-    margin:0!important;
-    padding:10px 7px 18px!important;
-
-    background:
-      linear-gradient(180deg,#020605 0%,#061008 100%)!important;
-
-    border:
-      2px solid #153d44!important;
-
-    border-radius:11px!important;
-
-    color:#a8ff61!important;
-
-    font-family:"Courier New",Consolas,monospace!important;
-    font-size:27px!important;
-    font-weight:900!important;
-
-    letter-spacing:.115em!important;
-    line-height:1!important;
-
-    text-align:center!important;
-
-    box-shadow:
-      inset 0 0 20px #000,
-      inset 0 0 7px rgba(91,255,48,.20),
-      0 0 15px rgba(59,255,47,.20)!important;
-
-    text-shadow:
-      0 0 4px #7cff52,
-      0 0 10px #5bff32!important;
-
-    overflow:hidden!important;
-
-    animation:screenPulse 2.5s ease-in-out infinite;
+    overflow:visible!important;
+    margin:auto!important;
   }
 
-  .nashabeh-smart-meter .meter-screen::before{
+  .nashabeh-smart-meter{
+    position:relative;
+    width:180px;
+    box-sizing:border-box;
+
+    padding:35px 12px 12px;
+
+    border-radius:21px;
+
+    background:
+      linear-gradient(
+        145deg,
+        #e6ecef 0%,
+        #9ca7ac 5%,
+        #526068 10%,
+        #172127 16%,
+        #080f14 100%
+      );
+
+    border:2px solid #82eaff;
+
+    box-shadow:
+      0 0 0 3px rgba(0,221,255,.08),
+      0 0 21px rgba(0,221,255,.30),
+      0 13px 27px rgba(0,0,0,.55),
+      inset 0 0 15px rgba(255,255,255,.12),
+      inset 0 -16px 24px rgba(0,0,0,.72);
+
+    animation:
+      nshMeterFloat 4.5s ease-in-out infinite,
+      nshMeterGlow 3.2s ease-in-out infinite;
+  }
+
+  .nashabeh-smart-meter:before,
+  .nashabeh-smart-meter:after{
     content:"";
+    position:absolute;
+    top:92px;
+
+    width:23px;
+    height:43px;
+
+    background:
+      linear-gradient(145deg,#d7dfe3,#69767d 50%,#2e383d);
+
+    border:1px solid #73828a;
+
+    z-index:-1;
+
+    box-shadow:
+      inset 0 0 5px rgba(255,255,255,.3),
+      0 4px 8px rgba(0,0,0,.45);
+  }
+
+  .nashabeh-smart-meter:before{
+    right:-23px;
+    border-radius:0 14px 14px 0;
+  }
+
+  .nashabeh-smart-meter:after{
+    left:-23px;
+    border-radius:14px 0 0 14px;
+  }
+
+  .nsh-meter-top{
+    position:absolute;
+    top:13px;
+    left:10px;
+    right:10px;
+
+    text-align:center;
+
+    color:#edfaff;
+
+    font-family:Arial,sans-serif;
+    font-size:6.7px;
+    font-weight:800;
+
+    letter-spacing:.04em;
+
+    white-space:nowrap;
+  }
+
+  .nsh-meter-scale{
+    direction:ltr;
+
+    display:grid;
+    grid-template-columns:repeat(6,1fr);
+
+    padding:0 4px 4px;
+
+    color:#d9e6e9;
+
+    font-family:Arial,sans-serif;
+    font-size:6px;
+    font-weight:700;
+
+    text-align:center;
+  }
+
+  .nsh-meter-scale span:last-child{
+    color:#16ddff;
+  }
+
+  .nsh-meter-display{
+    position:relative;
+
+    width:100%;
+    min-height:52px;
+
+    box-sizing:border-box;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    overflow:hidden;
+
+    padding:8px 5px 16px;
+
+    border-radius:8px;
+
+    background:
+      linear-gradient(180deg,#020604,#061109);
+
+    border:2px solid #173d43;
+
+    box-shadow:
+      inset 0 0 17px #000,
+      inset 0 0 7px rgba(84,255,49,.16),
+      0 0 10px rgba(74,255,46,.18);
+
+    color:#aaff62;
+
+    font-family:"Courier New",Consolas,monospace;
+    font-size:22px;
+    font-weight:900;
+
+    letter-spacing:.095em;
+
+    text-shadow:
+      0 0 4px #75ff4d,
+      0 0 9px #55ff32;
+
+    animation:nshScreenPulse 2.4s ease-in-out infinite;
+  }
+
+  .nsh-meter-display:before{
+    content:"";
+
     position:absolute;
     inset:0;
 
@@ -180,95 +211,64 @@ function injectEnhancedStyles(){
       linear-gradient(
         180deg,
         transparent 0%,
-        transparent 38%,
-        rgba(178,255,150,.10) 48%,
-        rgba(178,255,150,.18) 50%,
-        transparent 58%,
+        transparent 40%,
+        rgba(156,255,125,.10) 49%,
+        rgba(156,255,125,.18) 51%,
+        transparent 60%,
         transparent 100%
       );
 
-    transform:translateY(-125%);
+    transform:translateY(-120%);
 
-    animation:
-      meterScan 2.8s linear infinite;
-
-    pointer-events:none;
+    animation:nshMeterScan 2.7s linear infinite;
   }
 
-  .nashabeh-smart-meter .meter-screen::after{
-    content:"kWh"!important;
+  .nsh-kwh{
+    position:absolute;
 
-    position:absolute!important;
-    right:9px!important;
-    bottom:5px!important;
+    right:7px;
+    bottom:4px;
 
-    margin:0!important;
-
-    font-family:Arial,sans-serif!important;
-    font-size:10px!important;
-    font-weight:900!important;
-
-    letter-spacing:.03em!important;
-
-    color:#ffffff!important;
-    opacity:1!important;
-
-    text-shadow:
-      0 0 5px #66ff83,
-      0 0 10px rgba(49,255,100,.6)!important;
-  }
-
-  .meter-scale{
-    direction:ltr;
-
-    display:grid;
-    grid-template-columns:repeat(6,1fr);
-
-    padding:6px 5px 2px;
-
-    color:#dbe6e9;
+    color:#fff;
 
     font-family:Arial,sans-serif;
-    font-size:7px;
-    font-weight:700;
+    font-size:8px;
+    font-weight:900;
 
-    text-align:center;
+    text-shadow:
+      0 0 4px #64ff82,
+      0 0 8px rgba(53,255,101,.55);
   }
 
-  .meter-scale span:last-child{
-    color:#13ddff;
-  }
+  .nsh-meter-face{
+    margin-top:6px;
 
-  .meter-face{
-    margin-top:7px;
+    padding:9px;
 
-    padding:11px;
+    border-radius:11px;
 
     background:
-      linear-gradient(150deg,#050a0d,#0b141a);
+      linear-gradient(150deg,#05090c,#0a1218);
 
-    border:
-      1px solid #26363d;
-
-    border-radius:14px;
+    border:1px solid #27383f;
 
     box-shadow:
-      inset 0 0 18px rgba(0,0,0,.7);
+      inset 0 0 13px rgba(0,0,0,.78);
   }
 
-  .meter-middle{
+  .nsh-meter-main{
+    direction:ltr;
+
     display:grid;
-    grid-template-columns:86px 1fr;
-    gap:13px;
+    grid-template-columns:66px 1fr;
+    gap:9px;
 
     align-items:center;
-
-    direction:ltr;
   }
 
-  .meter-logo-wrap{
-    width:82px;
-    height:82px;
+  .nsh-logo{
+    width:62px;
+    height:62px;
 
     box-sizing:border-box;
 
@@ -279,169 +279,173 @@ function injectEnhancedStyles(){
     border-radius:50%;
 
     background:
-      radial-gradient(circle,#13100a,#050505 69%);
+      radial-gradient(circle,#151107,#030405 72%);
 
-    border:
-      1px solid #e4b400;
+    border:1px solid #e0ad00;
 
     box-shadow:
-      0 0 5px #ffc400,
-      0 0 18px rgba(255,196,0,.23),
-      inset 0 0 13px #000;
+      0 0 5px rgba(255,199,0,.72),
+      0 0 14px rgba(255,184,0,.18),
+      inset 0 0 10px #000;
   }
 
-  .meter-logo-wrap img{
+  .nsh-logo img{
     display:block;
 
-    max-width:73px;
-    max-height:73px;
+    max-width:56px;
+    max-height:56px;
 
     object-fit:contain;
 
     filter:
-      drop-shadow(0 0 4px #ffc400)
-      drop-shadow(0 0 8px rgba(255,186,0,.35));
+      drop-shadow(0 0 4px rgba(255,194,0,.72));
   }
 
-  .meter-specs{
+  .nsh-meter-specs{
     direction:ltr;
+
     text-align:left;
 
-    color:#f2f8fa;
+    color:#f1f8fa;
 
     font-family:Arial,sans-serif;
     font-weight:800;
 
-    line-height:1.9;
+    line-height:1.8;
   }
 
-  .meter-specs .volt{
-    font-size:12px;
+  .nsh-meter-specs .voltage{
+    font-size:10px;
   }
 
-  .meter-specs .amp{
-    font-size:12px;
+  .nsh-meter-specs .amp{
+    font-size:11px;
   }
 
-  .meter-specs .energy-name{
-    margin-top:3px;
+  .nsh-meter-specs .brand{
+    margin-top:2px;
 
-    color:#cddde2;
+    color:#afc2c8;
 
-    font-size:8px;
-    letter-spacing:.075em;
+    font-size:6.5px;
+    letter-spacing:.06em;
   }
 
-  .meter-current-strip{
+  .nsh-power-strip{
     position:relative;
 
-    height:52px;
+    height:39px;
 
-    margin-top:11px;
+    margin-top:9px;
 
     overflow:hidden;
 
-    border:
-      1px solid #00cfe9;
+    border-radius:8px;
 
-    border-radius:11px;
+    border:1px solid #00cbe7;
 
     background:
-      radial-gradient(circle at 20% 50%,rgba(0,221,255,.08),transparent 45%),
-      linear-gradient(180deg,#061218,#03090d);
+      radial-gradient(
+        circle at 15% 50%,
+        rgba(0,221,255,.08),
+        transparent 42%
+      ),
+      linear-gradient(180deg,#071217,#03090d);
 
     box-shadow:
-      inset 0 0 13px rgba(0,181,213,.18),
-      0 0 8px rgba(0,225,255,.09);
+      inset 0 0 10px rgba(0,199,230,.14);
   }
 
-  .meter-current-strip::before{
+  .nsh-power-strip:before{
     content:"";
+
     position:absolute;
 
-    width:35%;
-    height:100%;
-
     top:0;
-    left:-40%;
+    left:-45%;
+
+    width:40%;
+    height:100%;
 
     background:
       linear-gradient(
         90deg,
         transparent,
-        rgba(49,244,255,.11),
+        rgba(54,242,255,.14),
         transparent
       );
 
-    animation:
-      currentSweep 2.1s linear infinite;
+    animation:nshSweep 2s linear infinite;
   }
 
-  .meter-current-strip svg{
+  .nsh-power-strip svg{
     position:absolute;
 
-    left:9px;
-    top:8px;
+    left:7px;
+    top:5px;
 
-    width:74px;
-    height:35px;
+    width:55px;
+    height:29px;
 
     overflow:visible;
   }
 
-  .meter-current-line{
+  .nsh-wave{
     fill:none;
 
-    stroke:#39f5ff;
+    stroke:#29f2ff;
     stroke-width:2;
 
     stroke-linecap:round;
     stroke-linejoin:round;
 
-    stroke-dasharray:9 6;
+    stroke-dasharray:8 5;
 
     filter:
-      drop-shadow(0 0 3px #25f3ff)
-      drop-shadow(0 0 6px rgba(0,231,255,.45));
+      drop-shadow(0 0 3px #24efff)
+      drop-shadow(0 0 6px rgba(0,230,255,.35));
 
-    animation:
-      flowCurrent .55s linear infinite;
+    animation:nshCurrent .48s linear infinite;
   }
 
-  .meter-current-text{
+  .nsh-smart-label{
     position:absolute;
 
-    right:31px;
-    top:18px;
+    left:66px;
+    right:23px;
+    top:13px;
 
-    color:#edfaff;
+    text-align:center;
+
+    color:#f0fbff;
 
     font-family:Arial,sans-serif;
-    font-size:9px;
+    font-size:7px;
     font-weight:800;
 
-    letter-spacing:.06em;
+    letter-spacing:.035em;
+
+    white-space:nowrap;
   }
 
-  .meter-current-led{
+  .nsh-power-led{
     position:absolute;
 
-    right:10px;
-    top:21px;
+    right:8px;
+    top:15px;
 
-    width:9px;
-    height:9px;
+    width:8px;
+    height:8px;
 
     border-radius:50%;
 
-    background:#61ff79;
+    background:#63ff79;
 
     box-shadow:
-      0 0 5px #61ff79,
-      0 0 12px #61ff79;
+      0 0 4px #63ff79,
+      0 0 10px #63ff79;
 
-    animation:
-      powerBlink 1s ease-in-out infinite;
+    animation:nshLed 1s ease-in-out infinite;
   }
 
   .payment-actions,
@@ -476,72 +480,95 @@ function injectEnhancedStyles(){
     border-color:#ff6b72;
   }
 
-  @keyframes meterFloat{
+  @keyframes nshMeterFloat{
+
     0%,100%{
       transform:translateY(0);
     }
 
     50%{
-      transform:translateY(-5px);
+      transform:translateY(-4px);
     }
+
   }
 
-  @keyframes meterGlow{
+  @keyframes nshMeterGlow{
+
     0%,100%{
       box-shadow:
-        0 0 0 3px rgba(41,225,255,.08),
-        0 0 20px rgba(0,213,255,.28),
-        0 14px 35px rgba(0,0,0,.55),
-        inset 0 0 22px rgba(255,255,255,.12),
-        inset 0 -18px 32px rgba(0,0,0,.65);
+        0 0 0 3px rgba(0,221,255,.07),
+        0 0 17px rgba(0,221,255,.24),
+        0 13px 27px rgba(0,0,0,.55),
+        inset 0 0 15px rgba(255,255,255,.12),
+        inset 0 -16px 24px rgba(0,0,0,.72);
     }
 
     50%{
       box-shadow:
-        0 0 0 4px rgba(41,225,255,.13),
-        0 0 35px rgba(0,213,255,.46),
-        0 16px 40px rgba(0,0,0,.6),
-        inset 0 0 22px rgba(255,255,255,.14),
-        inset 0 -18px 32px rgba(0,0,0,.65);
+        0 0 0 3px rgba(0,221,255,.13),
+        0 0 28px rgba(0,221,255,.40),
+        0 15px 31px rgba(0,0,0,.60),
+        inset 0 0 15px rgba(255,255,255,.14),
+        inset 0 -16px 24px rgba(0,0,0,.72);
     }
+
   }
 
-  @keyframes meterScan{
+  @keyframes nshMeterScan{
+
     0%{
-      transform:translateY(-125%);
+      transform:translateY(-120%);
     }
 
     100%{
-      transform:translateY(125%);
+      transform:translateY(120%);
     }
+
   }
 
-  @keyframes screenPulse{
+  @keyframes nshScreenPulse{
+
     0%,100%{
       text-shadow:
-        0 0 4px #75ff4f,
-        0 0 8px #50ff2d;
+        0 0 4px #75ff4d,
+        0 0 8px #55ff32;
     }
 
     50%{
       text-shadow:
-        0 0 6px #8cff62,
-        0 0 14px #50ff2d,
-        0 0 20px rgba(70,255,45,.35);
+        0 0 6px #8dff69,
+        0 0 13px #55ff32,
+        0 0 18px rgba(84,255,50,.28);
     }
+
   }
 
-  @keyframes flowCurrent{
+  @keyframes nshCurrent{
+
     from{
       stroke-dashoffset:0;
     }
 
     to{
-      stroke-dashoffset:-30;
+      stroke-dashoffset:-26;
     }
+
   }
 
-  @keyframes powerBlink{
+  @keyframes nshSweep{
+
+    from{
+      left:-45%;
+    }
+
+    to{
+      left:120%;
+    }
+
+  }
+
+  @keyframes nshLed{
+
     0%,100%{
       opacity:.55;
       transform:scale(.82);
@@ -549,373 +576,541 @@ function injectEnhancedStyles(){
 
     50%{
       opacity:1;
-      transform:scale(1.15);
+      transform:scale(1.17);
     }
+
   }
 
-  @keyframes currentSweep{
-    from{
-      left:-40%;
-    }
+  @media(max-width:700px){
 
-    to{
-      left:120%;
+    .nashabeh-meter-slot{
+      width:160px!important;
+      min-width:160px!important;
+      max-width:160px!important;
     }
-  }
-
-  @media(max-width:850px){
 
     .nashabeh-smart-meter{
-      width:205px!important;
-      min-height:285px!important;
+      width:150px;
+      padding:
+        31px 9px 9px;
     }
 
-    .nashabeh-smart-meter .meter-screen{
-      font-size:23px!important;
+    .nsh-meter-display{
+      font-size:18px;
     }
 
-    .meter-middle{
-      grid-template-columns:72px 1fr;
+    .nsh-meter-main{
+      grid-template-columns:
+        53px 1fr;
     }
 
-    .meter-logo-wrap{
-      width:68px;
-      height:68px;
+    .nsh-logo{
+      width:50px;
+      height:50px;
     }
 
-    .meter-logo-wrap img{
-      max-width:61px;
-      max-height:61px;
+    .nsh-logo img{
+      max-width:45px;
+      max-height:45px;
     }
 
-    .meter-specs .volt,
-    .meter-specs .amp{
-      font-size:10px;
-    }
-
-    .meter-current-text{
+    .nsh-meter-specs .voltage{
       font-size:8px;
     }
+
+    .nsh-meter-specs .amp{
+      font-size:9px;
+    }
+
   }
 
   `;
 
   document.head.appendChild(st);
+
 }
+
+
+/*
+  IMPORTANT:
+  We completely replace the OLD meter visual.
+  لذلك الدوائر والعناصر القديمة لا تبقى موجودة.
+*/
 
 function enhanceMeter(){
-  let screen=document.querySelector(".meter-screen");
 
-  if(!screen)return;
+  let oldScreen=
+    document.querySelector(
+      ".meter-screen"
+    );
 
-  let host=screen.parentElement;
+  if(!oldScreen)return;
 
-  if(!host)return;
+  let oldHost=
+    oldScreen.parentElement;
 
-  host.classList.add("nashabeh-smart-meter");
+  if(!oldHost)return;
 
-  if(host.querySelector(".nashabeh-meter-title"))return;
+  if(
+    oldHost.classList.contains(
+      "nashabeh-meter-slot"
+    )
+  ){
+    return;
+  }
 
-  let title=document.createElement("div");
-  title.className="nashabeh-meter-title";
-  title.textContent="AC SINGLE PHASE TWO WIRE STATIC kWh METER";
+  let reading=
+    oldScreen.textContent
+    .trim()||
+    "0000000";
 
-  host.insertBefore(title,screen);
+  oldHost.className=
+    oldHost.className+
+    " nashabeh-meter-slot";
 
-  let scale=document.createElement("div");
+  /*
+    حذف كامل الديزاين القديم:
+    - الثلاث دوائر
+    - النص القديم
+    - kWh القديم
+    - أي meter body قديم
+  */
 
-  scale.className="meter-scale";
+  oldHost.innerHTML=`
 
-  scale.innerHTML=`
-    <span>10K</span>
-    <span>1K</span>
-    <span>100</span>
-    <span>10</span>
-    <span>1</span>
-    <span>0.1</span>
-  `;
+    <div class="nashabeh-smart-meter">
 
-  screen.insertAdjacentElement("afterend",scale);
-
-  let face=document.createElement("div");
-  face.className="meter-face";
-
-  face.innerHTML=`
-    <div class="meter-middle">
-
-      <div class="meter-logo-wrap">
-        <img
-          src="${getNashabehLogoSrc()}"
-          alt="نشابة">
+      <div class="nsh-meter-top">
+        AC SINGLE PHASE TWO WIRE STATIC kWh METER
       </div>
 
-      <div class="meter-specs">
+      <div class="nsh-meter-scale">
 
-        <div class="volt">
-          230V ~ 50Hz
+        <span>10K</span>
+        <span>1K</span>
+        <span>100</span>
+        <span>10</span>
+        <span>1</span>
+        <span>0.1</span>
+
+      </div>
+
+      <div class="nsh-meter-display">
+
+        <span class="nsh-reading">
+          ${reading}
+        </span>
+
+        <span class="nsh-kwh">
+          kWh
+        </span>
+
+      </div>
+
+      <div class="nsh-meter-face">
+
+        <div class="nsh-meter-main">
+
+          <div class="nsh-logo">
+
+            <img
+              src="${getNashabehLogoSrc()}"
+              alt="نشابة">
+
+          </div>
+
+          <div class="nsh-meter-specs">
+
+            <div class="voltage">
+              230V ~ 50Hz
+            </div>
+
+            <div class="amp">
+              5A
+            </div>
+
+            <div class="brand">
+              NASHABEH ENERGY
+            </div>
+
+          </div>
+
         </div>
 
-        <div class="amp">
-          5A
-        </div>
+        <div class="nsh-power-strip">
 
-        <div class="energy-name">
-          NASHABEH ENERGY
+          <svg
+            viewBox="0 0 80 30"
+            aria-hidden="true">
+
+            <polyline
+              class="nsh-wave"
+              points="
+              0,15
+              9,15
+              14,5
+              20,26
+              26,8
+              32,21
+              39,15
+              47,15
+              52,8
+              58,24
+              64,11
+              70,19
+              80,15
+              ">
+            </polyline>
+
+          </svg>
+
+          <span class="nsh-smart-label">
+            SMART ENERGY METER
+          </span>
+
+          <span class="nsh-power-led"></span>
+
         </div>
 
       </div>
 
     </div>
 
-    <div class="meter-current-strip">
-
-      <svg
-        viewBox="0 0 80 30"
-        aria-hidden="true">
-
-        <polyline
-          class="meter-current-line"
-          points="
-          0,15
-          9,15
-          14,5
-          20,26
-          26,8
-          32,21
-          39,15
-          47,15
-          52,8
-          58,24
-          64,11
-          70,19
-          80,15
-          ">
-        </polyline>
-
-      </svg>
-
-      <span class="meter-current-text">
-        SMART ENERGY METER
-      </span>
-
-      <span class="meter-current-led"></span>
-
-    </div>
   `;
 
-  scale.insertAdjacentElement("afterend",face);
 }
 
+
 /* =========================================================
-   PRINT
+   PRINTING
    ========================================================= */
 
 function printHtml(title,body){
-  let w=window.open("","_blank","width=900,height=1000");
+
+  let w=
+    window.open(
+      "",
+      "_blank",
+      "width=900,height=1000"
+    );
 
   if(!w){
-    return alert("اسمح بفتح النوافذ المنبثقة للطباعة");
+
+    return alert(
+      "اسمح بفتح النوافذ المنبثقة للطباعة"
+    );
+
   }
 
-  let logo=getNashabehLogoSrc();
+  let logo=
+    getNashabehLogoSrc();
 
   w.document.write(`
+
   <!doctype html>
 
-  <html dir="rtl" lang="ar">
+  <html
+    dir="rtl"
+    lang="ar">
 
   <head>
 
-  <meta charset="utf-8">
+    <meta charset="utf-8">
 
-  <title>${title}</title>
+    <title>
+      ${title}
+    </title>
 
-  <style>
+    <style>
 
-  body{
-    font-family:Arial,Tahoma,sans-serif;
-    color:#111;
-    background:#fff;
-    padding:28px;
-  }
+      body{
 
-  .sheet{
-    max-width:760px;
-    margin:auto;
+        font-family:
+          Arial,
+          Tahoma,
+          sans-serif;
 
-    border:1px solid #ddd;
-    border-radius:16px;
+        color:#111;
 
-    padding:28px;
-  }
+        background:#fff;
 
-  .head{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
+        padding:28px;
 
-    border-bottom:2px solid #d6a51e;
+      }
 
-    padding-bottom:16px;
-    margin-bottom:22px;
-  }
+      .sheet{
 
-  .head img{
-    width:86px;
-    height:86px;
-    object-fit:contain;
-  }
+        max-width:760px;
 
-  .brand h1{
-    margin:0;
-    color:#b88200;
-  }
+        margin:auto;
 
-  .brand p{
-    margin:5px 0;
-    color:#666;
-  }
+        border:
+          1px solid #ddd;
 
-  .grid{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:12px;
-  }
+        border-radius:16px;
 
-  .cell{
-    border:1px solid #e5e5e5;
-    border-radius:10px;
-    padding:10px;
-  }
+        padding:28px;
 
-  .cell small{
-    display:block;
-    color:#777;
-    margin-bottom:4px;
-  }
+      }
 
-  .total{
-    font-size:28px;
-    font-weight:700;
-    color:#b88200;
-    margin:22px 0;
-  }
+      .head{
 
-  .foot{
-    margin-top:28px;
-    padding-top:15px;
+        display:flex;
 
-    border-top:1px solid #ddd;
+        justify-content:
+          space-between;
 
-    font-size:12px;
-    color:#777;
-  }
+        align-items:center;
 
-  @media print{
-    body{
-      padding:0;
-    }
+        border-bottom:
+          2px solid #d6a51e;
 
-    .sheet{
-      border:0;
-    }
-  }
+        padding-bottom:16px;
 
-  </style>
+        margin-bottom:22px;
+
+      }
+
+      .head img{
+
+        width:86px;
+
+        height:86px;
+
+        object-fit:contain;
+
+      }
+
+      .brand h1{
+
+        margin:0;
+
+        color:#b88200;
+
+      }
+
+      .brand p{
+
+        margin:5px 0;
+
+        color:#666;
+
+      }
+
+      .grid{
+
+        display:grid;
+
+        grid-template-columns:
+          1fr 1fr;
+
+        gap:12px;
+
+      }
+
+      .cell{
+
+        border:
+          1px solid #e5e5e5;
+
+        border-radius:10px;
+
+        padding:10px;
+
+      }
+
+      .cell small{
+
+        display:block;
+
+        color:#777;
+
+        margin-bottom:4px;
+
+      }
+
+      .total{
+
+        font-size:28px;
+
+        font-weight:700;
+
+        color:#b88200;
+
+        margin:22px 0;
+
+      }
+
+      .foot{
+
+        margin-top:28px;
+
+        padding-top:15px;
+
+        border-top:
+          1px solid #ddd;
+
+        font-size:12px;
+
+        color:#777;
+
+      }
+
+      @media print{
+
+        body{
+          padding:0;
+        }
+
+        .sheet{
+          border:0;
+        }
+
+      }
+
+    </style>
 
   </head>
 
   <body>
 
-  <div class="sheet">
+    <div class="sheet">
 
-    <div class="head">
+      <div class="head">
 
-      <div class="brand">
+        <div class="brand">
 
-        <h1>
-          إشتراكات نشابة
-        </h1>
+          <h1>
+            إشتراكات نشابة
+          </h1>
 
-        <p>
-          خدمة الكهرباء والطاقة - طرابلس
-        </p>
+          <p>
+            خدمة الكهرباء والطاقة - طرابلس
+          </p>
+
+        </div>
+
+        <img src="${logo}">
 
       </div>
 
-      <img src="${logo}">
+      ${body}
+
+      <div class="foot">
+
+        تم إصدار هذه الوثيقة إلكترونيًا
+        من نظام إشتراكات نشابة.
+
+      </div>
 
     </div>
 
-    ${body}
+    <script>
 
-    <div class="foot">
-      تم إصدار هذه الوثيقة إلكترونيًا من نظام إشتراكات نشابة.
-    </div>
+      window.onload=
+        ()=>
+        setTimeout(
+          ()=>window.print(),
+          300
+        );
 
-  </div>
-
-  <script>
-  window.onload=()=>setTimeout(()=>window.print(),300)
-  <\/script>
+    <\/script>
 
   </body>
 
   </html>
+
   `);
 
   w.document.close();
+
 }
+
 
 /* =========================================================
    AUTH
    ========================================================= */
 
 function authMsg(t,ok=false){
+
   let e=A("authMessage");
 
   e.textContent=t;
 
-  e.classList.remove("hidden");
+  e.classList.remove(
+    "hidden"
+  );
 
   e.style.background=
-    ok?"#0d3b20":"#3a1016";
+    ok
+    ?"#0d3b20"
+    :"#3a1016";
 
   e.style.color=
-    ok?"#8dff9b":"#ff9499";
+    ok
+    ?"#8dff9b"
+    :"#ff9499";
+
 }
+
 
 function showFirstAdmin(){
-  A("loginPane").classList.add("hidden");
-  A("firstAdminPane").classList.remove("hidden");
+
+  A("loginPane")
+    .classList
+    .add("hidden");
+
+  A("firstAdminPane")
+    .classList
+    .remove("hidden");
+
 }
+
 
 function showLogin(){
-  A("firstAdminPane").classList.add("hidden");
-  A("loginPane").classList.remove("hidden");
+
+  A("firstAdminPane")
+    .classList
+    .add("hidden");
+
+  A("loginPane")
+    .classList
+    .remove("hidden");
+
 }
 
+
 async function login(){
+
   try{
 
     let {error}=
-      await sb.auth.signInWithPassword({
+      await sb.auth
+      .signInWithPassword({
 
         email:
-          A("loginEmail").value.trim(),
+          A("loginEmail")
+          .value
+          .trim(),
 
         password:
-          A("loginPassword").value
+          A("loginPassword")
+          .value
 
       });
 
     if(error){
-      return authMsg(error.message);
+
+      return authMsg(
+        error.message
+      );
+
     }
 
     await boot();
 
-  }catch(e){
+  }
+  catch(e){
 
     authMsg(
       e?.message||
@@ -923,21 +1118,30 @@ async function login(){
     );
 
   }
+
 }
+
 
 async function createFirstAdmin(){
 
   let full_name=
-    A("adminName").value.trim();
+    A("adminName")
+    .value
+    .trim();
 
   let email=
-    A("adminEmail").value.trim();
+    A("adminEmail")
+    .value
+    .trim();
 
   let phone=
-    A("adminPhone").value.trim();
+    A("adminPhone")
+    .value
+    .trim();
 
   let password=
-    A("adminPassword").value;
+    A("adminPassword")
+    .value;
 
   if(
     !full_name||
@@ -952,7 +1156,8 @@ async function createFirstAdmin(){
   }
 
   let {data,error}=
-    await sb.auth.signUp({
+    await sb.auth
+    .signUp({
 
       email,
 
@@ -968,20 +1173,28 @@ async function createFirstAdmin(){
     });
 
   if(error){
-    return authMsg(error.message);
+
+    return authMsg(
+      error.message
+    );
+
   }
 
   if(!data.session){
 
     return authMsg(
+
       "تم إنشاء الحساب. أكد البريد إذا طلب Supabase ذلك ثم سجّل الدخول.",
+
       true
+
     );
 
   }
 
   let r=
-    await sb.functions.invoke(
+    await sb.functions
+    .invoke(
       "bootstrap-admin",
       {
         body:{}
@@ -998,12 +1211,18 @@ async function createFirstAdmin(){
   }
 
   boot();
+
 }
 
+
 async function logout(){
+
   await sb.auth.signOut();
+
   location.reload();
+
 }
+
 
 /* =========================================================
    BOOT
@@ -1012,8 +1231,12 @@ async function logout(){
 async function boot(){
 
   let s=
-    (await sb.auth.getSession())
-    .data.session;
+    (
+      await sb.auth
+      .getSession()
+    )
+    .data
+    .session;
 
   if(!s)return;
 
@@ -1023,87 +1246,130 @@ async function boot(){
     await sb
     .from("profiles")
     .select("*,areas(*)")
-    .eq("id",s.user.id)
+    .eq(
+      "id",
+      s.user.id
+    )
     .single();
 
   if(q.error){
-    return authMsg(q.error.message);
+
+    return authMsg(
+      q.error.message
+    );
+
   }
 
   profile=q.data;
 
   A("authScreen")
-    .classList.add("hidden");
+    .classList
+    .add("hidden");
 
   A("topbar")
-    .classList.remove("hidden");
+    .classList
+    .remove("hidden");
 
   A("appRoot")
-    .classList.remove("hidden");
+    .classList
+    .remove("hidden");
 
-  A("loggedUser").textContent=
-    profile.full_name+
-    " · "+
-    (
-      profile.role==="admin"
-      ?"مدير"
-      :"مشترك"
+  A("loggedUser")
+    .textContent=
+
+      profile.full_name+
+      " · "+
+      (
+        profile.role==="admin"
+        ?"مدير"
+        :"مشترك"
+      );
+
+  if(
+    profile.role==="admin"
+  ){
+
+    A("adminApp")
+      .classList
+      .remove("hidden");
+
+    A("customerApp")
+      .classList
+      .add("hidden");
+
+    renderAdmin(
+      "dashboard"
     );
 
-  if(profile.role==="admin"){
-
-    A("adminApp")
-      .classList.remove("hidden");
+  }
+  else{
 
     A("customerApp")
-      .classList.add("hidden");
-
-    renderAdmin("dashboard");
-
-  }else{
-
-    A("customerApp")
-      .classList.remove("hidden");
+      .classList
+      .remove("hidden");
 
     A("adminApp")
-      .classList.add("hidden");
+      .classList
+      .add("hidden");
 
     loadCustomer();
 
   }
 
   icons();
+
 }
 
+
 /* =========================================================
-   CUSTOMER
+   STATUS
    ========================================================= */
 
 function stateAr(s){
 
-  return ({
-    stable:"الشبكة مستقرة",
-    monitoring:"قيد المتابعة",
-    high_load:"ضغط مرتفع",
-    outage:"انقطاع عام"
-  })[s]||"غير محدد";
+  return({
+
+    stable:
+      "الشبكة مستقرة",
+
+    monitoring:
+      "قيد المتابعة",
+
+    high_load:
+      "ضغط مرتفع",
+
+    outage:
+      "انقطاع عام"
+
+  })[s]||
+  "غير محدد";
 
 }
+
 
 function stateClass(s){
 
-  return s==="stable"
+  return(
+    s==="stable"
     ?"stable"
-    :s==="high_load"||
-     s==="outage"
-      ?"danger"
-      :"warning";
+    :
+    s==="high_load"||
+    s==="outage"
+    ?"danger"
+    :"warning"
+  );
 
 }
 
+
+/* =========================================================
+   CUSTOMER LOAD
+   ========================================================= */
+
 async function loadCustomer(){
 
-  let uid=session.user.id;
+  let uid=
+    session.user.id;
 
   let [
     m,
@@ -1116,15 +1382,34 @@ async function loadCustomer(){
 
     sb.from("meters")
       .select("*")
-      .eq("customer_id",uid)
-      .eq("active",true)
+      .eq(
+        "customer_id",
+        uid
+      )
+      .eq(
+        "active",
+        true
+      )
       .maybeSingle(),
 
-    /* أحدث فاتورة فعلية */
+    /*
+      مهم جداً:
+      أحدث فاتورة فعلياً حسب تاريخ إنشائها.
+      مش billing_month.
+    */
+
     sb.from("invoices")
       .select("*")
-      .eq("customer_id",uid)
-      .order("created_at",{ascending:false})
+      .eq(
+        "customer_id",
+        uid
+      )
+      .order(
+        "created_at",
+        {
+          ascending:false
+        }
+      )
       .limit(1)
       .maybeSingle(),
 
@@ -1132,17 +1417,38 @@ async function loadCustomer(){
       .select(
         "*,invoices(billing_month,amount,status)"
       )
-      .eq("customer_id",uid)
-      .order("paid_at",{ascending:false}),
+      .eq(
+        "customer_id",
+        uid
+      )
+      .order(
+        "paid_at",
+        {
+          ascending:false
+        }
+      ),
 
     sb.from("fault_reports")
       .select("*")
-      .eq("customer_id",uid)
-      .order("created_at",{ascending:false}),
+      .eq(
+        "customer_id",
+        uid
+      )
+      .order(
+        "created_at",
+        {
+          ascending:false
+        }
+      ),
 
     sb.from("notifications")
       .select("*")
-      .order("created_at",{ascending:false})
+      .order(
+        "created_at",
+        {
+          ascending:false
+        }
+      )
 
   ]);
 
@@ -1150,23 +1456,30 @@ async function loadCustomer(){
 
     profile,
 
-    area:profile.areas,
+    area:
+      profile.areas,
 
-    meter:m.data,
+    meter:
+      m.data,
 
-    invoice:i.data,
+    invoice:
+      i.data,
 
-    payments:p.data||[],
+    payments:
+      p.data||[],
 
-    faults:f.data||[],
+    faults:
+      f.data||[],
 
     notifications:
       (n.data||[])
       .filter(
         x=>
           !x.area_id||
-          x.area_id===profile.area_id||
-          x.customer_id===uid
+          x.area_id===
+          profile.area_id||
+          x.customer_id===
+          uid
       ),
 
     readings:[]
@@ -1178,7 +1491,9 @@ async function loadCustomer(){
     customer.readings=
       (
         await sb
-        .from("meter_readings")
+        .from(
+          "meter_readings"
+        )
         .select("*")
         .eq(
           "meter_id",
@@ -1186,50 +1501,68 @@ async function loadCustomer(){
         )
         .order(
           "reading_date",
-          {ascending:false}
+          {
+            ascending:false
+          }
         )
       ).data||[];
 
   }
 
   renderCustomer();
+
 }
+
+
+/* =========================================================
+   CUSTOMER HOME
+   ========================================================= */
 
 function renderCustomer(){
 
   injectEnhancedStyles();
 
-  let c=customer.profile;
+  let c=
+    customer.profile;
 
-  let a=customer.area;
+  let a=
+    customer.area;
 
-  let m=customer.meter;
+  let m=
+    customer.meter;
 
-  let inv=customer.invoice;
+  let inv=
+    customer.invoice;
 
-  let r=customer.readings[0];
+  let r=
+    customer.readings[0];
 
-  A("customerName").textContent=
+  A("customerName")
+    .textContent=
     c.full_name;
 
-  A("customerArea").textContent=
+  A("customerArea")
+    .textContent=
     a?.name||
     "غير محددة";
 
-  A("customerMeter").textContent=
+  A("customerMeter")
+    .textContent=
     m?.meter_number||
     "غير مربوط";
 
-  let screen=
-    document.querySelector(
+  let oldScreen=
+    document
+    .querySelector(
       ".meter-screen"
     );
 
-  if(screen){
+  if(oldScreen){
 
-    screen.textContent=
+    oldScreen.textContent=
       String(
-        r?.reading_value??0
+        r?.reading_value??
+        0
       )
       .padStart(
         7,
@@ -1238,9 +1571,15 @@ function renderCustomer(){
 
   }
 
+  /*
+    هون منحول العداد القديم
+    للعداد الجديد بالكامل.
+  */
+
   enhanceMeter();
 
-  let st=A("customerStatus");
+  let st=
+    A("customerStatus");
 
   st.className=
     "status "+
@@ -1252,40 +1591,55 @@ function renderCustomer(){
 
   st.innerHTML=
     c.active
-    ?'<i data-lucide="circle-check-big"></i> اشتراك فعّال'
-    :'<i data-lucide="circle-x"></i> اشتراك غير فعّال';
+    ?
+    '<i data-lucide="circle-check-big"></i> اشتراك فعّال'
+    :
+    '<i data-lucide="circle-x"></i> اشتراك غير فعّال';
 
-  A("networkCard").className=
-    "panel network-card "+
-    stateClass(
-      a?.network_status
-    );
+  A("networkCard")
+    .className=
 
-  A("networkStateText").textContent=
+      "panel network-card "+
+      stateClass(
+        a?.network_status
+      );
+
+  A("networkStateText")
+    .textContent=
     stateAr(
       a?.network_status
     );
 
-  A("networkMessage").textContent=
-    a?.status_message||
-    (
-      "حالة شبكة "+
-      (a?.name||"")
-    );
+  A("networkMessage")
+    .textContent=
 
-  A("currentBill").textContent=
-    inv
-    ?money(inv.amount)
-    :"$ 0.00";
+      a?.status_message||
+      (
+        "حالة شبكة "+
+        (a?.name||"")
+      );
 
-  let bp=
-    document.querySelector(
+  /*
+    أحدث فاتورة
+  */
+
+  A("currentBill")
+    .textContent=
+
+      inv
+      ?money(inv.amount)
+      :"$ 0.00";
+
+  let billDate=
+    document
+    .querySelector(
       ".bill-card p"
     );
 
-  if(bp){
+  if(billDate){
 
-    bp.innerHTML=
+    billDate.innerHTML=
+
       '<i data-lucide="calendar-days"></i> '+
       (
         inv?.due_date||
@@ -1294,14 +1648,19 @@ function renderCustomer(){
 
   }
 
-  A("notifCount").textContent=
-    customer.notifications.length;
+  A("notifCount")
+    .textContent=
+    customer
+    .notifications
+    .length;
 
   icons();
+
 }
 
+
 /* =========================================================
-   CUSTOMER TABS
+   CUSTOMER BOTTOM NAV
    ========================================================= */
 
 function setBottom(btn){
@@ -1314,11 +1673,17 @@ function setBottom(btn){
   )
   .forEach(
     x=>
-      x.classList.remove("active")
+      x.classList.remove(
+        "active"
+      )
   );
 
-  btn.classList.add("active");
+  btn.classList.add(
+    "active"
+  );
+
 }
+
 
 function showCustomerHome(btn){
 
@@ -1329,21 +1694,31 @@ function showCustomerHome(btn){
 
 }
 
+
+/* =========================================================
+   CUSTOMER PAGES
+   ========================================================= */
+
 async function showCustomerTab(type,btn){
 
   setBottom(btn);
 
-  let p=A("customerContent");
+  let p=
+    A("customerContent");
 
-  let c=customer.profile;
+  let c=
+    customer.profile;
 
-  let inv=customer.invoice;
+  let inv=
+    customer.invoice;
 
-  let m=customer.meter;
+  let m=
+    customer.meter;
 
   if(type==="invoice"){
 
     p.innerHTML=
+
       inv
       ?`
 
@@ -1388,8 +1763,12 @@ async function showCustomerTab(type,btn){
             inv.consumption??
             Math.max(
               0,
-              Number(inv.current_reading)-
-              Number(inv.previous_reading)
+              Number(
+                inv.current_reading
+              )-
+              Number(
+                inv.previous_reading
+              )
             )
           }
           kWh
@@ -1427,7 +1806,9 @@ async function showCustomerTab(type,btn){
         </span>
 
         <b style="color:#ffc72c">
+
           ${money(inv.amount)}
+
         </b>
 
       </div>
@@ -1482,10 +1863,18 @@ async function showCustomerTab(type,btn){
   if(type==="payments"){
 
     p.innerHTML=
+
       "<h3>دفعاتي</h3>"+
+
       (
-        customer.payments.length
-        ?customer.payments.map(
+        customer
+        .payments
+        .length
+
+        ?
+        customer
+        .payments
+        .map(
           x=>`
 
           <div class="detail-row">
@@ -1516,8 +1905,13 @@ async function showCustomerTab(type,btn){
           </div>
 
           `
-        ).join("")
-        :"<p>لا توجد دفعات.</p>"
+        )
+        .join("")
+
+        :
+
+        "<p>لا توجد دفعات.</p>"
+
       );
 
   }
@@ -1525,18 +1919,28 @@ async function showCustomerTab(type,btn){
   if(type==="readings"){
 
     p.innerHTML=
+
       "<h3>قراءات العداد</h3>"+
+
       (
-        customer.readings.length
-        ?customer.readings.map(
+        customer
+        .readings
+        .length
+
+        ?
+        customer
+        .readings
+        .map(
           x=>`
 
           <div class="detail-row">
 
             <span>
+
               ${x.billing_month}
               ·
               ${x.reading_date}
+
             </span>
 
             <b>
@@ -1546,8 +1950,13 @@ async function showCustomerTab(type,btn){
           </div>
 
           `
-        ).join("")
-        :"<p>لا توجد قراءات.</p>"
+        )
+        .join("")
+
+        :
+
+        "<p>لا توجد قراءات.</p>"
+
       );
 
   }
@@ -1556,57 +1965,57 @@ async function showCustomerTab(type,btn){
 
     p.innerHTML=`
 
-    <h3>
-      حسابي
-    </h3>
+      <h3>
+        حسابي
+      </h3>
 
-    <div class="detail-row">
+      <div class="detail-row">
 
-      <span>
-        الاسم
-      </span>
+        <span>
+          الاسم
+        </span>
 
-      <b>
-        ${c.full_name}
-      </b>
+        <b>
+          ${c.full_name}
+        </b>
 
-    </div>
+      </div>
 
-    <div class="detail-row">
+      <div class="detail-row">
 
-      <span>
-        الهاتف
-      </span>
+        <span>
+          الهاتف
+        </span>
 
-      <b>
-        ${c.phone||"-"}
-      </b>
+        <b>
+          ${c.phone||"-"}
+        </b>
 
-    </div>
+      </div>
 
-    <div class="detail-row">
+      <div class="detail-row">
 
-      <span>
-        رقم العداد
-      </span>
+        <span>
+          رقم العداد
+        </span>
 
-      <b>
-        ${m?.meter_number||"-"}
-      </b>
+        <b>
+          ${m?.meter_number||"-"}
+        </b>
 
-    </div>
+      </div>
 
-    <div class="detail-row">
+      <div class="detail-row">
 
-      <span>
-        العلبة
-      </span>
+        <span>
+          العلبة
+        </span>
 
-      <b>
-        ${customer.area?.name||"-"}
-      </b>
+        <b>
+          ${customer.area?.name||"-"}
+        </b>
 
-    </div>
+      </div>
 
     `;
 
@@ -1615,10 +2024,19 @@ async function showCustomerTab(type,btn){
   if(type==="notifications"){
 
     p.innerHTML=
+
       "<h3>التنبيهات</h3>"+
+
       (
-        customer.notifications.length
-        ?customer.notifications.map(
+        customer
+        .notifications
+        .length
+
+        ?
+
+        customer
+        .notifications
+        .map(
           x=>`
 
           <div class="notification-item">
@@ -1634,8 +2052,13 @@ async function showCustomerTab(type,btn){
           </div>
 
           `
-        ).join("")
-        :"<p>لا توجد تنبيهات.</p>"
+        )
+        .join("")
+
+        :
+
+        "<p>لا توجد تنبيهات.</p>"
+
       );
 
   }
@@ -1655,18 +2078,24 @@ async function showCustomerTab(type,btn){
 
         let u=
           await sb.storage
-          .from("fault-images")
+          .from(
+            "fault-images"
+          )
           .createSignedUrl(
             f.image_path,
             600
           );
 
-        if(u.data?.signedUrl){
+        if(
+          u.data?.signedUrl
+        ){
 
           im=`
+
           <img
             class="fault-thumb"
             src="${u.data.signedUrl}">
+
           `;
 
         }
@@ -1675,34 +2104,36 @@ async function showCustomerTab(type,btn){
 
       h+=`
 
-      <div class="fault-item">
+        <div class="fault-item">
 
-        <b>
-          #${f.id}
-          ·
-          ${f.fault_type}
-        </b>
+          <b>
 
-        <p>
-          ${f.description||""}
-        </p>
+            #${f.id}
+            ·
+            ${f.fault_type}
 
-        <p>
+          </b>
 
-          الحالة:
-          ${f.status}
+          <p>
+            ${f.description||""}
+          </p>
 
-          ${
-            f.admin_note
-            ?" · "+f.admin_note
-            :""
-          }
+          <p>
 
-        </p>
+            الحالة:
+            ${f.status}
 
-        ${im}
+            ${
+              f.admin_note
+              ?" · "+f.admin_note
+              :""
+            }
 
-      </div>
+          </p>
+
+          ${im}
+
+        </div>
 
       `;
 
@@ -1713,11 +2144,15 @@ async function showCustomerTab(type,btn){
   }
 
   icons();
+
 }
+
 
 function printCustomerInvoice(){
 
-  if(!customer.invoice)return;
+  if(
+    !customer.invoice
+  )return;
 
   printInvoiceData(
 
@@ -1743,8 +2178,9 @@ function printCustomerInvoice(){
 
 }
 
+
 /* =========================================================
-   FAULT REPORT CUSTOMER
+   CUSTOMER FAULT
    ========================================================= */
 
 function openFaultDialog(){
@@ -1756,18 +2192,23 @@ function openFaultDialog(){
 
 }
 
+
 async function submitFault(){
 
   let type=
-    A("faultType").value;
+    A("faultType")
+    .value;
 
   let description=
-    A("faultDescription").value;
+    A("faultDescription")
+    .value;
 
   let file=
-    document.querySelector(
+    document
+    .querySelector(
       '#faultDialog input[type="file"]'
-    ).files[0];
+    )
+    .files[0];
 
   if(!type){
 
@@ -1782,6 +2223,7 @@ async function submitFault(){
   if(file){
 
     image_path=
+
       session.user.id+
       "/"+
       Date.now()+
@@ -1792,7 +2234,9 @@ async function submitFault(){
 
     let up=
       await sb.storage
-      .from("fault-images")
+      .from(
+        "fault-images"
+      )
       .upload(
         image_path,
         file
@@ -1801,8 +2245,10 @@ async function submitFault(){
     if(up.error){
 
       return alert(
+
         "فشل رفع الصورة: "+
         up.error.message
+
       );
 
     }
@@ -1811,7 +2257,9 @@ async function submitFault(){
 
   let r=
     await sb
-    .from("fault_reports")
+    .from(
+      "fault_reports"
+    )
     .insert({
 
       customer_id:
@@ -1856,59 +2304,73 @@ async function submitFault(){
 
 }
 
+
 /* =========================================================
-   ADMIN
+   ADMIN HEADER
    ========================================================= */
 
 function header(t,d,a=""){
 
   return `
 
-  <div class="admin-header">
+    <div class="admin-header">
 
-    <div>
+      <div>
 
-      <span class="eyebrow">
-        NASHABEH ENERGY CONTROL CENTER
-      </span>
+        <span class="eyebrow">
 
-      <h2>
-        ${t}
-      </h2>
+          NASHABEH ENERGY CONTROL CENTER
 
-      <p>
-        ${d}
-      </p>
+        </span>
+
+        <h2>
+          ${t}
+        </h2>
+
+        <p>
+          ${d}
+        </p>
+
+      </div>
+
+      ${a}
 
     </div>
-
-    ${a}
-
-  </div>
 
   `;
 
 }
+
+
+/* =========================================================
+   ADMIN DASHBOARD
+   ========================================================= */
 
 async function renderAdmin(page="dashboard"){
 
   currentPage=page;
 
   document
-  .querySelectorAll(".side")
+  .querySelectorAll(
+    ".side"
+  )
   .forEach(
+
     b=>
-      b.classList.toggle(
-        "active",
-        b.dataset.page===page
-      )
+
+    b.classList.toggle(
+      "active",
+      b.dataset.page===page
+    )
+
   );
 
-  let c=A("adminContent");
+  let c=
+    A("adminContent");
 
   if(page==="dashboard"){
 
-    let [
+    let[
       pr,
       ar,
       me,
@@ -1919,7 +2381,9 @@ async function renderAdmin(page="dashboard"){
     await Promise.all([
 
       sb.from("profiles")
-        .select("id,active,role"),
+        .select(
+          "id,active,role"
+        ),
 
       sb.from("areas")
         .select("*"),
@@ -1927,11 +2391,15 @@ async function renderAdmin(page="dashboard"){
       sb.from("meters")
         .select(
           "id",
-          {count:"exact"}
+          {
+            count:"exact"
+          }
         ),
 
       sb.from("fault_reports")
-        .select("id,status"),
+        .select(
+          "id,status"
+        ),
 
       sb.from("invoices")
         .select(
@@ -1949,44 +2417,62 @@ async function renderAdmin(page="dashboard"){
       (pr.data||[])
       .filter(
         x=>
-          x.role==="customer"
+        x.role==="customer"
       );
 
     let open=
       (fa.data||[])
       .filter(
         x=>
-          x.status!=="resolved"
+        x.status!=="resolved"
       )
       .length;
 
     let paidMap={};
 
-    for(let x of(pay.data||[])){
+    for(
+      let x of
+      (pay.data||[])
+    ){
 
-      paidMap[x.invoice_id]=
-        (
-          paidMap[x.invoice_id]||
-          0
-        )+
-        Number(x.amount);
+      paidMap[
+        x.invoice_id
+      ]=
+
+      (
+        paidMap[
+          x.invoice_id
+        ]||
+        0
+      )+
+
+      Number(
+        x.amount
+      );
 
     }
 
     let unpaid=
+
       (iv.data||[])
       .reduce(
+
         (s,x)=>
-          s+
-          Math.max(
-            0,
-            Number(x.amount)-
-            Number(
-              paidMap[x.id]||
-              0
-            )
-          ),
+
+        s+
+        Math.max(
+          0,
+          Number(
+            x.amount
+          )-
+          Number(
+            paidMap[x.id]||
+            0
+          )
+        ),
+
         0
+
       );
 
     c.innerHTML=
@@ -1994,7 +2480,9 @@ async function renderAdmin(page="dashboard"){
       header(
         "لوحة التحكم",
         "بيانات حقيقية من Supabase."
-      )+
+      )
+
+      +
 
       `
 
@@ -2033,7 +2521,8 @@ async function renderAdmin(page="dashboard"){
               ${
                 ps.filter(
                   x=>x.active
-                ).length
+                )
+                .length
               }
 
             </strong>
@@ -2057,7 +2546,8 @@ async function renderAdmin(page="dashboard"){
               ${
                 ps.filter(
                   x=>!x.active
-                ).length
+                )
+                .length
               }
 
             </strong>
@@ -2113,7 +2603,12 @@ async function renderAdmin(page="dashboard"){
             </small>
 
             <strong>
-              ${(ar.data||[]).length}
+
+              ${
+                (ar.data||[])
+                .length
+              }
+
             </strong>
 
           </div>
@@ -2223,6 +2718,7 @@ async function renderAdmin(page="dashboard"){
 
 }
 
+
 /* =========================================================
    SUBSCRIBERS
    ========================================================= */
@@ -2250,228 +2746,239 @@ async function subscribers(c){
       )
       .order(
         "created_at",
-        {ascending:false}
+        {
+          ascending:false
+        }
       )
     ).data||[];
 
   c.innerHTML=
 
-  header(
-    "المشتركون",
-    "إنشاء حساب مشترك وربطه بالعداد والعلبة والقراءة الافتتاحية."
-  )+
+    header(
+      "المشتركون",
+      "إنشاء حساب مشترك وربطه بالعداد والعلبة والقراءة الافتتاحية."
+    )
 
-  `
+    +
 
-  <article class="panel admin-card">
+    `
 
-    <div class="admin-form">
+    <article class="panel admin-card">
 
-      <label>
+      <div class="admin-form">
 
-        الاسم
+        <label>
 
-        <input id="newName">
+          الاسم
 
-      </label>
+          <input id="newName">
 
-      <label>
+        </label>
 
-        الإيميل
+        <label>
 
-        <input
-          id="newEmail"
-          type="email"
-          autocomplete="off">
+          الإيميل
 
-      </label>
+          <input
+            id="newEmail"
+            type="email"
+            autocomplete="off">
 
-      <label>
+        </label>
 
-        الهاتف
+        <label>
 
-        <input id="newPhone">
+          الهاتف
 
-      </label>
+          <input id="newPhone">
 
-      <label>
+        </label>
 
-        كلمة المرور
+        <label>
 
-        <input
-          id="newPassword"
-          type="password"
-          autocomplete="new-password"
-          placeholder="8 أحرف على الأقل">
+          كلمة المرور
 
-      </label>
+          <input
+            id="newPassword"
+            type="password"
+            autocomplete="new-password"
+            placeholder="8 أحرف على الأقل">
 
-      <label>
+        </label>
 
-        العلبة
+        <label>
 
-        <select id="newArea">
+          العلبة
 
-          ${
-            areas.map(
-              a=>`
+          <select id="newArea">
 
-              <option value="${a.id}">
-                ${a.name}
-              </option>
+            ${
+              areas.map(
+                a=>`
 
-              `
-            )
-            .join("")
-          }
+                <option
+                  value="${a.id}">
 
-        </select>
+                  ${a.name}
 
-      </label>
+                </option>
 
-      <label>
+                `
+              )
+              .join("")
+            }
 
-        رقم العداد
+          </select>
 
-        <input
-          id="newMeter"
-          autocomplete="off"
-          placeholder="مثال: 756">
+        </label>
 
-      </label>
+        <label>
 
-      <label>
+          رقم العداد
 
-        القراءة الحالية عند بدء النظام
+          <input
+            id="newMeter"
+            autocomplete="off"
+            placeholder="مثال: 756">
 
-        <input
-          id="newInitialReading"
-          type="text"
-          inputmode="numeric"
-          autocomplete="off"
-          placeholder="مثال: 850">
+        </label>
 
-      </label>
+        <label>
 
-      <div class="full">
+          القراءة الحالية عند بدء النظام
 
-        <button
-          class="action-btn"
-          onclick="createCustomer()">
+          <input
+            id="newInitialReading"
+            type="text"
+            inputmode="numeric"
+            autocomplete="off"
+            placeholder="مثال: 850">
 
-          إنشاء حساب المشترك
+        </label>
 
-        </button>
+        <div class="full">
+
+          <button
+            class="action-btn"
+            onclick="createCustomer()">
+
+            إنشاء حساب المشترك
+
+          </button>
+
+        </div>
 
       </div>
 
-    </div>
+    </article>
 
-  </article>
+    <article class="panel admin-card">
 
-  <article class="panel admin-card">
+      <div class="table-wrap">
 
-    <div class="table-wrap">
+        <table class="admin-table">
 
-      <table class="admin-table">
+          <thead>
 
-        <thead>
+            <tr>
 
-          <tr>
+              <th>
+                الاسم
+              </th>
 
-            <th>
-              الاسم
-            </th>
+              <th>
+                الهاتف
+              </th>
 
-            <th>
-              الهاتف
-            </th>
+              <th>
+                المنطقة
+              </th>
 
-            <th>
-              المنطقة
-            </th>
+              <th>
+                الحالة
+              </th>
 
-            <th>
-              الحالة
-            </th>
+              <th>
+                تغيير
+              </th>
 
-            <th>
-              تغيير
-            </th>
+            </tr>
 
-          </tr>
+          </thead>
 
-        </thead>
+          <tbody>
 
-        <tbody>
+            ${
+              ps.map(
+                p=>`
 
-          ${
-            ps.map(
-              p=>`
+                <tr>
 
-              <tr>
+                  <td>
+                    ${p.full_name}
+                  </td>
 
-                <td>
-                  ${p.full_name}
-                </td>
+                  <td>
+                    ${p.phone||"-"}
+                  </td>
 
-                <td>
-                  ${p.phone||"-"}
-                </td>
-
-                <td>
-                  ${p.areas?.name||"-"}
-                </td>
-
-                <td>
-
-                  <span
-                    class="badge ${p.active?"active":"inactive"}">
-
+                  <td>
                     ${
-                      p.active
-                      ?"فعّال"
-                      :"غير فعّال"
+                      p.areas?.name||
+                      "-"
                     }
+                  </td>
 
-                  </span>
+                  <td>
 
-                </td>
+                    <span
+                      class="badge ${p.active?"active":"inactive"}">
 
-                <td>
+                      ${
+                        p.active
+                        ?"فعّال"
+                        :"غير فعّال"
+                      }
 
-                  <button
-                    class="row-btn"
-                    onclick="toggleCustomer('${p.id}',${!p.active})">
+                    </span>
 
-                    ${
-                      p.active
-                      ?"تعطيل"
-                      :"تفعيل"
-                    }
+                  </td>
 
-                  </button>
+                  <td>
 
-                </td>
+                    <button
+                      class="row-btn"
+                      onclick="toggleCustomer('${p.id}',${!p.active})">
 
-              </tr>
+                      ${
+                        p.active
+                        ?"تعطيل"
+                        :"تفعيل"
+                      }
 
-              `
-            )
-            .join("")
-          }
+                    </button>
 
-        </tbody>
+                  </td>
 
-      </table>
+                </tr>
 
-    </div>
+                `
+              )
+              .join("")
+            }
 
-  </article>
+          </tbody>
 
-  `;
+        </table>
+
+      </div>
+
+    </article>
+
+    `;
 
 }
+
 
 async function createCustomer(){
 
@@ -2580,7 +3087,8 @@ async function createCustomer(){
   };
 
   let r=
-    await sb.functions.invoke(
+    await sb.functions
+    .invoke(
       "create-customer",
       {
         body
@@ -2604,6 +3112,7 @@ async function createCustomer(){
   );
 
 }
+
 
 async function toggleCustomer(id,active){
 
@@ -2632,6 +3141,7 @@ async function toggleCustomer(id,active){
 
 }
 
+
 /* =========================================================
    AREAS
    ========================================================= */
@@ -2648,89 +3158,94 @@ async function areas(c){
 
   c.innerHTML=
 
-  header(
-    "العلب والمناطق",
-    "الحالة تظهر فورًا عند المشترك."
-  )+
+    header(
+      "العلب والمناطق",
+      "الحالة تظهر فورًا عند المشترك."
+    )
 
-  `
+    +
 
-  <article class="panel admin-card">
+    `
 
-    <div class="boxes-grid">
+    <article class="panel admin-card">
 
-      ${
-        ar.map(
-          a=>`
+      <div class="boxes-grid">
 
-          <div class="area-card area-editor">
+        ${
+          ar.map(
+            a=>`
 
-            <h4>
-              ${a.name}
-            </h4>
+            <div
+              class="area-card area-editor">
 
-            <select id="as_${a.id}">
+              <h4>
+                ${a.name}
+              </h4>
 
-              <option
-                value="stable"
-                ${a.network_status==="stable"?"selected":""}>
+              <select
+                id="as_${a.id}">
 
-                مستقرة
+                <option
+                  value="stable"
+                  ${a.network_status==="stable"?"selected":""}>
 
-              </option>
+                  مستقرة
 
-              <option
-                value="monitoring"
-                ${a.network_status==="monitoring"?"selected":""}>
+                </option>
 
-                متابعة
+                <option
+                  value="monitoring"
+                  ${a.network_status==="monitoring"?"selected":""}>
 
-              </option>
+                  متابعة
 
-              <option
-                value="high_load"
-                ${a.network_status==="high_load"?"selected":""}>
+                </option>
 
-                ضغط مرتفع
+                <option
+                  value="high_load"
+                  ${a.network_status==="high_load"?"selected":""}>
 
-              </option>
+                  ضغط مرتفع
 
-              <option
-                value="outage"
-                ${a.network_status==="outage"?"selected":""}>
+                </option>
 
-                انقطاع عام
+                <option
+                  value="outage"
+                  ${a.network_status==="outage"?"selected":""}>
 
-              </option>
+                  انقطاع عام
 
-            </select>
+                </option>
 
-            <textarea
-              id="am_${a.id}"
-              rows="2">${a.status_message||""}</textarea>
+              </select>
 
-            <button
-              class="row-btn"
-              onclick="saveArea('${a.id}')">
+              <textarea
+                id="am_${a.id}"
+                rows="2">${a.status_message||""}</textarea>
 
-              حفظ
+              <button
+                class="row-btn"
+                onclick="saveArea('${a.id}')">
 
-            </button>
+                حفظ
 
-          </div>
+              </button>
 
-          `
-        )
-        .join("")
-      }
+            </div>
 
-    </div>
+            `
+          )
+          .join("")
+        }
 
-  </article>
+      </div>
 
-  `;
+    </article>
+
+    `;
 
 }
+
 
 async function saveArea(id){
 
@@ -2740,10 +3255,12 @@ async function saveArea(id){
     .update({
 
       network_status:
-        A("as_"+id).value,
+        A("as_"+id)
+        .value,
 
       status_message:
-        A("am_"+id).value
+        A("am_"+id)
+        .value
 
     })
     .eq(
@@ -2765,8 +3282,9 @@ async function saveArea(id){
 
 }
 
+
 /* =========================================================
-   METERS
+   METERS ADMIN
    ========================================================= */
 
 async function meters(c){
@@ -2780,138 +3298,150 @@ async function meters(c){
       )
       .order(
         "created_at",
-        {ascending:false}
+        {
+          ascending:false
+        }
       )
     ).data||[];
 
   c.innerHTML=
 
-  header(
-    "العدادات",
-    "رقم العداد والقراءة تدخل يدويًا."
-  )+
+    header(
+      "العدادات",
+      "رقم العداد والقراءة تدخل يدويًا."
+    )
 
-  `
+    +
 
-  <article class="panel admin-card">
+    `
 
-    <div class="table-wrap">
+    <article class="panel admin-card">
 
-      <table class="admin-table">
+      <div class="table-wrap">
 
-        <thead>
+        <table class="admin-table">
 
-          <tr>
+          <thead>
 
-            <th>
-              المشترك
-            </th>
+            <tr>
 
-            <th>
-              رقم العداد
-            </th>
+              <th>
+                المشترك
+              </th>
 
-            <th>
-              آخر قراءة
-            </th>
+              <th>
+                رقم العداد
+              </th>
 
-            <th>
-              الإجراء
-            </th>
+              <th>
+                آخر قراءة
+              </th>
 
-          </tr>
+              <th>
+                الإجراء
+              </th>
 
-        </thead>
+            </tr>
 
-        <tbody>
+          </thead>
 
-          ${
-            ms.map(
-              m=>{
+          <tbody>
 
-                let rr=
-                  (
-                    m.meter_readings||
-                    []
-                  )
-                  .sort(
-                    (a,b)=>
-                      new Date(
-                        b.reading_date
-                      )-
-                      new Date(
-                        a.reading_date
-                      )
-                  )[0];
+            ${
+              ms.map(
+                m=>{
 
-                return `
+                  let rr=
+                    (
+                      m.meter_readings||
+                      []
+                    )
+                    .sort(
+                      (a,b)=>
 
-                <tr>
+                        new Date(
+                          b.reading_date
+                        )
+                        -
+                        new Date(
+                          a.reading_date
+                        )
 
-                  <td>
-                    ${
-                      m.profiles
-                      ?.full_name||
-                      "-"
-                    }
-                  </td>
+                    )[0];
 
-                  <td>
+                  return `
 
-                    <input
-                      class="meter-inline"
-                      id="mn_${m.id}"
-                      value="${m.meter_number}">
+                    <tr>
 
-                  </td>
+                      <td>
 
-                  <td>
-                    ${
-                      rr?.reading_value??
-                      "-"
-                    }
-                  </td>
+                        ${
+                          m.profiles
+                          ?.full_name||
+                          "-"
+                        }
 
-                  <td>
+                      </td>
 
-                    <button
-                      class="row-btn"
-                      onclick="saveMeter('${m.id}')">
+                      <td>
 
-                      حفظ الرقم
+                        <input
+                          class="meter-inline"
+                          id="mn_${m.id}"
+                          value="${m.meter_number}">
 
-                    </button>
+                      </td>
 
-                    <button
-                      class="row-btn"
-                      onclick="addReading('${m.id}')">
+                      <td>
 
-                      قراءة جديدة
+                        ${
+                          rr?.reading_value??
+                          "-"
+                        }
 
-                    </button>
+                      </td>
 
-                  </td>
+                      <td>
 
-                </tr>
+                        <button
+                          class="row-btn"
+                          onclick="saveMeter('${m.id}')">
 
-                `;
+                          حفظ الرقم
 
-              }
-            )
-            .join("")
-          }
+                        </button>
 
-        </tbody>
+                        <button
+                          class="row-btn"
+                          onclick="addReading('${m.id}')">
 
-      </table>
+                          قراءة جديدة
 
-    </div>
+                        </button>
 
-  </article>
+                      </td>
 
-  `;
+                    </tr>
+
+                  `;
+
+                }
+              )
+              .join("")
+            }
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </article>
+
+    `;
 
 }
+
 
 async function saveMeter(id){
 
@@ -2921,7 +3451,8 @@ async function saveMeter(id){
     .update({
 
       meter_number:
-        A("mn_"+id).value
+        A("mn_"+id)
+        .value
 
     })
     .eq(
@@ -2942,6 +3473,7 @@ async function saveMeter(id){
   );
 
 }
+
 
 async function addReading(id){
 
@@ -3000,6 +3532,7 @@ async function addReading(id){
 
 }
 
+
 /* =========================================================
    INVOICES
    ========================================================= */
@@ -3024,7 +3557,9 @@ async function invoices(c){
       )
       .order(
         "created_at",
-        {ascending:false}
+        {
+          ascending:false
+        }
       )
     ).data||[];
 
@@ -3042,13 +3577,17 @@ async function invoices(c){
       .single()
     ).data||
     {
+
       kwh_price:.65,
+
       currency:"USD"
+
     };
 
   window._invoices=iv;
 
   let options=
+
     ms.map(
       m=>{
 
@@ -3059,12 +3598,15 @@ async function invoices(c){
           )
           .sort(
             (a,b)=>
+
               new Date(
                 b.reading_date
-              )-
+              )
+              -
               new Date(
                 a.reading_date
               )
+
           )[0];
 
         let last=
@@ -3073,20 +3615,22 @@ async function invoices(c){
 
         return `
 
-        <option
-          value="${m.id}"
-          data-customer="${m.customer_id}"
-          data-last="${last}">
+          <option
+            value="${m.id}"
+            data-customer="${m.customer_id}"
+            data-last="${last}">
 
-          ${
-            m.profiles
-            ?.full_name||
-            "-"
-          }
-          ·
-          ${m.meter_number}
+            ${
+              m.profiles
+              ?.full_name||
+              "-"
+            }
 
-        </option>
+            ·
+
+            ${m.meter_number}
+
+          </option>
 
         `;
 
@@ -3096,312 +3640,327 @@ async function invoices(c){
 
   c.innerHTML=
 
-  header(
-    "الفواتير",
-    "أدخل القراءة الحالية فقط، والنظام يحسب الاستهلاك والقيمة تلقائيًا."
-  )+
+    header(
+      "الفواتير",
+      "أدخل القراءة الحالية فقط، والنظام يحسب الاستهلاك والقيمة تلقائيًا."
+    )
 
-  `
+    +
 
-  <article class="panel admin-card">
+    `
 
-    <div class="admin-form">
+    <article class="panel admin-card">
 
-      <label>
+      <div class="admin-form">
 
-        العداد
+        <label>
 
-        <select
-          id="ivMeter"
-          onchange="setInvoiceMeterDefaults()">
+          العداد
 
-          ${options}
+          <select
+            id="ivMeter"
+            onchange="setInvoiceMeterDefaults()">
 
-        </select>
+            ${options}
 
-      </label>
+          </select>
 
-      <label>
+        </label>
 
-        شهر الفاتورة
+        <label>
 
-        <input
-          id="ivMonth"
-          type="month">
+          شهر الفاتورة
 
-      </label>
+          <input
+            id="ivMonth"
+            type="month">
 
-      <label>
+        </label>
 
-        القراءة السابقة
+        <label>
 
-        <input
-          id="ivPrev"
-          type="text"
-          readonly>
+          القراءة السابقة
 
-      </label>
+          <input
+            id="ivPrev"
+            type="text"
+            readonly>
 
-      <label>
+        </label>
 
-        القراءة الحالية
+        <label>
 
-        <input
-          id="ivCur"
-          type="text"
-          inputmode="numeric"
-          autocomplete="off"
-          placeholder="أدخل القراءة الحالية"
-          oninput="updateInvoicePreview()">
+          القراءة الحالية
 
-      </label>
+          <input
+            id="ivCur"
+            type="text"
+            inputmode="numeric"
+            autocomplete="off"
+            placeholder="أدخل القراءة الحالية"
+            oninput="updateInvoicePreview()">
 
-      <label>
+        </label>
 
-        الاستهلاك kWh
+        <label>
 
-        <input
-          id="ivConsumption"
-          type="text"
-          readonly>
+          الاستهلاك kWh
 
-      </label>
+          <input
+            id="ivConsumption"
+            type="text"
+            readonly>
 
-      <label>
+        </label>
 
-        سعر 1 kWh
+        <label>
 
-        <input
-          id="ivPrice"
-          type="text"
-          value="${Number(s.kwh_price).toFixed(2)}"
-          readonly>
+          سعر 1 kWh
 
-      </label>
+          <input
+            id="ivPrice"
+            type="text"
+            value="${Number(s.kwh_price).toFixed(2)}"
+            readonly>
 
-      <label>
+        </label>
 
-        قيمة الفاتورة
+        <label>
 
-        <input
-          id="ivAmount"
-          type="text"
-          readonly>
+          قيمة الفاتورة
 
-      </label>
+          <input
+            id="ivAmount"
+            type="text"
+            readonly>
 
-      <label>
+        </label>
 
-        الاستحقاق
+        <label>
 
-        <input
-          id="ivDue"
-          type="date">
+          الاستحقاق
 
-      </label>
+          <input
+            id="ivDue"
+            type="date">
 
-      <div class="full">
+        </label>
 
-        <button
-          class="action-btn"
-          onclick="createInvoice()">
+        <div class="full">
 
-          حفظ الفاتورة
+          <button
+            class="action-btn"
+            onclick="createInvoice()">
 
-        </button>
+            حفظ الفاتورة
+
+          </button>
+
+        </div>
 
       </div>
 
-    </div>
+    </article>
 
-  </article>
+    <article class="panel admin-card">
 
-  <article class="panel admin-card">
+      <div class="table-wrap">
 
-    <div class="table-wrap">
+        <table class="admin-table">
 
-      <table class="admin-table">
+          <thead>
 
-        <thead>
+            <tr>
 
-          <tr>
+              <th>
+                المشترك
+              </th>
 
-            <th>
-              المشترك
-            </th>
+              <th>
+                العداد
+              </th>
 
-            <th>
-              العداد
-            </th>
+              <th>
+                الشهر
+              </th>
 
-            <th>
-              الشهر
-            </th>
+              <th>
+                السابقة
+              </th>
 
-            <th>
-              السابقة
-            </th>
+              <th>
+                الحالية
+              </th>
 
-            <th>
-              الحالية
-            </th>
+              <th>
+                الاستهلاك
+              </th>
 
-            <th>
-              الاستهلاك
-            </th>
+              <th>
+                سعر kWh
+              </th>
 
-            <th>
-              سعر kWh
-            </th>
+              <th>
+                القيمة
+              </th>
 
-            <th>
-              القيمة
-            </th>
+              <th>
+                الحالة
+              </th>
 
-            <th>
-              الحالة
-            </th>
+              <th>
+                الإجراء
+              </th>
 
-            <th>
-              الإجراء
-            </th>
+            </tr>
 
-          </tr>
+          </thead>
 
-        </thead>
+          <tbody>
 
-        <tbody>
+            ${
+              iv.map(
+                i=>`
 
-          ${
-            iv.map(
-              i=>`
+                <tr>
 
-              <tr>
-
-                <td>
-                  ${
-                    i.profiles
-                    ?.full_name||
-                    "-"
-                  }
-                </td>
-
-                <td>
-                  ${
-                    i.meters
-                    ?.meter_number||
-                    "-"
-                  }
-                </td>
-
-                <td>
-                  ${i.billing_month}
-                </td>
-
-                <td>
-                  ${i.previous_reading}
-                </td>
-
-                <td>
-                  ${i.current_reading}
-                </td>
-
-                <td>
-
-                  ${
-                    i.consumption_kwh??
-                    i.consumption??
-                    0
-                  }
-
-                  kWh
-
-                </td>
-
-                <td>
-
-                  $${
-                    Number(
-                      i.price_per_kwh||
-                      i.kwh_price||
-                      0
-                    )
-                    .toFixed(2)
-                  }
-
-                </td>
-
-                <td>
-                  ${money(i.amount)}
-                </td>
-
-                <td>
-
-                  <span
-                    class="badge ${i.status}">
-
-                    ${statusAr(i.status)}
-
-                  </span>
-
-                </td>
-
-                <td>
-
-                  <div class="invoice-actions">
-
-                    <button
-                      class="row-btn print"
-                      onclick="printInvoice('${i.id}')">
-
-                      طباعة
-
-                    </button>
+                  <td>
 
                     ${
-                      i.status!=="paid"
-                      ?`
+                      i.profiles
+                      ?.full_name||
+                      "-"
+                    }
+
+                  </td>
+
+                  <td>
+
+                    ${
+                      i.meters
+                      ?.meter_number||
+                      "-"
+                    }
+
+                  </td>
+
+                  <td>
+
+                    ${i.billing_month}
+
+                  </td>
+
+                  <td>
+
+                    ${i.previous_reading}
+
+                  </td>
+
+                  <td>
+
+                    ${i.current_reading}
+
+                  </td>
+
+                  <td>
+
+                    ${
+                      i.consumption_kwh??
+                      i.consumption??
+                      0
+                    }
+                    kWh
+
+                  </td>
+
+                  <td>
+
+                    $${
+                      Number(
+                        i.price_per_kwh||
+                        i.kwh_price||
+                        0
+                      )
+                      .toFixed(2)
+                    }
+
+                  </td>
+
+                  <td>
+
+                    ${money(i.amount)}
+
+                  </td>
+
+                  <td>
+
+                    <span
+                      class="badge ${i.status}">
+
+                      ${statusAr(i.status)}
+
+                    </span>
+
+                  </td>
+
+                  <td>
+
+                    <div class="invoice-actions">
 
                       <button
-                        class="row-btn pay"
-                        onclick="renderAdmin('payments')">
+                        class="row-btn print"
+                        onclick="printInvoice('${i.id}')">
 
-                        تسديد
+                        طباعة
 
                       </button>
 
-                      `
-                      :""
-                    }
+                      ${
+                        i.status!=="paid"
+                        ?`
 
-                  </div>
+                        <button
+                          class="row-btn pay"
+                          onclick="renderAdmin('payments')">
 
-                </td>
+                          تسديد
 
-              </tr>
+                        </button>
 
-              `
-            )
-            .join("")
-          }
+                        `
+                        :""
+                      }
 
-        </tbody>
+                    </div>
 
-      </table>
+                  </td>
 
-    </div>
+                </tr>
 
-  </article>
+                `
+              )
+              .join("")
+            }
 
-  `;
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </article>
+
+    `;
 
   setInvoiceMeterDefaults();
 
 }
 
+
 function setInvoiceMeterDefaults(){
 
-  let sel=A("ivMeter");
+  let sel=
+    A("ivMeter");
 
   if(
     !sel||
@@ -3413,19 +3972,22 @@ function setInvoiceMeterDefaults(){
       sel.selectedIndex
     ];
 
-  A("ivPrev").value=
+  A("ivPrev")
+    .value=
     o.dataset.last||
     "0";
 
-  A("ivCur").value="";
+  A("ivCur")
+    .value="";
 
-  A("ivConsumption").value=
-    "0";
+  A("ivConsumption")
+    .value="0";
 
-  A("ivAmount").value=
-    "$0.00";
+  A("ivAmount")
+    .value="$0.00";
 
 }
+
 
 function updateInvoicePreview(){
 
@@ -3452,19 +4014,24 @@ function updateInvoicePreview(){
     ?cur-prev
     :0;
 
-  A("ivConsumption").value=
+  A("ivConsumption")
+    .value=
     cons;
 
-  A("ivAmount").value=
+  A("ivAmount")
+    .value=
     money(
-      cons*price
+      cons*
+      price
     );
 
 }
 
+
 async function createInvoice(){
 
-  let sel=A("ivMeter");
+  let sel=
+    A("ivMeter");
 
   let o=
     sel.options[
@@ -3473,7 +4040,8 @@ async function createInvoice(){
 
   let previous=
     Number(
-      A("ivPrev").value
+      A("ivPrev")
+      .value
     );
 
   let currentRaw=
@@ -3483,14 +4051,17 @@ async function createInvoice(){
 
   let price=
     Number(
-      A("ivPrice").value
+      A("ivPrice")
+      .value
     );
 
   let month=
-    A("ivMonth").value;
+    A("ivMonth")
+    .value;
 
   let due=
-    A("ivDue").value;
+    A("ivDue")
+    .value;
 
   if(!month){
 
@@ -3500,7 +4071,9 @@ async function createInvoice(){
 
   }
 
-  if(currentRaw===""){
+  if(
+    currentRaw===""
+  ){
 
     return alert(
       "أدخل القراءة الحالية"
@@ -3509,7 +4082,9 @@ async function createInvoice(){
   }
 
   let current=
-    Number(currentRaw);
+    Number(
+      currentRaw
+    );
 
   if(
     !Number.isFinite(
@@ -3561,7 +4136,9 @@ async function createInvoice(){
 
   let r=
     await sb
-    .from("invoices")
+    .from(
+      "invoices"
+    )
     .insert({
 
       customer_id:
@@ -3578,8 +4155,7 @@ async function createInvoice(){
       current_reading:
         current,
 
-      consumption:
-        consumption,
+      consumption,
 
       consumption_kwh:
         consumption,
@@ -3610,7 +4186,9 @@ async function createInvoice(){
 
   let reading=
     await sb
-    .from("meter_readings")
+    .from(
+      "meter_readings"
+    )
     .upsert(
       {
 
@@ -3639,14 +4217,18 @@ async function createInvoice(){
   if(reading.error){
 
     return alert(
+
       "تم حفظ الفاتورة لكن تعذر تحديث قراءة العداد: "+
       reading.error.message
+
     );
 
   }
 
   alert(
+
     `تم حفظ الفاتورة: ${consumption} kWh × $${price.toFixed(2)} = ${money(amount)}`
+
   );
 
   renderAdmin(
@@ -3654,6 +4236,11 @@ async function createInvoice(){
   );
 
 }
+
+
+/* =========================================================
+   PRINT INVOICE
+   ========================================================= */
 
 function printInvoice(id){
 
@@ -3689,9 +4276,11 @@ function printInvoice(id){
 
 }
 
+
 function printInvoiceData(i,u){
 
   let cons=
+
     i.consumption_kwh??
     i.consumption??
     Math.max(
@@ -3712,144 +4301,145 @@ function printInvoiceData(i,u){
     );
 
   printHtml(
+
     "فاتورة إشتراكات نشابة",
 
     `
 
-    <h2>
-      فاتورة كهرباء
-    </h2>
+      <h2>
+        فاتورة كهرباء
+      </h2>
 
-    <div class="grid">
+      <div class="grid">
 
-      <div class="cell">
+        <div class="cell">
 
-        <small>
-          المشترك
-        </small>
+          <small>
+            المشترك
+          </small>
 
-        <b>
-          ${u.full_name||"-"}
-        </b>
+          <b>
+            ${u.full_name||"-"}
+          </b>
+
+        </div>
+
+        <div class="cell">
+
+          <small>
+            رقم العداد
+          </small>
+
+          <b>
+            ${u.meter_number||"-"}
+          </b>
+
+        </div>
+
+        <div class="cell">
+
+          <small>
+            المنطقة / العلبة
+          </small>
+
+          <b>
+            ${u.area||"-"}
+          </b>
+
+        </div>
+
+        <div class="cell">
+
+          <small>
+            شهر الفاتورة
+          </small>
+
+          <b>
+            ${i.billing_month}
+          </b>
+
+        </div>
+
+        <div class="cell">
+
+          <small>
+            القراءة السابقة
+          </small>
+
+          <b>
+            ${i.previous_reading}
+          </b>
+
+        </div>
+
+        <div class="cell">
+
+          <small>
+            القراءة الحالية
+          </small>
+
+          <b>
+            ${i.current_reading}
+          </b>
+
+        </div>
+
+        <div class="cell">
+
+          <small>
+            الاستهلاك
+          </small>
+
+          <b>
+            ${cons} kWh
+          </b>
+
+        </div>
+
+        <div class="cell">
+
+          <small>
+            سعر 1 kWh
+          </small>
+
+          <b>
+            $${rate.toFixed(2)}
+          </b>
+
+        </div>
+
+        <div class="cell">
+
+          <small>
+            الاستحقاق
+          </small>
+
+          <b>
+            ${i.due_date||"-"}
+          </b>
+
+        </div>
+
+        <div class="cell">
+
+          <small>
+            الحالة
+          </small>
+
+          <b>
+            ${statusAr(i.status)}
+          </b>
+
+        </div>
 
       </div>
 
-      <div class="cell">
+      <div class="total">
 
-        <small>
-          رقم العداد
-        </small>
-
-        <b>
-          ${u.meter_number||"-"}
-        </b>
+        الإجمالي:
+        ${money(i.amount)}
 
       </div>
-
-      <div class="cell">
-
-        <small>
-          المنطقة / العلبة
-        </small>
-
-        <b>
-          ${u.area||"-"}
-        </b>
-
-      </div>
-
-      <div class="cell">
-
-        <small>
-          شهر الفاتورة
-        </small>
-
-        <b>
-          ${i.billing_month}
-        </b>
-
-      </div>
-
-      <div class="cell">
-
-        <small>
-          القراءة السابقة
-        </small>
-
-        <b>
-          ${i.previous_reading}
-        </b>
-
-      </div>
-
-      <div class="cell">
-
-        <small>
-          القراءة الحالية
-        </small>
-
-        <b>
-          ${i.current_reading}
-        </b>
-
-      </div>
-
-      <div class="cell">
-
-        <small>
-          الاستهلاك
-        </small>
-
-        <b>
-          ${cons} kWh
-        </b>
-
-      </div>
-
-      <div class="cell">
-
-        <small>
-          سعر 1 kWh
-        </small>
-
-        <b>
-          $${rate.toFixed(2)}
-        </b>
-
-      </div>
-
-      <div class="cell">
-
-        <small>
-          الاستحقاق
-        </small>
-
-        <b>
-          ${i.due_date||"-"}
-        </b>
-
-      </div>
-
-      <div class="cell">
-
-        <small>
-          الحالة
-        </small>
-
-        <b>
-          ${statusAr(i.status)}
-        </b>
-
-      </div>
-
-    </div>
-
-    <div class="total">
-
-      الإجمالي:
-      ${money(i.amount)}
-
-    </div>
 
     `
 
@@ -3857,13 +4447,14 @@ function printInvoiceData(i,u){
 
 }
 
+
 /* =========================================================
    PAYMENTS
    ========================================================= */
 
 async function payments(c){
 
-  let [
+  let[
     p,
     iv
   ]=
@@ -3875,7 +4466,9 @@ async function payments(c){
       )
       .order(
         "paid_at",
-        {ascending:false}
+        {
+          ascending:false
+        }
       ),
 
     sb.from("invoices")
@@ -3888,7 +4481,9 @@ async function payments(c){
       )
       .order(
         "created_at",
-        {ascending:false}
+        {
+          ascending:false
+        }
       )
 
   ]);
@@ -3906,25 +4501,41 @@ async function payments(c){
 
   let paidBy={};
 
-  for(let x of pays){
+  for(
+    let x of pays
+  ){
 
-    paidBy[x.invoice_id]=
-      (
-        paidBy[x.invoice_id]||
-        0
-      )+
-      Number(x.amount);
+    paidBy[
+      x.invoice_id
+    ]=
+
+    (
+      paidBy[
+        x.invoice_id
+      ]||
+      0
+    )
+    +
+    Number(
+      x.amount
+    );
 
   }
 
   let opts=
+
     invs.map(
       i=>{
 
         let rem=
+
           Math.max(
             0,
-            Number(i.amount)-
+
+            Number(
+              i.amount
+            )
+            -
             Number(
               paidBy[i.id]||
               0
@@ -3933,29 +4544,29 @@ async function payments(c){
 
         return `
 
-        <option
-          value="${i.id}"
-          data-customer="${i.customer_id}"
-          data-total="${i.amount}"
-          data-paid="${paidBy[i.id]||0}"
-          data-remaining="${rem}">
+          <option
+            value="${i.id}"
+            data-customer="${i.customer_id}"
+            data-total="${i.amount}"
+            data-paid="${paidBy[i.id]||0}"
+            data-remaining="${rem}">
 
-          ${
-            i.profiles
-            ?.full_name||
-            "-"
-          }
+            ${
+              i.profiles
+              ?.full_name||
+              "-"
+            }
 
-          ·
+            ·
 
-          ${i.billing_month}
+            ${i.billing_month}
 
-          ·
+            ·
 
-          متبقي
-          ${money(rem)}
+            متبقي
+            ${money(rem)}
 
-        </option>
+          </option>
 
         `;
 
@@ -3965,246 +4576,257 @@ async function payments(c){
 
   c.innerHTML=
 
-  header(
-    "الدفعات",
-    "تسجيل دفعة كاملة أو جزئية وإصدار إيصال."
-  )+
+    header(
+      "الدفعات",
+      "تسجيل دفعة كاملة أو جزئية وإصدار إيصال."
+    )
 
-  `
+    +
 
-  <article class="panel admin-card">
+    `
 
-    <div class="admin-form">
+    <article class="panel admin-card">
 
-      <label>
+      <div class="admin-form">
 
-        الفاتورة
+        <label>
 
-        <select
-          id="payInvoice"
-          onchange="setPaymentDefaults()">
+          الفاتورة
 
-          ${opts}
+          <select
+            id="payInvoice"
+            onchange="setPaymentDefaults()">
 
-        </select>
+            ${opts}
 
-      </label>
+          </select>
 
-      <label>
+        </label>
 
-        المبلغ المدفوع
+        <label>
 
-        <input
-          id="payAmount"
-          type="text"
-          inputmode="decimal">
+          المبلغ المدفوع
 
-      </label>
+          <input
+            id="payAmount"
+            type="text"
+            inputmode="decimal">
 
-      <label>
+        </label>
 
-        طريقة الدفع
+        <label>
 
-        <select id="payMethod">
+          طريقة الدفع
 
-          <option value="cash">
+          <select
+            id="payMethod">
 
-            نقدًا Cash
+            <option value="cash">
+              نقدًا Cash
+            </option>
 
-          </option>
+            <option value="bank_transfer">
+              تحويل مصرفي
+            </option>
 
-          <option value="bank_transfer">
+            <option value="other">
+              أخرى
+            </option>
 
-            تحويل مصرفي
+          </select>
 
-          </option>
+        </label>
 
-          <option value="other">
+        <label>
 
-            أخرى
+          مرجع / رقم عملية
 
-          </option>
+          <input
+            id="payReference"
+            autocomplete="off">
 
-        </select>
+        </label>
 
-      </label>
+        <label class="full">
 
-      <label>
+          ملاحظة
 
-        مرجع / رقم عملية
+          <input
+            id="payNote"
+            autocomplete="off">
 
-        <input
-          id="payReference"
-          autocomplete="off">
+        </label>
 
-      </label>
+        <div class="full">
 
-      <label class="full">
+          <button
+            class="action-btn"
+            onclick="recordPayment()">
 
-        ملاحظة
+            تسجيل الدفعة وإصدار إيصال
 
-        <input
-          id="payNote"
-          autocomplete="off">
+          </button>
 
-      </label>
-
-      <div class="full">
-
-        <button
-          class="action-btn"
-          onclick="recordPayment()">
-
-          تسجيل الدفعة وإصدار إيصال
-
-        </button>
+        </div>
 
       </div>
 
-    </div>
+    </article>
 
-  </article>
+    <article class="panel admin-card">
 
-  <article class="panel admin-card">
+      <div class="table-wrap">
 
-    <div class="table-wrap">
+        <table class="admin-table">
 
-      <table class="admin-table">
+          <thead>
 
-        <thead>
+            <tr>
 
-          <tr>
+              <th>
+                المشترك
+              </th>
 
-            <th>
-              المشترك
-            </th>
+              <th>
+                الشهر
+              </th>
 
-            <th>
-              الشهر
-            </th>
+              <th>
+                القيمة
+              </th>
 
-            <th>
-              القيمة
-            </th>
+              <th>
+                الطريقة
+              </th>
 
-            <th>
-              الطريقة
-            </th>
+              <th>
+                الإيصال
+              </th>
 
-            <th>
-              الإيصال
-            </th>
+              <th>
+                التاريخ
+              </th>
 
-            <th>
-              التاريخ
-            </th>
+              <th>
+                الإجراء
+              </th>
 
-            <th>
-              الإجراء
-            </th>
+            </tr>
 
-          </tr>
+          </thead>
 
-        </thead>
+          <tbody>
 
-        <tbody>
+            ${
+              pays.map(
+                x=>`
 
-          ${
-            pays.map(
-              x=>`
+                <tr>
 
-              <tr>
+                  <td>
 
-                <td>
-                  ${
-                    x.profiles
-                    ?.full_name||
-                    "-"
-                  }
-                </td>
+                    ${
+                      x.profiles
+                      ?.full_name||
+                      "-"
+                    }
 
-                <td>
-                  ${
-                    x.invoices
-                    ?.billing_month||
-                    "-"
-                  }
-                </td>
+                  </td>
 
-                <td>
-                  ${money(x.amount)}
-                </td>
+                  <td>
 
-                <td>
-                  ${
-                    x.payment_method||
-                    "cash"
-                  }
-                </td>
+                    ${
+                      x.invoices
+                      ?.billing_month||
+                      "-"
+                    }
 
-                <td>
-                  ${
-                    x.receipt_no||
-                    "-"
-                  }
-                </td>
+                  </td>
 
-                <td>
+                  <td>
 
-                  ${
-                    new Date(
-                      x.paid_at
-                    )
-                    .toLocaleString(
-                      "ar-LB"
-                    )
-                  }
+                    ${money(x.amount)}
 
-                </td>
+                  </td>
 
-                <td>
+                  <td>
 
-                  <button
-                    class="row-btn print"
-                    onclick="printReceipt('${x.id}')">
+                    ${
+                      x.payment_method||
+                      "cash"
+                    }
 
-                    طباعة إيصال
+                  </td>
 
-                  </button>
+                  <td>
 
-                </td>
+                    ${
+                      x.receipt_no||
+                      "-"
+                    }
 
-              </tr>
+                  </td>
 
-              `
-            )
-            .join("")
-          }
+                  <td>
 
-        </tbody>
+                    ${
+                      new Date(
+                        x.paid_at
+                      )
+                      .toLocaleString(
+                        "ar-LB"
+                      )
+                    }
 
-      </table>
+                  </td>
 
-    </div>
+                  <td>
 
-  </article>
+                    <button
+                      class="row-btn print"
+                      onclick="printReceipt('${x.id}')">
 
-  `;
+                      طباعة إيصال
+
+                    </button>
+
+                  </td>
+
+                </tr>
+
+                `
+              )
+              .join("")
+            }
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </article>
+
+    `;
 
   setPaymentDefaults();
 
 }
 
+
 function setPaymentDefaults(){
 
-  let s=A("payInvoice");
+  let s=
+    A("payInvoice");
 
   if(
     !s||
     !s.options.length
   )return;
 
-  A("payAmount").value=
+  A("payAmount")
+    .value=
+
     Number(
       s.options[
         s.selectedIndex
@@ -4217,9 +4839,11 @@ function setPaymentDefaults(){
 
 }
 
+
 async function recordPayment(){
 
-  let s=A("payInvoice");
+  let s=
+    A("payInvoice");
 
   if(
     !s||
@@ -4239,16 +4863,19 @@ async function recordPayment(){
 
   let amount=
     Number(
-      A("payAmount").value
+      A("payAmount")
+      .value
     );
 
   let remaining=
     Number(
-      o.dataset.remaining
+      o.dataset
+      .remaining
     );
 
   let method=
-    A("payMethod").value;
+    A("payMethod")
+    .value;
 
   let reference=
     A("payReference")
@@ -4261,7 +4888,9 @@ async function recordPayment(){
     .trim();
 
   if(
-    !Number.isFinite(amount)||
+    !Number.isFinite(
+      amount
+    )||
     amount<=0
   ){
 
@@ -4343,6 +4972,7 @@ async function recordPayment(){
 
 }
 
+
 function printReceipt(id){
 
   let x=
@@ -4362,129 +4992,140 @@ function printReceipt(id){
 
 }
 
+
 function printReceiptData(x){
 
   printHtml(
+
     "إيصال دفع - إشتراكات نشابة",
 
     `
 
-    <h2>
-      إيصال قبض
-    </h2>
+      <h2>
+        إيصال قبض
+      </h2>
 
-    <div class="grid">
+      <div class="grid">
 
-      <div class="cell">
+        <div class="cell">
 
-        <small>
-          رقم الإيصال
-        </small>
+          <small>
+            رقم الإيصال
+          </small>
 
-        <b>
-          ${x.receipt_no||"-"}
-        </b>
+          <b>
+            ${x.receipt_no||"-"}
+          </b>
+
+        </div>
+
+        <div class="cell">
+
+          <small>
+            المشترك
+          </small>
+
+          <b>
+
+            ${
+              x.profiles
+              ?.full_name||
+              "-"
+            }
+
+          </b>
+
+        </div>
+
+        <div class="cell">
+
+          <small>
+            شهر الفاتورة
+          </small>
+
+          <b>
+
+            ${
+              x.invoices
+              ?.billing_month||
+              "-"
+            }
+
+          </b>
+
+        </div>
+
+        <div class="cell">
+
+          <small>
+            طريقة الدفع
+          </small>
+
+          <b>
+
+            ${
+              x.payment_method||
+              "cash"
+            }
+
+          </b>
+
+        </div>
+
+        <div class="cell">
+
+          <small>
+            المرجع
+          </small>
+
+          <b>
+
+            ${
+              x.reference||
+              "-"
+            }
+
+          </b>
+
+        </div>
+
+        <div class="cell">
+
+          <small>
+            التاريخ
+          </small>
+
+          <b>
+
+            ${
+              new Date(
+                x.paid_at||
+                Date.now()
+              )
+              .toLocaleString(
+                "ar-LB"
+              )
+            }
+
+          </b>
+
+        </div>
 
       </div>
 
-      <div class="cell">
+      <div class="total">
 
-        <small>
-          المشترك
-        </small>
-
-        <b>
-          ${
-            x.profiles
-            ?.full_name||
-            "-"
-          }
-        </b>
+        المبلغ المقبوض:
+        ${money(x.amount)}
 
       </div>
-
-      <div class="cell">
-
-        <small>
-          شهر الفاتورة
-        </small>
-
-        <b>
-          ${
-            x.invoices
-            ?.billing_month||
-            "-"
-          }
-        </b>
-
-      </div>
-
-      <div class="cell">
-
-        <small>
-          طريقة الدفع
-        </small>
-
-        <b>
-          ${
-            x.payment_method||
-            "cash"
-          }
-        </b>
-
-      </div>
-
-      <div class="cell">
-
-        <small>
-          المرجع
-        </small>
-
-        <b>
-          ${
-            x.reference||
-            "-"
-          }
-        </b>
-
-      </div>
-
-      <div class="cell">
-
-        <small>
-          التاريخ
-        </small>
-
-        <b>
-
-          ${
-            new Date(
-              x.paid_at||
-              Date.now()
-            )
-            .toLocaleString(
-              "ar-LB"
-            )
-          }
-
-        </b>
-
-      </div>
-
-    </div>
-
-    <div class="total">
-
-      المبلغ المقبوض:
-      ${money(x.amount)}
-
-    </div>
 
     `
 
   );
 
 }
+
 
 /* =========================================================
    FAULTS ADMIN
@@ -4501,7 +5142,9 @@ async function faults(c){
       )
       .order(
         "created_at",
-        {ascending:false}
+        {
+          ascending:false
+        }
       )
     ).data||[];
 
@@ -4510,123 +5153,137 @@ async function faults(c){
 
   c.innerHTML=
 
-  header(
-    "الأعطال",
-    "بلاغات حقيقية مع الصور والحالة."
-  )+
+    header(
+      "الأعطال",
+      "بلاغات حقيقية مع الصور والحالة."
+    )
 
-  `
+    +
 
-  <article class="panel admin-card">
+    `
 
-    <div class="table-wrap">
+    <article class="panel admin-card">
 
-      <table class="admin-table">
+      <div class="table-wrap">
 
-        <thead>
+        <table class="admin-table">
 
-          <tr>
+          <thead>
 
-            <th>#</th>
+            <tr>
 
-            <th>
-              المشترك
-            </th>
+              <th>#</th>
 
-            <th>
-              المنطقة
-            </th>
+              <th>
+                المشترك
+              </th>
 
-            <th>
-              العطل
-            </th>
+              <th>
+                المنطقة
+              </th>
 
-            <th>
-              الحالة
-            </th>
+              <th>
+                العطل
+              </th>
 
-            <th>
-              الإجراء
-            </th>
+              <th>
+                الحالة
+              </th>
 
-          </tr>
+              <th>
+                الإجراء
+              </th>
 
-        </thead>
+            </tr>
 
-        <tbody>
+          </thead>
 
-          ${
-            fs.map(
-              f=>`
+          <tbody>
 
-              <tr>
+            ${
+              fs.map(
+                f=>`
 
-                <td>
-                  #${f.id}
-                </td>
+                <tr>
 
-                <td>
-                  ${
-                    f.profiles
-                    ?.full_name||
-                    "-"
-                  }
-                </td>
+                  <td>
+                    #${f.id}
+                  </td>
 
-                <td>
-                  ${
-                    f.areas?.name||
-                    "-"
-                  }
-                </td>
+                  <td>
 
-                <td>
-                  ${f.fault_type}
-                </td>
+                    ${
+                      f.profiles
+                      ?.full_name||
+                      "-"
+                    }
 
-                <td>
+                  </td>
 
-                  <span class="badge ${f.status}">
-                    ${f.status}
-                  </span>
+                  <td>
 
-                </td>
+                    ${
+                      f.areas
+                      ?.name||
+                      "-"
+                    }
 
-                <td>
+                  </td>
 
-                  <button
-                    class="row-btn"
-                    onclick="openFaultAdmin(${f.id})">
+                  <td>
 
-                    فتح
+                    ${f.fault_type}
 
-                  </button>
+                  </td>
 
-                </td>
+                  <td>
 
-              </tr>
+                    <span
+                      class="badge ${f.status}">
 
-              `
-            )
-            .join("")
-          }
+                      ${f.status}
 
-        </tbody>
+                    </span>
 
-      </table>
+                  </td>
 
-    </div>
+                  <td>
 
-  </article>
+                    <button
+                      class="row-btn"
+                      onclick="openFaultAdmin(${f.id})">
 
-  `;
+                      فتح
+
+                    </button>
+
+                  </td>
+
+                </tr>
+
+                `
+              )
+              .join("")
+            }
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </article>
+
+    `;
 
 }
+
 
 async function openFaultAdmin(id){
 
   let f=
-    window._faults.find(
+    window._faults
+    .find(
       x=>x.id===id
     );
 
@@ -4636,18 +5293,25 @@ async function openFaultAdmin(id){
 
     let u=
       await sb.storage
-      .from("fault-images")
+      .from(
+        "fault-images"
+      )
       .createSignedUrl(
         f.image_path,
         600
       );
 
-    if(u.data?.signedUrl){
+    if(
+      u.data
+      ?.signedUrl
+    ){
 
       img=`
-      <img
-        class="fault-thumb-large"
-        src="${u.data.signedUrl}">
+
+        <img
+          class="fault-thumb-large"
+          src="${u.data.signedUrl}">
+
       `;
 
     }
@@ -4655,14 +5319,19 @@ async function openFaultAdmin(id){
   }
 
   let old=
-    A("faultAdminDialog");
+    A(
+      "faultAdminDialog"
+    );
 
   if(old){
+
     old.remove();
+
   }
 
   let d=
-    document.createElement(
+    document
+    .createElement(
       "dialog"
     );
 
@@ -4671,112 +5340,117 @@ async function openFaultAdmin(id){
 
   d.innerHTML=`
 
-  <form method="dialog">
+    <form method="dialog">
 
-    <div class="dialog-title">
+      <div class="dialog-title">
 
-      <div>
-        <i data-lucide="wrench"></i>
+        <div>
+
+          <i data-lucide="wrench"></i>
+
+        </div>
+
+        <div>
+
+          <small>
+
+            بلاغ #${f.id}
+
+          </small>
+
+          <h3>
+            ${f.fault_type}
+          </h3>
+
+        </div>
+
       </div>
 
-      <div>
+      <p>
+        ${f.description||""}
+      </p>
 
-        <small>
-          بلاغ #${f.id}
-        </small>
+      ${img}
 
-        <h3>
-          ${f.fault_type}
-        </h3>
+      <label>
+
+        الحالة
+
+        <select id="faStatus">
+
+          <option
+            value="open"
+            ${f.status==="open"?"selected":""}>
+
+            مفتوح
+
+          </option>
+
+          <option
+            value="scheduled"
+            ${f.status==="scheduled"?"selected":""}>
+
+            مجدول
+
+          </option>
+
+          <option
+            value="repairing"
+            ${f.status==="repairing"?"selected":""}>
+
+            جاري الإصلاح
+
+          </option>
+
+          <option
+            value="resolved"
+            ${f.status==="resolved"?"selected":""}>
+
+            تم الحل
+
+          </option>
+
+        </select>
+
+      </label>
+
+      <label>
+
+        ملاحظة للمشترك
+
+        <textarea
+          id="faNote"
+          rows="3">${f.admin_note||""}</textarea>
+
+      </label>
+
+      <div class="dialog-actions">
+
+        <button
+          value="cancel"
+          class="cancel">
+
+          إغلاق
+
+        </button>
+
+        <button
+          type="button"
+          class="send"
+          onclick="saveFaultAdmin(${f.id})">
+
+          حفظ
+
+        </button>
 
       </div>
 
-    </div>
-
-    <p>
-      ${f.description||""}
-    </p>
-
-    ${img}
-
-    <label>
-
-      الحالة
-
-      <select id="faStatus">
-
-        <option
-          value="open"
-          ${f.status==="open"?"selected":""}>
-
-          مفتوح
-
-        </option>
-
-        <option
-          value="scheduled"
-          ${f.status==="scheduled"?"selected":""}>
-
-          مجدول
-
-        </option>
-
-        <option
-          value="repairing"
-          ${f.status==="repairing"?"selected":""}>
-
-          جاري الإصلاح
-
-        </option>
-
-        <option
-          value="resolved"
-          ${f.status==="resolved"?"selected":""}>
-
-          تم الحل
-
-        </option>
-
-      </select>
-
-    </label>
-
-    <label>
-
-      ملاحظة للمشترك
-
-      <textarea
-        id="faNote"
-        rows="3">${f.admin_note||""}</textarea>
-
-    </label>
-
-    <div class="dialog-actions">
-
-      <button
-        value="cancel"
-        class="cancel">
-
-        إغلاق
-
-      </button>
-
-      <button
-        type="button"
-        class="send"
-        onclick="saveFaultAdmin(${f.id})">
-
-        حفظ
-
-      </button>
-
-    </div>
-
-  </form>
+    </form>
 
   `;
 
-  document.body.appendChild(d);
+  document.body
+    .appendChild(d);
 
   d.showModal();
 
@@ -4784,18 +5458,23 @@ async function openFaultAdmin(id){
 
 }
 
+
 async function saveFaultAdmin(id){
 
   let r=
     await sb
-    .from("fault_reports")
+    .from(
+      "fault_reports"
+    )
     .update({
 
       status:
-        A("faStatus").value,
+        A("faStatus")
+        .value,
 
       admin_note:
-        A("faNote").value,
+        A("faNote")
+        .value,
 
       updated_at:
         new Date()
@@ -4824,6 +5503,7 @@ async function saveFaultAdmin(id){
 
 }
 
+
 /* =========================================================
    NOTIFICATIONS
    ========================================================= */
@@ -4846,7 +5526,9 @@ async function notifications(c){
       )
       .order(
         "created_at",
-        {ascending:false}
+        {
+          ascending:false
+        }
       )
     ).data||[];
 
@@ -4855,79 +5537,86 @@ async function notifications(c){
 
   c.innerHTML=
 
-  header(
-    "التنبيهات",
-    "إرسال تنبيه عام أو لمنطقة.",
+    header(
+      "التنبيهات",
+      "إرسال تنبيه عام أو لمنطقة.",
 
-    `
+      `
 
-    <button
-      class="primary"
-      onclick="openNotificationDialog()">
+        <button
+          class="primary"
+          onclick="openNotificationDialog()">
 
-      إرسال تنبيه
+          إرسال تنبيه
 
-    </button>
-
-    `
-  )+
-
-  `
-
-  <article class="panel admin-card">
-
-    ${
-      ns.map(
-        n=>`
-
-        <div class="notification-item">
-
-          <b>
-
-            ${n.title}
-
-            ·
-
-            ${
-              n.areas?.name||
-              "الكل"
-            }
-
-          </b>
-
-          <p>
-            ${n.message}
-          </p>
-
-        </div>
-
-        `
-      )
-      .join("")
-    }
-
-  </article>
-
-  `;
-
-}
-
-function openNotificationDialog(){
-
-  A("notifArea").innerHTML=
-
-    '<option value="">الكل</option>'+
-
-    window._areas.map(
-      a=>`
-
-      <option value="${a.id}">
-        ${a.name}
-      </option>
+        </button>
 
       `
     )
-    .join("");
+
+    +
+
+    `
+
+      <article class="panel admin-card">
+
+        ${
+          ns.map(
+            n=>`
+
+              <div class="notification-item">
+
+                <b>
+
+                  ${n.title}
+                  ·
+                  ${
+                    n.areas
+                    ?.name||
+                    "الكل"
+                  }
+
+                </b>
+
+                <p>
+                  ${n.message}
+                </p>
+
+              </div>
+
+            `
+          )
+          .join("")
+        }
+
+      </article>
+
+    `;
+
+}
+
+
+function openNotificationDialog(){
+
+  A("notifArea")
+    .innerHTML=
+
+      '<option value="">الكل</option>'+
+
+      window._areas
+      .map(
+        a=>`
+
+          <option
+            value="${a.id}">
+
+            ${a.name}
+
+          </option>
+
+        `
+      )
+      .join("");
 
   A("notificationDialog")
     .showModal();
@@ -4935,6 +5624,7 @@ function openNotificationDialog(){
   icons();
 
 }
+
 
 async function sendNotification(){
 
@@ -4944,14 +5634,17 @@ async function sendNotification(){
     .insert({
 
       area_id:
-        A("notifArea").value||
+        A("notifArea")
+        .value||
         null,
 
       title:
-        A("notifTitle").value,
+        A("notifTitle")
+        .value,
 
       message:
-        A("notifMessage").value,
+        A("notifMessage")
+        .value,
 
       severity:
         "warning"
@@ -4979,6 +5672,7 @@ async function sendNotification(){
 
 }
 
+
 /* =========================================================
    SETTINGS
    ========================================================= */
@@ -4988,7 +5682,9 @@ async function settings(c){
   let s=
     (
       await sb
-      .from("app_settings")
+      .from(
+        "app_settings"
+      )
       .select("*")
       .eq(
         "id",
@@ -5006,75 +5702,85 @@ async function settings(c){
 
   c.innerHTML=
 
-  header(
-    "الإعدادات",
-    "إعدادات التسعير العامة للمنصة."
-  )+
+    header(
+      "الإعدادات",
+      "إعدادات التسعير العامة للمنصة."
+    )
 
-  `
+    +
 
-  <article class="panel admin-card">
+    `
 
-    <div class="admin-form">
+      <article class="panel admin-card">
 
-      <label>
+        <div class="admin-form">
 
-        سعر 1 kWh بالدولار
+          <label>
 
-        <input
-          id="setKwhPrice"
-          type="text"
-          inputmode="decimal"
-          value="${Number(s.kwh_price).toFixed(2)}">
+            سعر 1 kWh بالدولار
 
-      </label>
+            <input
+              id="setKwhPrice"
+              type="text"
+              inputmode="decimal"
+              value="${Number(s.kwh_price).toFixed(2)}">
 
-      <label>
+          </label>
 
-        العملة
+          <label>
 
-        <input
-          value="${s.currency||"USD"}"
-          readonly>
+            العملة
 
-      </label>
+            <input
+              value="${s.currency||"USD"}"
+              readonly>
 
-      <div class="full">
+          </label>
 
-        <p style="color:#8fa7b8;font-size:10px">
+          <div class="full">
 
-          كل فاتورة جديدة تحفظ سعر الكيلو المستخدم فيها،
-          لذلك تغيير السعر لاحقًا لا يغيّر الفواتير القديمة.
+            <p
+              style="
+                color:#8fa7b8;
+                font-size:10px
+              ">
 
-        </p>
+              كل فاتورة جديدة تحفظ سعر الكيلو المستخدم فيها،
+              لذلك تغيير السعر لاحقًا لا يغيّر الفواتير القديمة.
 
-        <button
-          class="action-btn"
-          onclick="saveSettings()">
+            </p>
 
-          حفظ سعر الكيلوواط
+            <button
+              class="action-btn"
+              onclick="saveSettings()">
 
-        </button>
+              حفظ سعر الكيلوواط
 
-      </div>
+            </button>
 
-    </div>
+          </div>
 
-  </article>
+        </div>
 
-  `;
+      </article>
+
+    `;
 
 }
+
 
 async function saveSettings(){
 
   let price=
     Number(
-      A("setKwhPrice").value
+      A("setKwhPrice")
+      .value
     );
 
   if(
-    !Number.isFinite(price)||
+    !Number.isFinite(
+      price
+    )||
     price<0
   ){
 
@@ -5086,7 +5792,9 @@ async function saveSettings(){
 
   let r=
     await sb
-    .from("app_settings")
+    .from(
+      "app_settings"
+    )
     .update({
 
       kwh_price:
@@ -5111,8 +5819,10 @@ async function saveSettings(){
   }
 
   alert(
+
     "تم تحديث سعر الكيلوواط إلى $"+
     price.toFixed(2)
+
   );
 
   renderAdmin(
@@ -5121,32 +5831,49 @@ async function saveSettings(){
 
 }
 
+
 /* =========================================================
-   NAV
+   NAVIGATION
    ========================================================= */
 
 document
-.querySelectorAll(".side")
+.querySelectorAll(
+  ".side"
+)
 .forEach(
-  b=>
-    b.onclick=()=>{
 
-      renderAdmin(
-        b.dataset.page
+  b=>
+
+  b.onclick=()=>{
+
+    renderAdmin(
+      b.dataset.page
+    );
+
+    A("sidebar")
+      .classList
+      .remove(
+        "open"
       );
 
-      A("sidebar")
-      .classList
-      .remove("open");
+  }
 
-    }
 );
 
-A("mobileMenuBtn").onclick=
-  ()=>
+
+A("mobileMenuBtn")
+  .onclick=
+
+  ()=>{
+
     A("sidebar")
-    .classList
-    .toggle("open");
+      .classList
+      .toggle(
+        "open"
+      );
+
+  };
+
 
 injectEnhancedStyles();
 
