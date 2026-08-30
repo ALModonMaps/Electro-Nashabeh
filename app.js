@@ -718,7 +718,7 @@ function injectEnhancedStyles(){
   }
 
 }
-
+`;
   document.head.appendChild(st);
 
 }
