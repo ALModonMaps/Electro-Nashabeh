@@ -718,7 +718,395 @@ function injectEnhancedStyles(){
   }
 
 }
+
+/* =========================================================
+   ADMIN ELECTRICAL AREA BOXES
+   ========================================================= */
+
+.energy-area-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(230px,1fr));
+  gap:18px;
+}
+
+.energy-box{
+  --box-accent:#39f078;
+  --box-glow:rgba(57,240,120,.22);
+  position:relative;
+  min-height:285px;
+  overflow:hidden;
+  padding:16px;
+  border-radius:18px;
+  border:1px solid color-mix(in srgb,var(--box-accent) 55%,#17394a);
+  background:
+    radial-gradient(circle at 85% 10%,var(--box-glow),transparent 34%),
+    linear-gradient(145deg,rgba(8,28,37,.98),rgba(3,14,22,.98));
+  box-shadow:
+    inset 0 0 28px rgba(0,0,0,.45),
+    0 12px 32px rgba(0,0,0,.22);
+  transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease;
+}
+
+.energy-box:hover{
+  transform:translateY(-4px);
+  box-shadow:
+    inset 0 0 28px rgba(0,0,0,.45),
+    0 16px 38px rgba(0,0,0,.32),
+    0 0 24px var(--box-glow);
+}
+
+.energy-box.stable{
+  --box-accent:#39f078;
+  --box-glow:rgba(57,240,120,.20);
+}
+
+.energy-box.monitoring{
+  --box-accent:#ffc72c;
+  --box-glow:rgba(255,199,44,.19);
+}
+
+.energy-box.high_load{
+  --box-accent:#ff8c33;
+  --box-glow:rgba(255,140,51,.20);
+}
+
+.energy-box.outage{
+  --box-accent:#ff4757;
+  --box-glow:rgba(255,71,87,.22);
+}
+
+.energy-box::before{
+  content:"";
+  position:absolute;
+  top:-60px;
+  right:-60px;
+  width:150px;
+  height:150px;
+  border-radius:50%;
+  background:radial-gradient(circle,var(--box-glow),transparent 68%);
+  pointer-events:none;
+}
+
+.energy-box::after{
+  content:"";
+  position:absolute;
+  left:-40%;
+  bottom:0;
+  width:35%;
+  height:1px;
+  background:linear-gradient(90deg,transparent,var(--box-accent),transparent);
+  box-shadow:0 0 8px var(--box-accent);
+  animation:electricalBoxSweep 3s linear infinite;
+}
+
+.energy-box-top{
+  position:relative;
+  z-index:2;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:14px;
+}
+
+.energy-box-name{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.energy-box-name h4{
+  margin:0;
+  font-size:16px;
+  font-weight:800;
+  color:#f6fbff;
+}
+
+.energy-box-name small{
+  display:block;
+  margin-top:3px;
+  color:#7898a7;
+  font-size:8px;
+  letter-spacing:.05em;
+}
+
+.energy-box-icon{
+  position:relative;
+  width:47px;
+  height:47px;
+  flex:0 0 47px;
+  display:grid;
+  place-items:center;
+  border-radius:13px;
+  color:var(--box-accent);
+  background:linear-gradient(145deg,rgba(14,42,53,.9),rgba(5,19,27,.95));
+  border:1px solid color-mix(in srgb,var(--box-accent) 45%,transparent);
+  box-shadow:
+    inset 0 0 12px rgba(0,0,0,.45),
+    0 0 14px var(--box-glow);
+}
+
+.energy-box-icon svg{
+  width:24px;
+  height:24px;
+}
+
+.energy-box-led{
+  position:absolute;
+  right:-2px;
+  top:-2px;
+  width:9px;
+  height:9px;
+  border-radius:50%;
+  background:var(--box-accent);
+  box-shadow:0 0 5px var(--box-accent),0 0 12px var(--box-accent);
+  animation:areaStatusLed 1.6s ease-in-out infinite;
+}
+
+.energy-status{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  padding:6px 9px;
+  border-radius:999px;
+  color:var(--box-accent);
+  font-size:8px;
+  font-weight:800;
+  border:1px solid color-mix(in srgb,var(--box-accent) 40%,transparent);
+  background:color-mix(in srgb,var(--box-accent) 8%,transparent);
+}
+
+.energy-status-dot{
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  background:var(--box-accent);
+  box-shadow:0 0 7px var(--box-accent);
+}
+
+.energy-panel{
+  position:relative;
+  z-index:2;
+  margin-bottom:12px;
+  padding:11px;
+  border-radius:13px;
+  background:linear-gradient(180deg,rgba(1,10,15,.72),rgba(8,23,31,.72));
+  border:1px solid #173747;
+}
+
+.energy-flow{
+  position:relative;
+  height:42px;
+  margin-bottom:10px;
+  overflow:hidden;
+  border-radius:9px;
+  background:linear-gradient(180deg,#030b10,#07151d);
+  border:1px solid #143541;
+}
+
+.energy-flow svg{
+  position:absolute;
+  top:6px;
+  left:9px;
+  width:92px;
+  height:28px;
+}
+
+.energy-flow-line{
+  fill:none;
+  stroke:var(--box-accent);
+  stroke-width:2;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  stroke-dasharray:8 6;
+  filter:drop-shadow(0 0 4px var(--box-accent));
+  animation:areaElectricFlow .6s linear infinite;
+}
+
+.energy-flow-label{
+  position:absolute;
+  right:10px;
+  top:10px;
+  text-align:right;
+}
+
+.energy-flow-label strong{
+  display:block;
+  color:#e9f8ff;
+  font-size:9px;
+}
+
+.energy-flow-label small{
+  display:block;
+  margin-top:2px;
+  color:var(--box-accent);
+  font-size:7px;
+  font-weight:800;
+}
+
+.energy-breaker-row{
+  display:grid;
+  grid-template-columns:1fr 44px;
+  align-items:center;
+  gap:10px;
+}
+
+.energy-breaker{
+  position:relative;
+  height:42px;
+  border-radius:8px;
+  border:1px solid #254858;
+  background:linear-gradient(145deg,#122934,#06121a);
+  box-shadow:inset 0 0 9px rgba(0,0,0,.55);
+}
+
+.energy-breaker::before{
+  content:"";
+  position:absolute;
+  left:50%;
+  top:7px;
+  transform:translateX(-50%);
+  width:11px;
+  height:25px;
+  border-radius:3px;
+  background:linear-gradient(180deg,#d5e1e5,#63727a);
+  box-shadow:0 0 5px rgba(255,255,255,.16);
+}
+
+.energy-box.outage .energy-breaker::before{
+  top:11px;
+  transform:translateX(-50%) rotate(24deg);
+  background:linear-gradient(180deg,#777,#3b4449);
+}
+
+.energy-breaker-text small{
+  display:block;
+  color:#7094a4;
+  font-size:7px;
+}
+
+.energy-breaker-text b{
+  display:block;
+  margin-top:2px;
+  color:#e9f6fa;
+  font-size:10px;
+}
+
+.energy-controls{
+  position:relative;
+  z-index:2;
+  display:grid;
+  gap:8px;
+}
+
+.energy-controls label{
+  color:#89a8b5;
+  font-size:8px;
+}
+
+.energy-controls select,
+.energy-controls textarea{
+  width:100%;
+  margin-top:5px;
+  border-radius:9px;
+  border:1px solid #245064;
+  background:#061b27;
+  color:#e8f8ff;
+  outline:none;
+  padding:9px;
+  transition:.2s ease;
+}
+
+.energy-controls select:focus,
+.energy-controls textarea:focus{
+  border-color:var(--box-accent);
+  box-shadow:0 0 0 2px var(--box-glow);
+}
+
+.energy-controls textarea{
+  resize:vertical;
+  min-height:55px;
+}
+
+.energy-save-btn{
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  margin-top:3px;
+  padding:10px 12px;
+  border-radius:9px;
+  border:1px solid color-mix(in srgb,var(--box-accent) 55%,transparent);
+  background:linear-gradient(135deg,color-mix(in srgb,var(--box-accent) 16%,#07141b),#07151d);
+  color:var(--box-accent);
+  font-size:9px;
+  font-weight:800;
+  cursor:pointer;
+  transition:.2s ease;
+}
+
+.energy-save-btn:hover{
+  transform:translateY(-1px);
+  background:color-mix(in srgb,var(--box-accent) 18%,#07151d);
+  box-shadow:0 0 15px var(--box-glow);
+}
+
+.energy-save-btn svg{
+  width:14px;
+  height:14px;
+}
+
+@keyframes electricalBoxSweep{
+  from{
+    left:-40%;
+  }
+
+  to{
+    left:120%;
+  }
+}
+
+@keyframes areaStatusLed{
+  0%,100%{
+    opacity:.45;
+    transform:scale(.8);
+  }
+
+  50%{
+    opacity:1;
+    transform:scale(1.15);
+  }
+}
+
+@keyframes areaElectricFlow{
+  to{
+    stroke-dashoffset:-28;
+  }
+}
+
+@media(max-width:1350px){
+
+  .energy-area-grid{
+    grid-template-columns:repeat(2,minmax(240px,1fr));
+  }
+
+}
+
+@media(max-width:700px){
+
+  .energy-area-grid{
+    grid-template-columns:1fr;
+  }
+
+  .energy-box{
+    min-height:auto;
+  }
+
+}
+
 `;
+
   document.head.appendChild(st);
 
 }
@@ -761,12 +1149,7 @@ function enhanceMeter(){
     oldHost.className+
     " nashabeh-meter-slot";
 
-  /*
-    حذف تصميم العداد القديم بالكامل
-    وإعادة بناء العداد الجديد.
-  */
-
-oldHost.innerHTML = `
+  oldHost.innerHTML = `
 
     <div class="nashabeh-smart-meter">
 
@@ -861,7 +1244,6 @@ oldHost.innerHTML = `
   `;
 
 }
-
 
 /* =========================================================
    PRINTING
@@ -1125,13 +1507,13 @@ function authMsg(t,ok=false){
 
   e.style.background=
     ok
-    ?"#0d3b20"
-    :"#3a1016";
+      ?"#0d3b20"
+      :"#3a1016";
 
   e.style.color=
     ok
-    ?"#8dff9b"
-    :"#ff9499";
+      ?"#8dff9b"
+      :"#ff9499";
 
 }
 
@@ -1363,8 +1745,8 @@ async function boot(){
       " · "+
       (
         profile.role==="admin"
-        ?"مدير"
-        :"مشترك"
+          ?"مدير"
+          :"مشترك"
       );
 
   if(
@@ -1433,12 +1815,12 @@ function stateClass(s){
 
   return(
     s==="stable"
-    ?"stable"
-    :
+      ?"stable"
+      :
     s==="high_load"||
     s==="outage"
-    ?"danger"
-    :"warning"
+      ?"danger"
+      :"warning"
   );
 
 }
@@ -1653,11 +2035,6 @@ function renderCustomer(){
 
   }
 
-  /*
-    هون منحول العداد القديم
-    للعداد الجديد بالكامل.
-  */
-
   enhanceMeter();
 
   let st=
@@ -1667,15 +2044,15 @@ function renderCustomer(){
     "status "+
     (
       c.active
-      ?"active"
-      :"inactive"
+        ?"active"
+        :"inactive"
     );
 
   st.innerHTML=
     c.active
-    ?
+      ?
     '<i data-lucide="circle-check-big"></i> اشتراك فعّال'
-    :
+      :
     '<i data-lucide="circle-x"></i> اشتراك غير فعّال';
 
   A("networkCard")
@@ -1701,16 +2078,12 @@ function renderCustomer(){
         (a?.name||"")
       );
 
-  /*
-    أحدث فاتورة
-  */
-
   A("currentBill")
     .textContent=
 
       inv
-      ?money(inv.amount)
-      :"$ 0.00";
+        ?money(inv.amount)
+        :"$ 0.00";
 
   let billDate=
     document
@@ -2207,8 +2580,8 @@ async function showCustomerTab(type,btn){
 
             ${
               f.admin_note
-              ?" · "+f.admin_note
-              :""
+                ?" · "+f.admin_note
+                :""
             }
 
           </p>
@@ -2385,7 +2758,6 @@ async function submitFault(){
   );
 
 }
-
 
 /* =========================================================
    ADMIN HEADER
@@ -3238,11 +3610,34 @@ async function areas(c){
       .order("name")
     ).data||[];
 
+  function areaStatusLabel(status){
+
+    return({
+
+      stable:"ONLINE",
+      monitoring:"MONITOR",
+      high_load:"HIGH LOAD",
+      outage:"OUTAGE"
+
+    })[status]||"UNKNOWN";
+
+  }
+
+  function breakerStatus(status){
+
+    return(
+      status==="outage"
+      ?"MAIN BREAKER OFF"
+      :"MAIN BREAKER ON"
+    );
+
+  }
+
   c.innerHTML=
 
     header(
       "العلب والمناطق",
-      "الحالة تظهر فورًا عند المشترك."
+      "مركز مراقبة وتوزيع الطاقة وحالة الشبكة لكل منطقة."
     )
 
     +
@@ -3251,67 +3646,160 @@ async function areas(c){
 
     <article class="panel admin-card">
 
-      <div class="boxes-grid">
+      <div class="energy-area-grid">
 
         ${
           ar.map(
             a=>`
 
             <div
-              class="area-card area-editor">
+              class="energy-box ${a.network_status||"stable"}">
 
-              <h4>
-                ${a.name}
-              </h4>
+              <div class="energy-box-top">
 
-              <select
-                id="as_${a.id}">
+                <div class="energy-box-name">
 
-                <option
-                  value="stable"
-                  ${a.network_status==="stable"?"selected":""}>
+                  <div class="energy-box-icon">
 
-                  مستقرة
+                    <i data-lucide="circuit-board"></i>
 
-                </option>
+                    <span class="energy-box-led"></span>
 
-                <option
-                  value="monitoring"
-                  ${a.network_status==="monitoring"?"selected":""}>
+                  </div>
 
-                  متابعة
+                  <div>
 
-                </option>
+                    <h4>${a.name}</h4>
 
-                <option
-                  value="high_load"
-                  ${a.network_status==="high_load"?"selected":""}>
+                    <small>
+                      ELECTRICAL DISTRIBUTION BOX
+                    </small>
 
-                  ضغط مرتفع
+                  </div>
 
-                </option>
+                </div>
 
-                <option
-                  value="outage"
-                  ${a.network_status==="outage"?"selected":""}>
+                <div class="energy-status">
 
-                  انقطاع عام
+                  <span class="energy-status-dot"></span>
 
-                </option>
+                  ${areaStatusLabel(a.network_status)}
 
-              </select>
+                </div>
 
-              <textarea
-                id="am_${a.id}"
-                rows="2">${a.status_message||""}</textarea>
+              </div>
 
-              <button
-                class="row-btn"
-                onclick="saveArea('${a.id}')">
+              <div class="energy-panel">
 
-                حفظ
+                <div class="energy-flow">
 
-              </button>
+                  <svg viewBox="0 0 100 30" aria-hidden="true">
+
+                    <polyline
+                      class="energy-flow-line"
+                      points="
+                      0,15
+                      10,15
+                      15,5
+                      22,26
+                      29,8
+                      36,21
+                      44,15
+                      56,15
+                      62,7
+                      69,24
+                      76,10
+                      83,19
+                      100,15
+                      ">
+                    </polyline>
+
+                  </svg>
+
+                  <div class="energy-flow-label">
+
+                    <strong>
+                      POWER DISTRIBUTION
+                    </strong>
+
+                    <small>
+                      ${stateAr(a.network_status)}
+                    </small>
+
+                  </div>
+
+                </div>
+
+                <div class="energy-breaker-row">
+
+                  <div class="energy-breaker-text">
+
+                    <small>
+                      MAIN DISTRIBUTION
+                    </small>
+
+                    <b>
+                      ${breakerStatus(a.network_status)}
+                    </b>
+
+                  </div>
+
+                  <div class="energy-breaker"></div>
+
+                </div>
+
+              </div>
+
+              <div class="energy-controls">
+
+                <label>
+
+                  حالة الشبكة
+
+                  <select id="as_${a.id}">
+
+                    <option value="stable" ${a.network_status==="stable"?"selected":""}>
+                      مستقرة
+                    </option>
+
+                    <option value="monitoring" ${a.network_status==="monitoring"?"selected":""}>
+                      متابعة
+                    </option>
+
+                    <option value="high_load" ${a.network_status==="high_load"?"selected":""}>
+                      ضغط مرتفع
+                    </option>
+
+                    <option value="outage" ${a.network_status==="outage"?"selected":""}>
+                      انقطاع عام
+                    </option>
+
+                  </select>
+
+                </label>
+
+                <label>
+
+                  رسالة للمشتركين
+
+                  <textarea
+                    id="am_${a.id}"
+                    rows="2"
+                    placeholder="مثال: الشبكة تعمل بصورة طبيعية">${a.status_message||""}</textarea>
+
+                </label>
+
+                <button
+                  class="energy-save-btn"
+                  onclick="saveArea('${a.id}')">
+
+                  <i data-lucide="save"></i>
+
+                  تحديث حالة العلبة
+
+                </button>
+
+              </div>
 
             </div>
 
@@ -3363,7 +3851,6 @@ async function saveArea(id){
   );
 
 }
-
 
 /* =========================================================
    METERS ADMIN
@@ -3614,7 +4101,6 @@ async function addReading(id){
 
 }
 
-
 /* =========================================================
    INVOICES
    ========================================================= */
@@ -3843,6 +4329,7 @@ async function invoices(c){
       </div>
 
     </article>
+
 
     <article class="panel admin-card">
 
@@ -4529,7 +5016,6 @@ function printInvoiceData(i,u){
 
 }
 
-
 /* =========================================================
    PAYMENTS
    ========================================================= */
@@ -5208,7 +5694,6 @@ function printReceiptData(x){
 
 }
 
-
 /* =========================================================
    FAULTS ADMIN
    ========================================================= */
@@ -5430,98 +5915,162 @@ async function openFaultAdmin(id){
 
           <i data-lucide="wrench"></i>
 
-        </div>
-
-        <div>
-
-          <small>
-
-            بلاغ #${f.id}
-
-          </small>
-
-          <h3>
-            ${f.fault_type}
-          </h3>
+          <strong>
+            بلاغ عطل #${f.id}
+          </strong>
 
         </div>
-
-      </div>
-
-      <p>
-        ${f.description||""}
-      </p>
-
-      ${img}
-
-      <label>
-
-        الحالة
-
-        <select id="faStatus">
-
-          <option
-            value="open"
-            ${f.status==="open"?"selected":""}>
-
-            مفتوح
-
-          </option>
-
-          <option
-            value="scheduled"
-            ${f.status==="scheduled"?"selected":""}>
-
-            مجدول
-
-          </option>
-
-          <option
-            value="repairing"
-            ${f.status==="repairing"?"selected":""}>
-
-            جاري الإصلاح
-
-          </option>
-
-          <option
-            value="resolved"
-            ${f.status==="resolved"?"selected":""}>
-
-            تم الحل
-
-          </option>
-
-        </select>
-
-      </label>
-
-      <label>
-
-        ملاحظة للمشترك
-
-        <textarea
-          id="faNote"
-          rows="3">${f.admin_note||""}</textarea>
-
-      </label>
-
-      <div class="dialog-actions">
 
         <button
-          value="cancel"
-          class="cancel">
+          class="icon-btn"
+          value="cancel">
 
-          إغلاق
+          <i data-lucide="x"></i>
 
         </button>
 
+      </div>
+
+      <div class="dialog-content">
+
+        <div class="detail-row">
+
+          <span>
+            المشترك
+          </span>
+
+          <b>
+
+            ${
+              f.profiles
+              ?.full_name||
+              "-"
+            }
+
+          </b>
+
+        </div>
+
+        <div class="detail-row">
+
+          <span>
+            المنطقة
+          </span>
+
+          <b>
+
+            ${
+              f.areas
+              ?.name||
+              "-"
+            }
+
+          </b>
+
+        </div>
+
+        <div class="detail-row">
+
+          <span>
+            رقم العداد
+          </span>
+
+          <b>
+
+            ${
+              f.meters
+              ?.meter_number||
+              "-"
+            }
+
+          </b>
+
+        </div>
+
+        <div class="detail-row">
+
+          <span>
+            نوع العطل
+          </span>
+
+          <b>
+            ${f.fault_type}
+          </b>
+
+        </div>
+
+        <div class="detail-row">
+
+          <span>
+            الوصف
+          </span>
+
+          <b>
+            ${f.description||"-"}
+          </b>
+
+        </div>
+
+        ${img}
+
+        <label>
+
+          حالة البلاغ
+
+          <select id="faultAdminStatus">
+
+            <option
+              value="open"
+              ${f.status==="open"?"selected":""}>
+
+              مفتوح
+
+            </option>
+
+            <option
+              value="scheduled"
+              ${f.status==="scheduled"?"selected":""}>
+
+              مجدول
+
+            </option>
+
+            <option
+              value="repairing"
+              ${f.status==="repairing"?"selected":""}>
+
+              قيد التصليح
+
+            </option>
+
+            <option
+              value="resolved"
+              ${f.status==="resolved"?"selected":""}>
+
+              تم الحل
+
+            </option>
+
+          </select>
+
+        </label>
+
+        <label>
+
+          ملاحظة الإدارة
+
+          <textarea
+            id="faultAdminNote"
+            rows="4">${f.admin_note||""}</textarea>
+
+        </label>
+
         <button
           type="button"
-          class="send"
+          class="action-btn"
           onclick="saveFaultAdmin(${f.id})">
 
-          حفظ
+          حفظ التحديث
 
         </button>
 
@@ -5532,7 +6081,7 @@ async function openFaultAdmin(id){
   `;
 
   document.body
-    .appendChild(d);
+  .appendChild(d);
 
   d.showModal();
 
@@ -5543,24 +6092,25 @@ async function openFaultAdmin(id){
 
 async function saveFaultAdmin(id){
 
+  let status=
+    A("faultAdminStatus")
+    .value;
+
+  let admin_note=
+    A("faultAdminNote")
+    .value
+    .trim();
+
   let r=
     await sb
-    .from(
-      "fault_reports"
-    )
+    .from("fault_reports")
     .update({
 
-      status:
-        A("faStatus")
-        .value,
+      status,
 
       admin_note:
-        A("faNote")
-        .value,
-
-      updated_at:
-        new Date()
-        .toISOString()
+        admin_note||
+        null
 
     })
     .eq(
@@ -5576,15 +6126,27 @@ async function saveFaultAdmin(id){
 
   }
 
-  A("faultAdminDialog")
-    .close();
+  let d=
+    A(
+      "faultAdminDialog"
+    );
+
+  if(d){
+
+    d.close();
+    d.remove();
+
+  }
+
+  alert(
+    "تم تحديث البلاغ"
+  );
 
   renderAdmin(
     "faults"
   );
 
 }
-
 
 /* =========================================================
    NOTIFICATIONS
@@ -5622,7 +6184,6 @@ async function notifications(c){
     header(
       "التنبيهات",
       "إرسال تنبيه عام أو لمنطقة.",
-
       `
 
         <button
@@ -5941,7 +6502,6 @@ document
   }
 
 );
-
 
 A("mobileMenuBtn")
   .onclick=
