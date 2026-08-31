@@ -4588,11 +4588,11 @@ function updateInvoicePreview(){
     cons;
 
   A("ivAmount")
-    .value=
-    money(
-      cons*
-      price
-    );
+  .value=
+  (
+    cons*
+    price
+  ).toFixed(2);
 
 }
 
