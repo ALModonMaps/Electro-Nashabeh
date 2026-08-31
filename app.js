@@ -4553,7 +4553,7 @@ function setInvoiceMeterDefaults(){
     .value="0";
 
   A("ivAmount")
-    .value="$0.00";
+    .value="0.00";
 
 }
 
