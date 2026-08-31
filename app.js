@@ -12710,7 +12710,7 @@ async function(c){
                               title="تسديد"
                               onclick="renderAdmin('payments')">
 
-                              <i data-lucide="banknote-arrow-up"></i>
+                              <i data-lucide="circle-dollar-sign"></i>
 
                             </button>
 
