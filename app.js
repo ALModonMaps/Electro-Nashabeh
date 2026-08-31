@@ -4724,7 +4724,6 @@ async function createInvoice(){
       current_reading:
         current,
 
-      consumption,
 
       consumption_kwh:
         consumption,
