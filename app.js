@@ -10549,10 +10549,3000 @@ async function(
 
 };
 
+/* =========================================================
+   ADMIN PREMIUM V4
+   BILLING CONTROL + PAYMENT & RECEIPT CENTER
+   ========================================================= */
+
+function injectAdminPremiumV4Styles(){
+
+  if(A("nashabehAdminPremiumV4"))return;
+
+  let st=
+    document.createElement("style");
+
+  st.id=
+    "nashabehAdminPremiumV4";
+
+  st.textContent=`
+
+  /* =====================================================
+     SHARED FINANCE UI
+     ===================================================== */
+
+  .finance-summary{
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:11px;
+    margin-bottom:16px;
+  }
+
+  .finance-stat{
+    --finance:#39eaff;
+
+    position:relative;
+    overflow:hidden;
+
+    display:flex;
+    align-items:center;
+    gap:10px;
+
+    min-height:76px;
+
+    padding:12px;
+
+    border-radius:15px;
+
+    border:
+      1px solid
+      color-mix(
+        in srgb,
+        var(--finance) 28%,
+        #183b49
+      );
+
+    background:
+      radial-gradient(
+        circle at 88% 8%,
+        color-mix(
+          in srgb,
+          var(--finance) 11%,
+          transparent
+        ),
+        transparent 40%
+      ),
+      linear-gradient(
+        145deg,
+        #061d28,
+        #03141c
+      );
+
+    box-shadow:
+      inset 0 0 20px rgba(0,0,0,.25);
+  }
+
+  .finance-stat.total{
+    --finance:#43eaff;
+  }
+
+  .finance-stat.paid{
+    --finance:#39ef78;
+  }
+
+  .finance-stat.partial{
+    --finance:#ffc934;
+  }
+
+  .finance-stat.unpaid{
+    --finance:#ff5c69;
+  }
+
+  .finance-stat-icon{
+    width:41px;
+    height:41px;
+
+    flex:0 0 41px;
+
+    display:grid;
+    place-items:center;
+
+    border-radius:12px;
+
+    color:var(--finance);
+
+    border:
+      1px solid
+      color-mix(
+        in srgb,
+        var(--finance) 36%,
+        transparent
+      );
+
+    background:
+      rgba(2,15,21,.75);
+
+    box-shadow:
+      0 0 14px
+      color-mix(
+        in srgb,
+        var(--finance) 10%,
+        transparent
+      );
+  }
+
+  .finance-stat-icon svg{
+    width:19px;
+    height:19px;
+  }
+
+  .finance-stat small{
+    display:block;
+    color:#718f9d;
+    font-size:7px;
+  }
+
+  .finance-stat b{
+    display:block;
+
+    margin-top:2px;
+
+    color:#f3fbff;
+
+    font-size:18px;
+  }
+
+  .finance-stat em{
+    display:block;
+
+    margin-top:3px;
+
+    color:var(--finance);
+
+    font-size:6px;
+    font-style:normal;
+    font-weight:900;
+  }
+
+
+  /* =====================================================
+     BILLING TERMINAL
+     ===================================================== */
+
+  .billing-terminal{
+    position:relative;
+    overflow:hidden;
+
+    margin-bottom:16px;
+
+    padding:17px;
+
+    border-radius:20px;
+
+    border:
+      1px solid rgba(48,218,255,.25);
+
+    background:
+      radial-gradient(
+        circle at 90% 0%,
+        rgba(24,218,255,.10),
+        transparent 34%
+      ),
+      linear-gradient(
+        145deg,
+        #071f2a,
+        #03151e
+      );
+
+    box-shadow:
+      inset 0 0 28px rgba(0,0,0,.30),
+      0 12px 30px rgba(0,0,0,.16);
+  }
+
+  .billing-terminal::after{
+    content:"";
+
+    position:absolute;
+    left:-35%;
+    bottom:0;
+
+    width:30%;
+    height:1px;
+
+    background:
+      linear-gradient(
+        90deg,
+        transparent,
+        #43eaff,
+        transparent
+      );
+
+    box-shadow:
+      0 0 9px #43eaff;
+
+    animation:
+      billingSweep 4s linear infinite;
+  }
+
+  .billing-terminal-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+
+    margin-bottom:15px;
+  }
+
+  .billing-terminal-title{
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+
+  .billing-terminal-icon{
+    position:relative;
+
+    width:44px;
+    height:44px;
+
+    display:grid;
+    place-items:center;
+
+    border-radius:13px;
+
+    color:#42eaff;
+
+    border:
+      1px solid rgba(66,234,255,.34);
+
+    background:#041821;
+
+    box-shadow:
+      0 0 16px rgba(44,226,255,.10);
+  }
+
+  .billing-terminal-icon svg{
+    width:21px;
+    height:21px;
+  }
+
+  .billing-terminal-icon::after{
+    content:"";
+
+    position:absolute;
+    right:4px;
+    top:4px;
+
+    width:6px;
+    height:6px;
+
+    border-radius:50%;
+
+    background:#39ef78;
+
+    box-shadow:
+      0 0 6px #39ef78;
+
+    animation:
+      financeLed 1.5s ease-in-out infinite;
+  }
+
+  .billing-terminal-title h3{
+    margin:0;
+
+    color:#f2fbff;
+
+    font-size:13px;
+  }
+
+  .billing-terminal-title p{
+    margin:3px 0 0;
+
+    color:#7194a2;
+
+    font-size:7px;
+  }
+
+  .billing-price-tag{
+    padding:6px 9px;
+
+    border-radius:999px;
+
+    border:
+      1px solid rgba(255,202,45,.32);
+
+    background:
+      rgba(255,202,45,.06);
+
+    color:#ffd142;
+
+    font-size:7px;
+    font-weight:900;
+  }
+
+  .billing-form-grid{
+    display:grid;
+
+    grid-template-columns:
+      repeat(4,minmax(0,1fr));
+
+    gap:10px;
+  }
+
+  .billing-field{
+    min-width:0;
+  }
+
+  .billing-field.span2{
+    grid-column:span 2;
+  }
+
+  .billing-field label{
+    display:block;
+
+    margin-bottom:5px;
+
+    color:#7899a7;
+
+    font-size:7px;
+  }
+
+  .billing-field input,
+  .billing-field select{
+    width:100%;
+
+    box-sizing:border-box;
+
+    min-height:38px;
+
+    padding:9px 10px;
+
+    border-radius:10px;
+
+    border:
+      1px solid #21495a;
+
+    outline:none;
+
+    background:#061923;
+
+    color:#edf9fd;
+
+    transition:.2s ease;
+  }
+
+  .billing-field input:focus,
+  .billing-field select:focus{
+    border-color:#43eaff;
+
+    box-shadow:
+      0 0 0 2px rgba(67,234,255,.08);
+  }
+
+  .billing-field input[readonly]{
+    color:#78ddeb;
+    background:#04151d;
+  }
+
+  .billing-preview{
+    display:grid;
+
+    grid-template-columns:
+      repeat(3,minmax(0,1fr));
+
+    gap:8px;
+
+    margin-top:12px;
+  }
+
+  .billing-preview-box{
+    padding:10px;
+
+    border-radius:11px;
+
+    border:
+      1px solid #173d4b;
+
+    background:
+      rgba(2,15,21,.56);
+
+    text-align:center;
+  }
+
+  .billing-preview-box small{
+    display:block;
+
+    color:#678b99;
+
+    font-size:6px;
+  }
+
+  .billing-preview-box strong{
+    display:block;
+
+    margin-top:4px;
+
+    color:#e9f9fd;
+
+    font-size:12px;
+  }
+
+  .billing-preview-box.amount strong{
+    color:#ffd043;
+
+    font-size:18px;
+
+    text-shadow:
+      0 0 8px rgba(255,208,67,.16);
+  }
+
+  .billing-save{
+    width:100%;
+
+    min-height:40px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+
+    margin-top:12px;
+
+    border-radius:10px;
+
+    border:
+      1px solid rgba(67,234,255,.42);
+
+    background:
+      linear-gradient(
+        145deg,
+        rgba(30,204,234,.14),
+        rgba(4,34,46,.9)
+      );
+
+    color:#48eaff;
+
+    font-size:8px;
+    font-weight:900;
+
+    cursor:pointer;
+
+    transition:.2s ease;
+  }
+
+  .billing-save:hover{
+    transform:translateY(-1px);
+
+    box-shadow:
+      0 0 16px rgba(50,226,255,.10);
+  }
+
+  .billing-save svg{
+    width:14px;
+    height:14px;
+  }
+
+
+  /* =====================================================
+     INVOICE LEDGER
+     ===================================================== */
+
+  .billing-ledger{
+    border-radius:19px;
+
+    border:
+      1px solid #173d4c;
+
+    background:
+      linear-gradient(
+        145deg,
+        rgba(5,24,33,.97),
+        rgba(2,14,21,.98)
+      );
+
+    overflow:hidden;
+  }
+
+  .billing-ledger-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+
+    padding:14px 15px;
+
+    border-bottom:
+      1px solid #173846;
+  }
+
+  .billing-ledger-head h3{
+    margin:0;
+
+    color:#eefaff;
+
+    font-size:12px;
+  }
+
+  .billing-ledger-head small{
+    color:#668a98;
+
+    font-size:7px;
+  }
+
+  .ledger-count{
+    padding:5px 8px;
+
+    border-radius:999px;
+
+    border:
+      1px solid rgba(62,228,255,.24);
+
+    background:
+      rgba(62,228,255,.05);
+
+    color:#42e9ff;
+
+    font-size:6px;
+    font-weight:900;
+  }
+
+  .invoice-ledger-list{
+    display:grid;
+  }
+
+  .invoice-ledger-row{
+    --invoice:#ff5b69;
+
+    display:grid;
+
+    grid-template-columns:
+      minmax(150px,1.2fr)
+      minmax(95px,.75fr)
+      minmax(90px,.65fr)
+      minmax(110px,.75fr)
+      minmax(90px,.6fr)
+      minmax(110px,.75fr)
+      auto;
+
+    gap:10px;
+    align-items:center;
+
+    min-height:67px;
+
+    padding:10px 14px;
+
+    border-bottom:
+      1px solid #123441;
+
+    transition:.2s ease;
+  }
+
+  .invoice-ledger-row:last-child{
+    border-bottom:0;
+  }
+
+  .invoice-ledger-row:hover{
+    background:
+      color-mix(
+        in srgb,
+        var(--invoice) 3%,
+        rgba(5,25,34,.96)
+      );
+  }
+
+  .invoice-ledger-row.paid{
+    --invoice:#39ef78;
+  }
+
+  .invoice-ledger-row.partial{
+    --invoice:#ffc934;
+  }
+
+  .invoice-client{
+    display:flex;
+    align-items:center;
+    gap:9px;
+
+    min-width:0;
+  }
+
+  .invoice-client-icon{
+    position:relative;
+
+    width:34px;
+    height:34px;
+
+    flex:0 0 34px;
+
+    display:grid;
+    place-items:center;
+
+    border-radius:10px;
+
+    color:var(--invoice);
+
+    border:
+      1px solid
+      color-mix(
+        in srgb,
+        var(--invoice) 28%,
+        transparent
+      );
+
+    background:#041720;
+  }
+
+  .invoice-client-icon svg{
+    width:16px;
+    height:16px;
+  }
+
+  .invoice-client b{
+    display:block;
+
+    color:#eaf7fc;
+
+    font-size:9px;
+
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+
+  .invoice-client small{
+    display:block;
+
+    margin-top:2px;
+
+    color:#648795;
+
+    font-size:6px;
+  }
+
+  .ledger-cell small{
+    display:block;
+
+    color:#638694;
+
+    font-size:6px;
+  }
+
+  .ledger-cell b{
+    display:block;
+
+    margin-top:3px;
+
+    color:#e4f5fa;
+
+    font-size:8px;
+  }
+
+  .ledger-amount b{
+    color:#ffd044;
+
+    font-size:11px;
+  }
+
+  .invoice-state{
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+
+    padding:5px 7px;
+
+    border-radius:999px;
+
+    color:var(--invoice);
+
+    border:
+      1px solid
+      color-mix(
+        in srgb,
+        var(--invoice) 34%,
+        transparent
+      );
+
+    background:
+      color-mix(
+        in srgb,
+        var(--invoice) 6%,
+        transparent
+      );
+
+    font-size:6px;
+    font-weight:900;
+  }
+
+  .invoice-state::before{
+    content:"";
+
+    width:5px;
+    height:5px;
+
+    border-radius:50%;
+
+    background:var(--invoice);
+
+    box-shadow:
+      0 0 5px var(--invoice);
+  }
+
+  .ledger-actions{
+    display:flex;
+    gap:5px;
+  }
+
+  .ledger-action{
+    width:31px;
+    height:31px;
+
+    display:grid;
+    place-items:center;
+
+    padding:0;
+
+    border-radius:8px;
+
+    border:
+      1px solid #245063;
+
+    background:#061923;
+
+    color:#87b6c6;
+
+    cursor:pointer;
+
+    transition:.2s ease;
+  }
+
+  .ledger-action:hover{
+    color:#42eaff;
+    border-color:#42eaff;
+  }
+
+  .ledger-action.pay{
+    color:#42ef7a;
+    border-color:rgba(66,239,122,.28);
+  }
+
+  .ledger-action svg{
+    width:13px;
+    height:13px;
+  }
+
+
+  /* =====================================================
+     PAYMENT TERMINAL
+     ===================================================== */
+
+  .payment-terminal{
+    display:grid;
+
+    grid-template-columns:
+      minmax(0,1.15fr)
+      minmax(260px,.45fr);
+
+    gap:14px;
+
+    margin-bottom:16px;
+  }
+
+  .payment-console,
+  .payment-screen{
+    border-radius:19px;
+
+    border:
+      1px solid #193f4e;
+
+    background:
+      linear-gradient(
+        145deg,
+        #071e29,
+        #03141d
+      );
+
+    box-shadow:
+      inset 0 0 25px rgba(0,0,0,.28);
+  }
+
+  .payment-console{
+    padding:16px;
+  }
+
+  .payment-console-head{
+    display:flex;
+    align-items:center;
+    gap:10px;
+
+    margin-bottom:14px;
+  }
+
+  .payment-console-head-icon{
+    width:42px;
+    height:42px;
+
+    display:grid;
+    place-items:center;
+
+    border-radius:12px;
+
+    color:#42ef7a;
+
+    border:
+      1px solid rgba(66,239,122,.30);
+
+    background:#041820;
+
+    box-shadow:
+      0 0 15px rgba(66,239,122,.08);
+  }
+
+  .payment-console-head-icon svg{
+    width:20px;
+    height:20px;
+  }
+
+  .payment-console-head h3{
+    margin:0;
+
+    color:#effaff;
+
+    font-size:12px;
+  }
+
+  .payment-console-head p{
+    margin:3px 0 0;
+
+    color:#6e91a0;
+
+    font-size:7px;
+  }
+
+  .payment-form-grid{
+    display:grid;
+
+    grid-template-columns:
+      repeat(2,minmax(0,1fr));
+
+    gap:9px;
+  }
+
+  .payment-form-grid .full{
+    grid-column:1/-1;
+  }
+
+  .payment-form-grid label{
+    color:#7697a5;
+
+    font-size:7px;
+  }
+
+  .payment-form-grid input,
+  .payment-form-grid select{
+    width:100%;
+
+    box-sizing:border-box;
+
+    min-height:38px;
+
+    margin-top:5px;
+
+    padding:9px 10px;
+
+    border-radius:10px;
+
+    border:
+      1px solid #214a5a;
+
+    background:#061923;
+
+    color:#edf9fd;
+
+    outline:none;
+  }
+
+  .payment-form-grid input:focus,
+  .payment-form-grid select:focus{
+    border-color:#42ef7a;
+
+    box-shadow:
+      0 0 0 2px rgba(66,239,122,.07);
+  }
+
+  .payment-submit{
+    width:100%;
+
+    min-height:40px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+
+    border-radius:10px;
+
+    border:
+      1px solid rgba(66,239,122,.40);
+
+    background:
+      linear-gradient(
+        145deg,
+        rgba(66,239,122,.12),
+        rgba(3,32,21,.75)
+      );
+
+    color:#45ef7c;
+
+    font-size:8px;
+    font-weight:900;
+
+    cursor:pointer;
+  }
+
+  .payment-submit svg{
+    width:14px;
+    height:14px;
+  }
+
+  .payment-screen{
+    position:relative;
+
+    overflow:hidden;
+
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+
+    padding:16px;
+
+    text-align:center;
+  }
+
+  .payment-screen::before{
+    content:"";
+
+    position:absolute;
+    inset:12px;
+
+    border-radius:13px;
+
+    border:
+      1px dashed rgba(66,239,122,.16);
+  }
+
+  .payment-screen-icon{
+    position:relative;
+    z-index:2;
+
+    width:58px;
+    height:58px;
+
+    display:grid;
+    place-items:center;
+
+    margin-bottom:9px;
+
+    border-radius:18px;
+
+    color:#42ef7a;
+
+    border:
+      1px solid rgba(66,239,122,.32);
+
+    background:
+      radial-gradient(
+        circle,
+        rgba(66,239,122,.12),
+        #041712 70%
+      );
+
+    box-shadow:
+      0 0 21px rgba(66,239,122,.10);
+  }
+
+  .payment-screen-icon svg{
+    width:27px;
+    height:27px;
+  }
+
+  .payment-screen small{
+    position:relative;
+    z-index:2;
+
+    color:#658a77;
+
+    font-size:6px;
+  }
+
+  .payment-screen strong{
+    position:relative;
+    z-index:2;
+
+    display:block;
+
+    margin-top:5px;
+
+    color:#9cffaf;
+
+    font-family:
+      "Courier New",
+      monospace;
+
+    font-size:19px;
+
+    letter-spacing:.06em;
+
+    text-shadow:
+      0 0 8px rgba(85,255,116,.25);
+  }
+
+  .payment-screen span{
+    position:relative;
+    z-index:2;
+
+    display:inline-flex;
+
+    margin-top:8px;
+
+    padding:5px 8px;
+
+    border-radius:999px;
+
+    color:#42ef7a;
+
+    border:
+      1px solid rgba(66,239,122,.25);
+
+    background:
+      rgba(66,239,122,.05);
+
+    font-size:6px;
+    font-weight:900;
+  }
+
+
+  /* =====================================================
+     RECEIPT FEED
+     ===================================================== */
+
+  .receipt-center{
+    overflow:hidden;
+
+    border-radius:19px;
+
+    border:
+      1px solid #183d4b;
+
+    background:
+      linear-gradient(
+        145deg,
+        #061c27,
+        #03141c
+      );
+  }
+
+  .receipt-center-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+
+    padding:14px 15px;
+
+    border-bottom:
+      1px solid #163846;
+  }
+
+  .receipt-center-head h3{
+    margin:0;
+
+    color:#effaff;
+
+    font-size:12px;
+  }
+
+  .receipt-center-head p{
+    margin:3px 0 0;
+
+    color:#668a98;
+
+    font-size:7px;
+  }
+
+  .receipt-list{
+    display:grid;
+  }
+
+  .receipt-row{
+    display:grid;
+
+    grid-template-columns:
+      minmax(150px,1fr)
+      minmax(90px,.6fr)
+      minmax(95px,.65fr)
+      minmax(115px,.8fr)
+      minmax(130px,.9fr)
+      auto;
+
+    gap:10px;
+    align-items:center;
+
+    min-height:62px;
+
+    padding:10px 14px;
+
+    border-bottom:
+      1px solid #123440;
+
+    transition:.2s ease;
+  }
+
+  .receipt-row:last-child{
+    border-bottom:0;
+  }
+
+  .receipt-row:hover{
+    background:
+      rgba(66,239,122,.025);
+  }
+
+  .receipt-client{
+    display:flex;
+    align-items:center;
+    gap:8px;
+
+    min-width:0;
+  }
+
+  .receipt-icon{
+    width:33px;
+    height:33px;
+
+    flex:0 0 33px;
+
+    display:grid;
+    place-items:center;
+
+    border-radius:10px;
+
+    color:#42ef7a;
+
+    border:
+      1px solid rgba(66,239,122,.25);
+
+    background:#041710;
+  }
+
+  .receipt-icon svg{
+    width:15px;
+    height:15px;
+  }
+
+  .receipt-client b{
+    display:block;
+
+    color:#eaf7fb;
+
+    font-size:9px;
+
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+
+  .receipt-client small{
+    display:block;
+
+    margin-top:2px;
+
+    color:#638695;
+
+    font-size:6px;
+  }
+
+  .receipt-data small{
+    display:block;
+
+    color:#628593;
+
+    font-size:6px;
+  }
+
+  .receipt-data b{
+    display:block;
+
+    margin-top:3px;
+
+    color:#deeff5;
+
+    font-size:8px;
+  }
+
+  .receipt-money b{
+    color:#68f391;
+
+    font-size:11px;
+  }
+
+  .receipt-number b{
+    color:#ffd043;
+
+    font-family:
+      "Courier New",
+      monospace;
+
+    font-size:7px;
+  }
+
+  .receipt-print{
+    width:32px;
+    height:32px;
+
+    display:grid;
+    place-items:center;
+
+    border-radius:8px;
+
+    border:
+      1px solid #245064;
+
+    background:#061923;
+
+    color:#43eaff;
+
+    cursor:pointer;
+  }
+
+  .receipt-print svg{
+    width:14px;
+    height:14px;
+  }
+
+
+  /* =====================================================
+     EMPTY STATE
+     ===================================================== */
+
+  .finance-empty{
+    padding:28px;
+
+    text-align:center;
+
+    color:#70929f;
+  }
+
+  .finance-empty svg{
+    width:27px;
+    height:27px;
+
+    margin-bottom:7px;
+
+    color:#42eaff;
+  }
+
+
+  /* =====================================================
+     ANIMATIONS
+     ===================================================== */
+
+  @keyframes billingSweep{
+
+    from{
+      left:-35%;
+    }
+
+    to{
+      left:120%;
+    }
+
+  }
+
+  @keyframes financeLed{
+
+    0%,100%{
+      opacity:.45;
+      transform:scale(.82);
+    }
+
+    50%{
+      opacity:1;
+      transform:scale(1.15);
+    }
+
+  }
+
+
+  /* =====================================================
+     RESPONSIVE
+     ===================================================== */
+
+  @media(max-width:1200px){
+
+    .finance-summary{
+      grid-template-columns:
+        repeat(2,minmax(0,1fr));
+    }
+
+    .billing-form-grid{
+      grid-template-columns:
+        repeat(2,minmax(0,1fr));
+    }
+
+    .invoice-ledger-row{
+      grid-template-columns:
+        minmax(150px,1fr)
+        repeat(3,minmax(85px,.65fr))
+        auto;
+    }
+
+    .invoice-ledger-row
+    .hide-md{
+      display:none;
+    }
+
+    .receipt-row{
+      grid-template-columns:
+        minmax(140px,1fr)
+        repeat(3,minmax(90px,.7fr))
+        auto;
+    }
+
+    .receipt-row
+    .hide-md{
+      display:none;
+    }
+
+  }
+
+  @media(max-width:780px){
+
+    .finance-summary{
+      grid-template-columns:1fr 1fr;
+    }
+
+    .billing-form-grid{
+      grid-template-columns:1fr;
+    }
+
+    .billing-field.span2{
+      grid-column:auto;
+    }
+
+    .billing-preview{
+      grid-template-columns:1fr;
+    }
+
+    .payment-terminal{
+      grid-template-columns:1fr;
+    }
+
+    .payment-form-grid{
+      grid-template-columns:1fr;
+    }
+
+    .payment-form-grid .full{
+      grid-column:auto;
+    }
+
+    .invoice-ledger-row{
+      grid-template-columns:1fr auto;
+
+      padding:12px;
+    }
+
+    .invoice-ledger-row
+    .ledger-cell{
+      display:none;
+    }
+
+    .invoice-ledger-row
+    .ledger-actions{
+      grid-column:1/-1;
+      justify-content:flex-end;
+    }
+
+    .receipt-row{
+      grid-template-columns:1fr auto;
+
+      padding:12px;
+    }
+
+    .receipt-row
+    .receipt-data{
+      display:none;
+    }
+
+  }
+
+  `;
+
+  document.head
+    .appendChild(st);
+
+}
+
+
+/* =========================================================
+   INVOICE HELPERS
+   ========================================================= */
+
+function invoiceStatusEnglish(status){
+
+  return({
+
+    paid:"PAID",
+
+    partial:"PARTIAL",
+
+    unpaid:"UNPAID"
+
+  })[status]||
+  String(status||"UNPAID")
+  .toUpperCase();
+
+}
+
+
+function paymentMethodArabic(method){
+
+  return({
+
+    cash:"نقدًا",
+
+    bank_transfer:"تحويل مصرفي",
+
+    other:"أخرى"
+
+  })[method]||
+  method||
+  "نقدًا";
+
+}
+
+
+/* =========================================================
+   BILLING CONTROL CENTER
+   ========================================================= */
+
+invoices=
+async function(c){
+
+  let[
+    metersResult,
+    invoicesResult,
+    settingsResult,
+    paymentsResult
+  ]=
+  await Promise.all([
+
+    sb.from("meters")
+      .select(
+        "id,meter_number,customer_id,profiles(full_name,phone,area_id,areas(name)),meter_readings(reading_value,reading_date,billing_month)"
+      ),
+
+    sb.from("invoices")
+      .select(
+        "*,profiles(full_name,phone,areas(name)),meters(meter_number)"
+      )
+      .order(
+        "created_at",
+        {
+          ascending:false
+        }
+      ),
+
+    sb.from("app_settings")
+      .select(
+        "kwh_price,currency"
+      )
+      .eq(
+        "id",
+        1
+      )
+      .single(),
+
+    sb.from("payments")
+      .select(
+        "invoice_id,amount"
+      )
+
+  ]);
+
+
+  let ms=
+    metersResult.data||
+    [];
+
+  let iv=
+    invoicesResult.data||
+    [];
+
+  let s=
+    settingsResult.data||
+    {
+      kwh_price:.65,
+      currency:"USD"
+    };
+
+  let pays=
+    paymentsResult.data||
+    [];
+
+
+  window._invoices=
+    iv;
+
+
+  let paidBy={};
+
+  for(
+    let p of pays
+  ){
+
+    paidBy[
+      p.invoice_id
+    ]=
+      (
+        paidBy[
+          p.invoice_id
+        ]||
+        0
+      )
+      +
+      Number(
+        p.amount||
+        0
+      );
+
+  }
+
+
+  let totalValue=
+    iv.reduce(
+      (sum,i)=>
+        sum+
+        Number(
+          i.amount||
+          0
+        ),
+      0
+    );
+
+
+  let paidValue=
+    iv
+    .filter(
+      i=>i.status==="paid"
+    )
+    .reduce(
+      (sum,i)=>
+        sum+
+        Number(
+          i.amount||
+          0
+        ),
+      0
+    );
+
+
+  let outstanding=
+    iv.reduce(
+      (sum,i)=>
+        sum+
+        Math.max(
+          0,
+          Number(
+            i.amount||
+            0
+          )
+          -
+          Number(
+            paidBy[
+              i.id
+            ]||
+            0
+          )
+        ),
+      0
+    );
+
+
+  let partialCount=
+    iv.filter(
+      i=>i.status==="partial"
+    ).length;
+
+
+  let unpaidCount=
+    iv.filter(
+      i=>i.status==="unpaid"
+    ).length;
+
+
+  let options=
+    ms.map(
+      m=>{
+
+        let rr=
+          (
+            m.meter_readings||
+            []
+          )
+          .sort(
+            (a,b)=>
+              new Date(
+                b.reading_date
+              )
+              -
+              new Date(
+                a.reading_date
+              )
+          )[0];
+
+        let last=
+          rr?.reading_value??
+          0;
+
+        return `
+
+          <option
+            value="${m.id}"
+            data-customer="${m.customer_id}"
+            data-last="${last}">
+
+            ${
+              m.profiles
+              ?.full_name||
+              "-"
+            }
+
+            ·
+
+            ${m.meter_number}
+
+          </option>
+
+        `;
+
+      }
+    )
+    .join("");
+
+
+  c.innerHTML=
+
+    header(
+      "الفواتير",
+      "Billing Control Center — إصدار الفواتير ومتابعة الاستهلاك والتحصيل."
+    )
+
+    +
+
+    `
+
+      <section class="finance-summary">
+
+        <article class="finance-stat total">
+
+          <div class="finance-stat-icon">
+            <i data-lucide="files"></i>
+          </div>
+
+          <div>
+
+            <small>
+              إجمالي الفواتير
+            </small>
+
+            <b>
+              ${money(totalValue)}
+            </b>
+
+            <em>
+              ${iv.length} INVOICES
+            </em>
+
+          </div>
+
+        </article>
+
+
+        <article class="finance-stat paid">
+
+          <div class="finance-stat-icon">
+            <i data-lucide="badge-check"></i>
+          </div>
+
+          <div>
+
+            <small>
+              فواتير مدفوعة
+            </small>
+
+            <b>
+              ${money(paidValue)}
+            </b>
+
+            <em>
+              ${
+                iv.filter(
+                  i=>i.status==="paid"
+                ).length
+              }
+              PAID
+            </em>
+
+          </div>
+
+        </article>
+
+
+        <article class="finance-stat partial">
+
+          <div class="finance-stat-icon">
+            <i data-lucide="circle-dollar-sign"></i>
+          </div>
+
+          <div>
+
+            <small>
+              مدفوعة جزئيًا
+            </small>
+
+            <b>
+              ${partialCount}
+            </b>
+
+            <em>
+              PARTIAL
+            </em>
+
+          </div>
+
+        </article>
+
+
+        <article class="finance-stat unpaid">
+
+          <div class="finance-stat-icon">
+            <i data-lucide="triangle-alert"></i>
+          </div>
+
+          <div>
+
+            <small>
+              الرصيد المستحق
+            </small>
+
+            <b>
+              ${money(outstanding)}
+            </b>
+
+            <em>
+              ${unpaidCount} UNPAID
+            </em>
+
+          </div>
+
+        </article>
+
+      </section>
+
+
+      <section class="billing-terminal">
+
+        <div class="billing-terminal-head">
+
+          <div class="billing-terminal-title">
+
+            <div class="billing-terminal-icon">
+              <i data-lucide="calculator"></i>
+            </div>
+
+            <div>
+
+              <h3>
+                إصدار فاتورة جديدة
+              </h3>
+
+              <p>
+                أدخل القراءة الحالية فقط —
+                النظام يحسب الاستهلاك والقيمة تلقائيًا.
+              </p>
+
+            </div>
+
+          </div>
+
+          <span class="billing-price-tag">
+
+            CURRENT RATE ·
+            ${money(s.kwh_price)}
+            / kWh
+
+          </span>
+
+        </div>
+
+
+        <div class="billing-form-grid">
+
+          <div class="billing-field span2">
+
+            <label>
+              المشترك والعداد
+            </label>
+
+            <select
+              id="ivMeter"
+              onchange="setInvoiceMeterDefaults()">
+
+              ${options}
+
+            </select>
+
+          </div>
+
+
+          <div class="billing-field">
+
+            <label>
+              شهر الفاتورة
+            </label>
+
+            <input
+              id="ivMonth"
+              type="month">
+
+          </div>
+
+
+          <div class="billing-field">
+
+            <label>
+              الاستحقاق
+            </label>
+
+            <input
+              id="ivDue"
+              type="date">
+
+          </div>
+
+
+          <div class="billing-field">
+
+            <label>
+              القراءة السابقة
+            </label>
+
+            <input
+              id="ivPrev"
+              type="text"
+              readonly>
+
+          </div>
+
+
+          <div class="billing-field">
+
+            <label>
+              القراءة الحالية
+            </label>
+
+            <input
+              id="ivCur"
+              type="text"
+              inputmode="numeric"
+              autocomplete="off"
+              placeholder="أدخل القراءة الحالية"
+              oninput="updateInvoicePreview()">
+
+          </div>
+
+
+          <div class="billing-field">
+
+            <label>
+              سعر 1 kWh
+            </label>
+
+            <input
+              id="ivPrice"
+              type="text"
+              value="${Number(s.kwh_price).toFixed(2)}"
+              readonly>
+
+          </div>
+
+
+          <div class="billing-field">
+
+            <label>
+              الاستهلاك kWh
+            </label>
+
+            <input
+              id="ivConsumption"
+              type="text"
+              readonly>
+
+          </div>
+
+        </div>
+
+
+        <div class="billing-preview">
+
+          <div class="billing-preview-box">
+
+            <small>
+              PREVIOUS READING
+            </small>
+
+            <strong id="billingPrevVisual">
+              —
+            </strong>
+
+          </div>
+
+
+          <div class="billing-preview-box">
+
+            <small>
+              CONSUMPTION
+            </small>
+
+            <strong id="billingConsumptionVisual">
+              0 kWh
+            </strong>
+
+          </div>
+
+
+          <div class="billing-preview-box amount">
+
+            <small>
+              INVOICE TOTAL
+            </small>
+
+            <strong id="billingAmountVisual">
+              $0.00
+            </strong>
+
+          </div>
+
+        </div>
+
+
+        <input
+          id="ivAmount"
+          type="hidden"
+          readonly>
+
+
+        <button
+          class="billing-save"
+          onclick="createInvoice()">
+
+          <i data-lucide="file-plus-2"></i>
+
+          إصدار وحفظ الفاتورة
+
+        </button>
+
+      </section>
+
+
+      <section class="billing-ledger">
+
+        <div class="billing-ledger-head">
+
+          <div>
+
+            <h3>
+              سجل الفواتير
+            </h3>
+
+            <small>
+              Billing Ledger · أحدث الفواتير أولًا
+            </small>
+
+          </div>
+
+          <span class="ledger-count">
+            ${iv.length} RECORDS
+          </span>
+
+        </div>
+
+
+        <div class="invoice-ledger-list">
+
+          ${
+            iv.map(
+              i=>{
+
+                let consumption=
+                  i.consumption_kwh??
+                  i.consumption??
+                  0;
+
+                let status=
+                  i.status||
+                  "unpaid";
+
+                return `
+
+                  <article
+                    class="invoice-ledger-row ${status}">
+
+                    <div class="invoice-client">
+
+                      <div class="invoice-client-icon">
+                        <i data-lucide="user-round"></i>
+                      </div>
+
+                      <div>
+
+                        <b>
+                          ${
+                            i.profiles
+                            ?.full_name||
+                            "-"
+                          }
+                        </b>
+
+                        <small>
+                          METER ·
+                          ${
+                            i.meters
+                            ?.meter_number||
+                            "-"
+                          }
+                        </small>
+
+                      </div>
+
+                    </div>
+
+
+                    <div class="ledger-cell">
+
+                      <small>
+                        الشهر
+                      </small>
+
+                      <b>
+                        ${i.billing_month||"-"}
+                      </b>
+
+                    </div>
+
+
+                    <div class="ledger-cell hide-md">
+
+                      <small>
+                        القراءة
+                      </small>
+
+                      <b>
+                        ${i.previous_reading}
+                        →
+                        ${i.current_reading}
+                      </b>
+
+                    </div>
+
+
+                    <div class="ledger-cell hide-md">
+
+                      <small>
+                        الاستهلاك
+                      </small>
+
+                      <b>
+                        ${consumption} kWh
+                      </b>
+
+                    </div>
+
+
+                    <div class="ledger-cell">
+
+                      <small>
+                        السعر
+                      </small>
+
+                      <b>
+
+                        $${
+                          Number(
+                            i.price_per_kwh||
+                            i.kwh_price||
+                            0
+                          )
+                          .toFixed(2)
+                        }
+
+                      </b>
+
+                    </div>
+
+
+                    <div class="ledger-cell ledger-amount">
+
+                      <small>
+                        القيمة
+                      </small>
+
+                      <b>
+                        ${money(i.amount)}
+                      </b>
+
+                    </div>
+
+
+                    <div>
+
+                      <span class="invoice-state">
+
+                        ${invoiceStatusEnglish(status)}
+
+                      </span>
+
+                      <div class="ledger-actions">
+
+                        <button
+                          class="ledger-action"
+                          title="طباعة"
+                          onclick="printInvoice('${i.id}')">
+
+                          <i data-lucide="printer"></i>
+
+                        </button>
+
+                        ${
+                          status!=="paid"
+                          ?`
+
+                            <button
+                              class="ledger-action pay"
+                              title="تسديد"
+                              onclick="renderAdmin('payments')">
+
+                              <i data-lucide="banknote-arrow-up"></i>
+
+                            </button>
+
+                          `
+                          :""
+                        }
+
+                      </div>
+
+                    </div>
+
+                  </article>
+
+                `;
+
+              }
+            )
+            .join("")
+
+            ||
+
+            `
+
+              <div class="finance-empty">
+
+                <i data-lucide="file-x-2"></i>
+
+                <div>
+                  لا توجد فواتير حتى الآن
+                </div>
+
+              </div>
+
+            `
+          }
+
+        </div>
+
+      </section>
+
+    `;
+
+
+  setInvoiceMeterDefaults();
+
+  syncBillingVisuals();
+
+}
+
+
+/* =========================================================
+   BILLING VISUAL SYNC
+   ========================================================= */
+
+function syncBillingVisuals(){
+
+  let prev=
+    A("ivPrev");
+
+  let con=
+    A("ivConsumption");
+
+  let amount=
+    A("ivAmount");
+
+  let p=
+    A("billingPrevVisual");
+
+  let c=
+    A("billingConsumptionVisual");
+
+  let a=
+    A("billingAmountVisual");
+
+
+  if(
+    p&&
+    prev
+  ){
+
+    p.textContent=
+      prev.value||
+      "—";
+
+  }
+
+
+  if(
+    c&&
+    con
+  ){
+
+    c.textContent=
+      (
+        con.value||
+        "0"
+      )
+      +
+      " kWh";
+
+  }
+
+
+  if(
+    a&&
+    amount
+  ){
+
+    a.textContent=
+      money(
+        amount.value||
+        0
+      );
+
+  }
+
+}
+
+
+/* preserve old calculation then update premium visual */
+
+const setInvoiceMeterDefaultsPremiumBase=
+  setInvoiceMeterDefaults;
+
+
+setInvoiceMeterDefaults=
+function(){
+
+  setInvoiceMeterDefaultsPremiumBase();
+
+  setTimeout(
+    syncBillingVisuals,
+    0
+  );
+
+};
+
+
+const updateInvoicePreviewPremiumBase=
+  updateInvoicePreview;
+
+
+updateInvoicePreview=
+function(){
+
+  updateInvoicePreviewPremiumBase();
+
+  syncBillingVisuals();
+
+};
+
+
+/* =========================================================
+   PAYMENT & RECEIPT CENTER
+   ========================================================= */
+
+payments=
+async function(c){
+
+  let[
+    p,
+    iv
+  ]=
+  await Promise.all([
+
+    sb.from("payments")
+      .select(
+        "*,profiles(full_name),invoices(billing_month,amount,status)"
+      )
+      .order(
+        "paid_at",
+        {
+          ascending:false
+        }
+      ),
+
+    sb.from("invoices")
+      .select(
+        "*,profiles(full_name),meters(meter_number)"
+      )
+      .neq(
+        "status",
+        "paid"
+      )
+      .order(
+        "created_at",
+        {
+          ascending:false
+        }
+      )
+
+  ]);
+
+
+  let pays=
+    p.data||
+    [];
+
+  let invs=
+    iv.data||
+    [];
+
+
+  window._payments=
+    pays;
+
+
+  let paidBy={};
+
+
+  for(
+    let x of pays
+  ){
+
+    paidBy[
+      x.invoice_id
+    ]=
+      (
+        paidBy[
+          x.invoice_id
+        ]||
+        0
+      )
+      +
+      Number(
+        x.amount||
+        0
+      );
+
+  }
+
+
+  let opts=
+    invs.map(
+      i=>{
+
+        let rem=
+          Math.max(
+            0,
+            Number(
+              i.amount
+            )
+            -
+            Number(
+              paidBy[
+                i.id
+              ]||
+              0
+            )
+          );
+
+        return `
+
+          <option
+            value="${i.id}"
+            data-customer="${i.customer_id}"
+            data-total="${i.amount}"
+            data-paid="${paidBy[i.id]||0}"
+            data-remaining="${rem}">
+
+            ${
+              i.profiles
+              ?.full_name||
+              "-"
+            }
+
+            ·
+            ${i.billing_month}
+
+            · متبقي
+            ${money(rem)}
+
+          </option>
+
+        `;
+
+      }
+    )
+    .join("");
+
+
+  let totalCollected=
+    pays.reduce(
+      (sum,x)=>
+        sum+
+        Number(
+          x.amount||
+          0
+        ),
+      0
+    );
+
+
+  let today=
+    new Date()
+    .toISOString()
+    .slice(
+      0,
+      10
+    );
+
+
+  let todayCollected=
+    pays
+    .filter(
+      x=>
+        String(
+          x.paid_at||
+          ""
+        )
+        .slice(
+          0,
+          10
+        )===
+        today
+    )
+    .reduce(
+      (sum,x)=>
+        sum+
+        Number(
+          x.amount||
+          0
+        ),
+      0
+    );
+
+
+  let remainingTotal=
+    invs.reduce(
+      (sum,i)=>
+        sum+
+        Math.max(
+          0,
+          Number(
+            i.amount||
+            0
+          )
+          -
+          Number(
+            paidBy[
+              i.id
+            ]||
+            0
+          )
+        ),
+      0
+    );
+
+
+  c.innerHTML=
+
+    header(
+      "الدفعات",
+      "Payment & Receipt Center — تسجيل التحصيل وإصدار الإيصالات."
+    )
+
+    +
+
+    `
+
+      <section class="finance-summary">
+
+        <article class="finance-stat total">
+
+          <div class="finance-stat-icon">
+            <i data-lucide="receipt-text"></i>
+          </div>
+
+          <div>
+
+            <small>
+              عدد الدفعات
+            </small>
+
+            <b>
+              ${pays.length}
+            </b>
+
+            <em>
+              RECEIPTS
+            </em>
+
+          </div>
+
+        </article>
+
+
+        <article class="finance-stat paid">
+
+          <div class="finance-stat-icon">
+            <i data-lucide="circle-dollar-sign"></i>
+          </div>
+
+          <div>
+
+            <small>
+              إجمالي المقبوض
+            </small>
+
+            <b>
+              ${money(totalCollected)}
+            </b>
+
+            <em>
+              COLLECTED
+            </em>
+
+          </div>
+
+        </article>
+
+
+        <article class="finance-stat partial">
+
+          <div class="finance-stat-icon">
+            <i data-lucide="calendar-check-2"></i>
+          </div>
+
+          <div>
+
+            <small>
+              مقبوض اليوم
+            </small>
+
+            <b>
+              ${money(todayCollected)}
+            </b>
+
+            <em>
+              TODAY
+            </em>
+
+          </div>
+
+        </article>
+
+
+        <article class="finance-stat unpaid">
+
+          <div class="finance-stat-icon">
+            <i data-lucide="clock-3"></i>
+          </div>
+
+          <div>
+
+            <small>
+              متبقي للتحصيل
+            </small>
+
+            <b>
+              ${money(remainingTotal)}
+            </b>
+
+            <em>
+              OUTSTANDING
+            </em>
+
+          </div>
+
+        </article>
+
+      </section>
+
+
+      <section class="payment-terminal">
+
+        <article class="payment-console">
+
+          <div class="payment-console-head">
+
+            <div class="payment-console-head-icon">
+
+              <i data-lucide="credit-card"></i>
+
+            </div>
+
+            <div>
+
+              <h3>
+                تسجيل دفعة
+              </h3>
+
+              <p>
+                دفعة كاملة أو جزئية مع إصدار رقم إيصال تلقائي.
+              </p>
+
+            </div>
+
+          </div>
+
+
+          <div class="payment-form-grid">
+
+            <label class="full">
+
+              الفاتورة
+
+              <select
+                id="payInvoice"
+                onchange="setPaymentDefaults()">
+
+                ${opts}
+
+              </select>
+
+            </label>
+
+
+            <label>
+
+              المبلغ المدفوع
+
+              <input
+                id="payAmount"
+                type="text"
+                inputmode="decimal"
+                oninput="syncPaymentScreen()">
+
+            </label>
+
+
+            <label>
+
+              طريقة الدفع
+
+              <select id="payMethod">
+
+                <option value="cash">
+                  نقدًا Cash
+                </option>
+
+                <option value="bank_transfer">
+                  تحويل مصرفي
+                </option>
+
+                <option value="other">
+                  أخرى
+                </option>
+
+              </select>
+
+            </label>
+
+
+            <label>
+
+              مرجع / رقم عملية
+
+              <input
+                id="payReference"
+                autocomplete="off">
+
+            </label>
+
+
+            <label>
+
+              ملاحظة
+
+              <input
+                id="payNote"
+                autocomplete="off">
+
+            </label>
+
+
+            <div class="full">
+
+              <button
+                class="payment-submit"
+                onclick="recordPayment()">
+
+                <i data-lucide="badge-dollar-sign"></i>
+
+                تسجيل الدفعة وإصدار الإيصال
+
+              </button>
+
+            </div>
+
+          </div>
+
+        </article>
+
+
+        <aside class="payment-screen">
+
+          <div class="payment-screen-icon">
+
+            <i data-lucide="wallet-cards"></i>
+
+          </div>
+
+          <small>
+            PAYMENT AMOUNT
+          </small>
+
+          <strong id="paymentScreenAmount">
+            $0.00
+          </strong>
+
+          <span>
+            TERMINAL READY
+          </span>
+
+        </aside>
+
+      </section>
+
+
+      <section class="receipt-center">
+
+        <div class="receipt-center-head">
+
+          <div>
+
+            <h3>
+              سجل الإيصالات
+            </h3>
+
+            <p>
+              Receipt History · أحدث عمليات القبض أولًا
+            </p>
+
+          </div>
+
+          <span class="ledger-count">
+            ${pays.length} RECEIPTS
+          </span>
+
+        </div>
+
+
+        <div class="receipt-list">
+
+          ${
+            pays.map(
+              x=>`
+
+                <article class="receipt-row">
+
+                  <div class="receipt-client">
+
+                    <div class="receipt-icon">
+                      <i data-lucide="user-round-check"></i>
+                    </div>
+
+                    <div>
+
+                      <b>
+                        ${
+                          x.profiles
+                          ?.full_name||
+                          "-"
+                        }
+                      </b>
+
+                      <small>
+                        ${
+                          x.invoices
+                          ?.billing_month||
+                          "-"
+                        }
+                      </small>
+
+                    </div>
+
+                  </div>
+
+
+                  <div class="receipt-data receipt-money">
+
+                    <small>
+                      المبلغ
+                    </small>
+
+                    <b>
+                      ${money(x.amount)}
+                    </b>
+
+                  </div>
+
+
+                  <div class="receipt-data">
+
+                    <small>
+                      الطريقة
+                    </small>
+
+                    <b>
+                      ${paymentMethodArabic(x.payment_method)}
+                    </b>
+
+                  </div>
+
+
+                  <div class="receipt-data receipt-number">
+
+                    <small>
+                      رقم الإيصال
+                    </small>
+
+                    <b>
+                      ${x.receipt_no||"-"}
+                    </b>
+
+                  </div>
+
+
+                  <div class="receipt-data hide-md">
+
+                    <small>
+                      التاريخ
+                    </small>
+
+                    <b>
+
+                      ${
+                        new Date(
+                          x.paid_at
+                        )
+                        .toLocaleString(
+                          "ar-LB"
+                        )
+                      }
+
+                    </b>
+
+                  </div>
+
+
+                  <button
+                    class="receipt-print"
+                    title="طباعة الإيصال"
+                    onclick="printReceipt('${x.id}')">
+
+                    <i data-lucide="printer"></i>
+
+                  </button>
+
+                </article>
+
+              `
+            )
+            .join("")
+
+            ||
+
+            `
+
+              <div class="finance-empty">
+
+                <i data-lucide="receipt"></i>
+
+                <div>
+                  لا توجد دفعات مسجلة بعد
+                </div>
+
+              </div>
+
+            `
+          }
+
+        </div>
+
+      </section>
+
+    `;
+
+
+  setPaymentDefaults();
+
+  syncPaymentScreen();
+
+}
+
+
+/* =========================================================
+   PAYMENT SCREEN SYNC
+   ========================================================= */
+
+function syncPaymentScreen(){
+
+  let amount=
+    A("payAmount");
+
+  let screen=
+    A("paymentScreenAmount");
+
+
+  if(
+    !screen
+  )return;
+
+
+  screen.textContent=
+    money(
+      amount?.value||
+      0
+    );
+
+}
+
+
+const setPaymentDefaultsPremiumBase=
+  setPaymentDefaults;
+
+
+setPaymentDefaults=
+function(){
+
+  setPaymentDefaultsPremiumBase();
+
+  setTimeout(
+    syncPaymentScreen,
+    0
+  );
+
+};
+
+
+/* =========================================================
+   LOAD V4 STYLES
+   ========================================================= */
+
+injectAdminPremiumV4Styles();
 
 injectAdminPremiumV3Styles();
 
 injectAdminPremiumV2Styles();
+
 injectEnhancedStyles();
 
 boot();
