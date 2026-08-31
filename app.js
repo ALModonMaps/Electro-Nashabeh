@@ -6516,7 +6516,2090 @@ A("mobileMenuBtn")
 
   };
 
+/* =========================================================
+   ADMIN PREMIUM V2 — DASHBOARD + METERS
+   ========================================================= */
 
+function injectAdminPremiumV2Styles(){
+
+  if(A("nashabehAdminPremiumV2"))return;
+
+  let st=
+    document.createElement(
+      "style"
+    );
+
+  st.id=
+    "nashabehAdminPremiumV2";
+
+  st.textContent=`
+
+  .control-center{
+    display:grid;
+    gap:18px;
+  }
+
+  .control-hero{
+    position:relative;
+    overflow:hidden;
+
+    display:grid;
+    grid-template-columns:minmax(0,1.45fr) minmax(280px,.55fr);
+    gap:18px;
+
+    min-height:185px;
+
+    padding:22px;
+
+    border-radius:22px;
+
+    border:
+      1px solid rgba(35,211,255,.22);
+
+    background:
+      radial-gradient(
+        circle at 12% 20%,
+        rgba(0,224,255,.13),
+        transparent 28%
+      ),
+      radial-gradient(
+        circle at 90% 0%,
+        rgba(255,191,36,.10),
+        transparent 27%
+      ),
+      linear-gradient(
+        145deg,
+        #061c28 0%,
+        #03131d 58%,
+        #07141b 100%
+      );
+
+    box-shadow:
+      inset 0 0 38px rgba(0,0,0,.35),
+      0 18px 45px rgba(0,0,0,.22);
+  }
+
+  .control-hero::after{
+    content:"";
+
+    position:absolute;
+
+    left:-25%;
+    bottom:0;
+
+    width:25%;
+    height:1px;
+
+    background:
+      linear-gradient(
+        90deg,
+        transparent,
+        #1ce7ff,
+        transparent
+      );
+
+    box-shadow:
+      0 0 12px #1ce7ff;
+
+    animation:
+      ccSweep 4s linear infinite;
+  }
+
+  .control-hero-copy{
+    position:relative;
+    z-index:2;
+    align-self:center;
+  }
+
+  .control-eyebrow{
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+
+    margin-bottom:10px;
+
+    padding:6px 9px;
+
+    border-radius:999px;
+
+    border:
+      1px solid rgba(36,229,255,.28);
+
+    background:
+      rgba(13,69,86,.27);
+
+    color:#46e7ff;
+
+    font-size:8px;
+    font-weight:900;
+
+    letter-spacing:.08em;
+  }
+
+  .control-live-dot{
+    width:7px;
+    height:7px;
+
+    border-radius:50%;
+
+    background:#36f47a;
+
+    box-shadow:
+      0 0 6px #36f47a,
+      0 0 13px #36f47a;
+
+    animation:
+      ccPulse 1.4s ease-in-out infinite;
+  }
+
+  .control-hero h2{
+    margin:0;
+
+    color:#f5fbff;
+
+    font-size:24px;
+
+    line-height:1.25;
+  }
+
+  .control-hero p{
+    max-width:620px;
+
+    margin:9px 0 0;
+
+    color:#88a8b8;
+
+    font-size:10px;
+
+    line-height:1.8;
+  }
+
+  .control-grid-visual{
+    position:relative;
+
+    min-height:138px;
+
+    display:grid;
+    place-items:center;
+
+    border-radius:18px;
+
+    border:
+      1px solid rgba(43,203,255,.20);
+
+    background:
+      linear-gradient(
+        rgba(41,203,255,.055) 1px,
+        transparent 1px
+      ),
+      linear-gradient(
+        90deg,
+        rgba(41,203,255,.055) 1px,
+        transparent 1px
+      ),
+      rgba(1,12,18,.52);
+
+    background-size:
+      18px 18px;
+
+    overflow:hidden;
+  }
+
+  .control-grid-visual::before{
+    content:"";
+
+    position:absolute;
+
+    inset:18px;
+
+    border:
+      1px dashed rgba(51,235,255,.18);
+
+    border-radius:14px;
+  }
+
+  .grid-core{
+    position:relative;
+
+    width:84px;
+    height:84px;
+
+    display:grid;
+    place-items:center;
+
+    border-radius:24px;
+
+    border:
+      1px solid rgba(63,237,255,.4);
+
+    color:#49ecff;
+
+    background:
+      radial-gradient(
+        circle,
+        rgba(21,213,255,.15),
+        rgba(4,22,30,.96) 68%
+      );
+
+    box-shadow:
+      0 0 24px rgba(28,221,255,.17),
+      inset 0 0 18px rgba(0,0,0,.46);
+  }
+
+  .grid-core svg{
+    width:38px;
+    height:38px;
+
+    filter:
+      drop-shadow(
+        0 0 7px rgba(44,232,255,.48)
+      );
+  }
+
+  .grid-orbit{
+    position:absolute;
+
+    width:116px;
+    height:116px;
+
+    border:
+      1px solid rgba(50,228,255,.16);
+
+    border-radius:50%;
+
+    animation:
+      ccRotate 8s linear infinite;
+  }
+
+  .grid-orbit::before,
+  .grid-orbit::after{
+    content:"";
+
+    position:absolute;
+
+    width:7px;
+    height:7px;
+
+    border-radius:50%;
+
+    background:#ffd02c;
+
+    box-shadow:
+      0 0 8px #ffd02c;
+  }
+
+  .grid-orbit::before{
+    top:-4px;
+    left:50%;
+  }
+
+  .grid-orbit::after{
+    bottom:-4px;
+    left:50%;
+
+    background:#39f078;
+
+    box-shadow:
+      0 0 8px #39f078;
+  }
+
+  .control-stats{
+    display:grid;
+
+    grid-template-columns:
+      repeat(
+        4,
+        minmax(0,1fr)
+      );
+
+    gap:12px;
+  }
+
+  .control-kpi{
+    --kpi:#33e8ff;
+    --kpi-bg:
+      rgba(51,232,255,.12);
+
+    position:relative;
+
+    min-height:105px;
+
+    overflow:hidden;
+
+    display:flex;
+    align-items:center;
+    gap:12px;
+
+    padding:15px;
+
+    border-radius:17px;
+
+    border:
+      1px solid
+      color-mix(
+        in srgb,
+        var(--kpi) 28%,
+        #18394a
+      );
+
+    background:
+      radial-gradient(
+        circle at 86% 10%,
+        var(--kpi-bg),
+        transparent 36%
+      ),
+      linear-gradient(
+        145deg,
+        rgba(7,27,37,.98),
+        rgba(3,16,24,.98)
+      );
+
+    box-shadow:
+      inset 0 0 22px rgba(0,0,0,.28);
+
+    transition:.22s ease;
+  }
+
+  .control-kpi:hover{
+    transform:
+      translateY(-3px);
+
+    border-color:
+      color-mix(
+        in srgb,
+        var(--kpi) 52%,
+        #173a49
+      );
+
+    box-shadow:
+      inset 0 0 22px rgba(0,0,0,.32),
+      0 11px 28px rgba(0,0,0,.24),
+      0 0 18px var(--kpi-bg);
+  }
+
+  .control-kpi.green{
+    --kpi:#3bf278;
+    --kpi-bg:
+      rgba(59,242,120,.12);
+  }
+
+  .control-kpi.red{
+    --kpi:#ff5b69;
+    --kpi-bg:
+      rgba(255,91,105,.12);
+  }
+
+  .control-kpi.gold{
+    --kpi:#ffc72c;
+    --kpi-bg:
+      rgba(255,199,44,.12);
+  }
+
+  .control-kpi.blue{
+    --kpi:#5e9cff;
+    --kpi-bg:
+      rgba(94,156,255,.12);
+  }
+
+  .control-kpi.teal{
+    --kpi:#20e0c0;
+    --kpi-bg:
+      rgba(32,224,192,.12);
+  }
+
+  .control-kpi.lime{
+    --kpi:#9af35d;
+    --kpi-bg:
+      rgba(154,243,93,.12);
+  }
+
+  .control-kpi-icon{
+    width:45px;
+    height:45px;
+
+    flex:
+      0 0 45px;
+
+    display:grid;
+    place-items:center;
+
+    border-radius:13px;
+
+    color:
+      var(--kpi);
+
+    border:
+      1px solid
+      color-mix(
+        in srgb,
+        var(--kpi) 38%,
+        transparent
+      );
+
+    background:
+      rgba(2,16,23,.72);
+
+    box-shadow:
+      0 0 15px var(--kpi-bg),
+      inset 0 0 9px rgba(0,0,0,.36);
+  }
+
+  .control-kpi-icon svg{
+    width:21px;
+    height:21px;
+  }
+
+  .control-kpi small{
+    display:block;
+
+    color:#789baa;
+
+    font-size:8px;
+
+    margin-bottom:3px;
+  }
+
+  .control-kpi strong{
+    display:block;
+
+    color:#f3fbff;
+
+    font-size:22px;
+
+    line-height:1;
+  }
+
+  .control-kpi em{
+    display:block;
+
+    margin-top:6px;
+
+    color:
+      var(--kpi);
+
+    font-size:7px;
+    font-style:normal;
+    font-weight:800;
+  }
+
+  .network-overview{
+    padding:17px;
+
+    border-radius:19px;
+
+    border:
+      1px solid #153b4d;
+
+    background:
+      linear-gradient(
+        145deg,
+        rgba(5,24,34,.97),
+        rgba(2,14,21,.98)
+      );
+
+    box-shadow:
+      inset 0 0 28px rgba(0,0,0,.3);
+  }
+
+  .network-overview-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+
+    margin-bottom:13px;
+  }
+
+  .network-overview-head h3{
+    margin:0;
+
+    color:#effaff;
+
+    font-size:14px;
+  }
+
+  .network-overview-head p{
+    margin:3px 0 0;
+
+    color:#6f91a0;
+
+    font-size:8px;
+  }
+
+  .network-open-btn{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+
+    padding:8px 11px;
+
+    border-radius:9px;
+
+    border:
+      1px solid rgba(255,199,44,.36);
+
+    background:
+      rgba(255,199,44,.08);
+
+    color:#ffd34a;
+
+    font-size:8px;
+    font-weight:800;
+
+    cursor:pointer;
+  }
+
+  .network-open-btn svg{
+    width:13px;
+    height:13px;
+  }
+
+  .network-mini-grid{
+    display:grid;
+
+    grid-template-columns:
+      repeat(
+        4,
+        minmax(0,1fr)
+      );
+
+    gap:9px;
+  }
+
+  .network-mini{
+    --net:#39f078;
+
+    position:relative;
+
+    display:flex;
+    align-items:center;
+    gap:9px;
+
+    min-height:68px;
+
+    padding:10px;
+
+    border-radius:12px;
+
+    border:
+      1px solid
+      color-mix(
+        in srgb,
+        var(--net) 25%,
+        #173848
+      );
+
+    background:
+      linear-gradient(
+        145deg,
+        rgba(5,24,32,.94),
+        rgba(2,14,21,.96)
+      );
+
+    cursor:pointer;
+
+    transition:.2s ease;
+  }
+
+  .network-mini:hover{
+    transform:
+      translateY(-2px);
+
+    box-shadow:
+      0 0 14px
+      color-mix(
+        in srgb,
+        var(--net) 12%,
+        transparent
+      );
+  }
+
+  .network-mini.monitoring{
+    --net:#ffc72c;
+  }
+
+  .network-mini.high_load{
+    --net:#ff8c33;
+  }
+
+  .network-mini.outage{
+    --net:#ff5967;
+  }
+
+  .network-mini-led{
+    width:10px;
+    height:10px;
+
+    flex:
+      0 0 10px;
+
+    border-radius:50%;
+
+    background:
+      var(--net);
+
+    box-shadow:
+      0 0 5px var(--net),
+      0 0 12px var(--net);
+
+    animation:
+      ccPulse 1.5s ease-in-out infinite;
+  }
+
+  .network-mini b{
+    display:block;
+
+    color:#eef9fd;
+
+    font-size:9px;
+  }
+
+  .network-mini small{
+    display:block;
+
+    margin-top:3px;
+
+    color:
+      var(--net);
+
+    font-size:7px;
+    font-weight:800;
+  }
+
+  .meters-control-grid{
+    display:grid;
+
+    grid-template-columns:
+      repeat(
+        3,
+        minmax(260px,1fr)
+      );
+
+    gap:16px;
+  }
+
+  .meter-admin-unit{
+    --meter-accent:#35e9ff;
+
+    position:relative;
+
+    overflow:hidden;
+
+    padding:16px;
+
+    border-radius:20px;
+
+    border:
+      1px solid rgba(41,212,242,.28);
+
+    background:
+      radial-gradient(
+        circle at 90% 0%,
+        rgba(36,218,255,.11),
+        transparent 34%
+      ),
+      linear-gradient(
+        145deg,
+        #071e2a,
+        #03141d 68%,
+        #06131a
+      );
+
+    box-shadow:
+      inset 0 0 26px rgba(0,0,0,.38),
+      0 13px 30px rgba(0,0,0,.20);
+  }
+
+  .meter-admin-unit.inactive{
+    --meter-accent:#ff6471;
+
+    border-color:
+      rgba(255,100,113,.25);
+  }
+
+  .meter-admin-unit::after{
+    content:"";
+
+    position:absolute;
+
+    left:-35%;
+    bottom:0;
+
+    width:30%;
+    height:1px;
+
+    background:
+      linear-gradient(
+        90deg,
+        transparent,
+        var(--meter-accent),
+        transparent
+      );
+
+    box-shadow:
+      0 0 8px var(--meter-accent);
+
+    animation:
+      ccSweep 3.3s linear infinite;
+  }
+
+  .meter-admin-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+
+    margin-bottom:13px;
+  }
+
+  .meter-user{
+    display:flex;
+    align-items:center;
+    gap:9px;
+
+    min-width:0;
+  }
+
+  .meter-user-icon{
+    position:relative;
+
+    width:42px;
+    height:42px;
+
+    flex:
+      0 0 42px;
+
+    display:grid;
+    place-items:center;
+
+    border-radius:12px;
+
+    color:
+      var(--meter-accent);
+
+    border:
+      1px solid
+      color-mix(
+        in srgb,
+        var(--meter-accent) 35%,
+        transparent
+      );
+
+    background:#051823;
+
+    box-shadow:
+      0 0 13px
+      color-mix(
+        in srgb,
+        var(--meter-accent) 13%,
+        transparent
+      );
+  }
+
+  .meter-user-icon svg{
+    width:21px;
+    height:21px;
+  }
+
+  .meter-user-led{
+    position:absolute;
+
+    right:-2px;
+    top:-2px;
+
+    width:8px;
+    height:8px;
+
+    border-radius:50%;
+
+    background:
+      var(--meter-accent);
+
+    box-shadow:
+      0 0 5px var(--meter-accent),
+      0 0 10px var(--meter-accent);
+
+    animation:
+      ccPulse 1.4s ease-in-out infinite;
+  }
+
+  .meter-user b{
+    display:block;
+
+    overflow:hidden;
+
+    text-overflow:ellipsis;
+
+    white-space:nowrap;
+
+    color:#f1f9fd;
+
+    font-size:11px;
+  }
+
+  .meter-user small{
+    display:block;
+
+    margin-top:2px;
+
+    color:#708f9d;
+
+    font-size:7px;
+  }
+
+  .meter-state-pill{
+    padding:5px 8px;
+
+    border-radius:999px;
+
+    color:
+      var(--meter-accent);
+
+    border:
+      1px solid
+      color-mix(
+        in srgb,
+        var(--meter-accent) 38%,
+        transparent
+      );
+
+    background:
+      color-mix(
+        in srgb,
+        var(--meter-accent) 8%,
+        transparent
+      );
+
+    font-size:7px;
+    font-weight:900;
+  }
+
+  .meter-digital{
+    position:relative;
+
+    overflow:hidden;
+
+    min-height:84px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    margin-bottom:12px;
+
+    border-radius:14px;
+
+    border:
+      1px solid #1c4b57;
+
+    background:
+      linear-gradient(
+        180deg,
+        #020806,
+        #07110b
+      );
+
+    box-shadow:
+      inset 0 0 20px #000,
+      0 0 15px rgba(48,255,117,.06);
+  }
+
+  .meter-digital::before{
+    content:"";
+
+    position:absolute;
+
+    inset:0;
+
+    background:
+      linear-gradient(
+        180deg,
+        transparent 0 40%,
+        rgba(117,255,137,.07) 49%,
+        rgba(117,255,137,.13) 51%,
+        transparent 60%
+      );
+
+    transform:
+      translateY(-120%);
+
+    animation:
+      meterAdminScan 2.7s linear infinite;
+  }
+
+  .meter-digital strong{
+    position:relative;
+    z-index:2;
+
+    color:#9cff6a;
+
+    font-family:
+      "Courier New",
+      Consolas,
+      monospace;
+
+    font-size:27px;
+
+    letter-spacing:.11em;
+
+    text-shadow:
+      0 0 5px #69ff47,
+      0 0 12px rgba(87,255,69,.5);
+  }
+
+  .meter-digital span{
+    position:absolute;
+
+    right:11px;
+    bottom:7px;
+
+    color:#d8fce2;
+
+    font-size:7px;
+    font-weight:900;
+  }
+
+  .meter-wavebar{
+    position:relative;
+
+    height:36px;
+
+    margin-bottom:12px;
+
+    overflow:hidden;
+
+    border-radius:10px;
+
+    border:
+      1px solid #173b47;
+
+    background:#041119;
+  }
+
+  .meter-wavebar svg{
+    position:absolute;
+
+    left:8px;
+    top:4px;
+
+    width:105px;
+    height:28px;
+  }
+
+  .meter-wavebar polyline{
+    fill:none;
+
+    stroke:
+      var(--meter-accent);
+
+    stroke-width:2;
+
+    stroke-dasharray:
+      8 6;
+
+    filter:
+      drop-shadow(
+        0 0 4px var(--meter-accent)
+      );
+
+    animation:
+      areaElectricFlow .55s linear infinite;
+  }
+
+  .meter-wavebar label{
+    position:absolute;
+
+    right:9px;
+    top:8px;
+
+    color:#789ba8;
+
+    font-size:6px;
+
+    text-align:right;
+  }
+
+  .meter-wavebar label b{
+    display:block;
+
+    color:
+      var(--meter-accent);
+
+    font-size:8px;
+
+    margin-top:1px;
+  }
+
+  .meter-admin-controls{
+    display:grid;
+
+    grid-template-columns:
+      1fr auto;
+
+    gap:8px;
+
+    align-items:end;
+  }
+
+  .meter-admin-controls label{
+    color:#7f9eaa;
+
+    font-size:7px;
+  }
+
+  .meter-admin-controls input{
+    width:100%;
+
+    box-sizing:border-box;
+
+    margin-top:5px;
+
+    padding:9px 10px;
+
+    border-radius:9px;
+
+    border:
+      1px solid #245064;
+
+    background:#061a24;
+
+    color:#eaf9ff;
+
+    outline:none;
+  }
+
+  .meter-admin-controls input:focus{
+    border-color:
+      var(--meter-accent);
+
+    box-shadow:
+      0 0 0 2px
+      color-mix(
+        in srgb,
+        var(--meter-accent) 12%,
+        transparent
+      );
+  }
+
+  .meter-admin-actions{
+    display:flex;
+
+    gap:7px;
+
+    margin-top:9px;
+  }
+
+  .meter-admin-actions button{
+    flex:1;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+
+    min-height:36px;
+
+    border-radius:9px;
+
+    border:
+      1px solid #285468;
+
+    background:#071b26;
+
+    color:#acd0dd;
+
+    font-size:8px;
+    font-weight:800;
+
+    cursor:pointer;
+
+    transition:.2s ease;
+  }
+
+  .meter-admin-actions button:hover{
+    transform:
+      translateY(-1px);
+
+    border-color:
+      var(--meter-accent);
+
+    color:
+      var(--meter-accent);
+  }
+
+  .meter-admin-actions button.primary-meter{
+    border-color:
+      color-mix(
+        in srgb,
+        var(--meter-accent) 48%,
+        #24485a
+      );
+
+    color:
+      var(--meter-accent);
+
+    background:
+      color-mix(
+        in srgb,
+        var(--meter-accent) 7%,
+        #071b26
+      );
+  }
+
+  .meter-admin-actions svg{
+    width:13px;
+    height:13px;
+  }
+
+  .meters-summary{
+    display:grid;
+
+    grid-template-columns:
+      repeat(
+        3,
+        minmax(0,1fr)
+      );
+
+    gap:10px;
+
+    margin-bottom:15px;
+  }
+
+  .meter-summary-card{
+    display:flex;
+    align-items:center;
+    gap:10px;
+
+    padding:12px;
+
+    border-radius:13px;
+
+    border:
+      1px solid #193e4e;
+
+    background:
+      linear-gradient(
+        145deg,
+        rgba(7,27,37,.96),
+        rgba(3,15,22,.96)
+      );
+  }
+
+  .meter-summary-card i,
+  .meter-summary-card svg{
+    width:18px;
+    height:18px;
+
+    color:#43eaff;
+  }
+
+  .meter-summary-card small{
+    display:block;
+
+    color:#7798a5;
+
+    font-size:7px;
+  }
+
+  .meter-summary-card b{
+    display:block;
+
+    color:#f3fbff;
+
+    font-size:16px;
+
+    margin-top:2px;
+  }
+
+  @keyframes ccSweep{
+
+    from{
+      left:-35%;
+    }
+
+    to{
+      left:120%;
+    }
+
+  }
+
+  @keyframes ccPulse{
+
+    0%,100%{
+      opacity:.5;
+      transform:scale(.82);
+    }
+
+    50%{
+      opacity:1;
+      transform:scale(1.14);
+    }
+
+  }
+
+  @keyframes ccRotate{
+
+    to{
+      transform:rotate(360deg);
+    }
+
+  }
+
+  @keyframes meterAdminScan{
+
+    from{
+      transform:translateY(-120%);
+    }
+
+    to{
+      transform:translateY(120%);
+    }
+
+  }
+
+  @media(max-width:1250px){
+
+    .control-stats{
+      grid-template-columns:
+        repeat(
+          2,
+          minmax(0,1fr)
+        );
+    }
+
+    .network-mini-grid{
+      grid-template-columns:
+        repeat(
+          2,
+          minmax(0,1fr)
+        );
+    }
+
+    .meters-control-grid{
+      grid-template-columns:
+        repeat(
+          2,
+          minmax(250px,1fr)
+        );
+    }
+
+  }
+
+  @media(max-width:760px){
+
+    .control-hero{
+      grid-template-columns:1fr;
+      padding:15px;
+    }
+
+    .control-grid-visual{
+      min-height:120px;
+    }
+
+    .control-stats{
+      grid-template-columns:
+        1fr 1fr;
+    }
+
+    .control-kpi{
+      min-height:88px;
+      padding:11px;
+    }
+
+    .control-kpi strong{
+      font-size:18px;
+    }
+
+    .network-mini-grid{
+      grid-template-columns:1fr;
+    }
+
+    .meters-control-grid{
+      grid-template-columns:1fr;
+    }
+
+    .meters-summary{
+      grid-template-columns:1fr;
+    }
+
+  }
+
+  `;
+
+  document.head
+    .appendChild(st);
+
+}
+
+
+function adminKpi(
+  icon,
+  label,
+  value,
+  cls="",
+  sub="LIVE DATA"
+){
+
+  return `
+
+    <article class="control-kpi ${cls}">
+
+      <div class="control-kpi-icon">
+
+        <i data-lucide="${icon}"></i>
+
+      </div>
+
+      <div>
+
+        <small>
+          ${label}
+        </small>
+
+        <strong>
+          ${value}
+        </strong>
+
+        <em>
+          ${sub}
+        </em>
+
+      </div>
+
+    </article>
+
+  `;
+
+}
+
+
+async function renderDashboardPremium(c){
+
+  let[
+    pr,
+    ar,
+    me,
+    fa,
+    iv,
+    pay
+  ]=
+  await Promise.all([
+
+    sb.from("profiles")
+      .select(
+        "id,active,role"
+      ),
+
+    sb.from("areas")
+      .select("*"),
+
+    sb.from("meters")
+      .select("id"),
+
+    sb.from("fault_reports")
+      .select(
+        "id,status"
+      ),
+
+    sb.from("invoices")
+      .select(
+        "id,amount,status"
+      ),
+
+    sb.from("payments")
+      .select(
+        "invoice_id,amount"
+      )
+
+  ]);
+
+  let ps=
+    (pr.data||[])
+    .filter(
+      x=>
+      x.role==="customer"
+    );
+
+  let areasData=
+    ar.data||
+    [];
+
+  let meterCount=
+    (me.data||[])
+    .length;
+
+  let open=
+    (fa.data||[])
+    .filter(
+      x=>
+      x.status!=="resolved"
+    )
+    .length;
+
+  let paidMap={};
+
+  for(
+    let x of
+    (pay.data||[])
+  ){
+
+    paidMap[
+      x.invoice_id
+    ]=
+
+      (
+        paidMap[
+          x.invoice_id
+        ]||
+        0
+      )
+
+      +
+
+      Number(
+        x.amount||
+        0
+      );
+
+  }
+
+  let unpaid=
+    (iv.data||[])
+    .reduce(
+
+      (sum,x)=>
+
+        sum+
+
+        Math.max(
+          0,
+
+          Number(
+            x.amount||
+            0
+          )
+
+          -
+
+          Number(
+            paidMap[
+              x.id
+            ]||
+            0
+          )
+        ),
+
+      0
+
+    );
+
+  let active=
+    ps.filter(
+      x=>x.active
+    )
+    .length;
+
+  let inactive=
+    ps.length-
+    active;
+
+  let stableAreas=
+    areasData
+    .filter(
+      x=>
+      x.network_status===
+      "stable"
+    )
+    .length;
+
+  c.innerHTML=
+
+    header(
+      "لوحة التحكم",
+      "مركز المراقبة الرئيسي لإشتراكات وشبكة نشابة."
+    )
+
+    +
+
+    `
+
+    <div class="control-center">
+
+      <section class="control-hero">
+
+        <div class="control-hero-copy">
+
+          <div class="control-eyebrow">
+
+            <span class="control-live-dot"></span>
+
+            NASHABEH ELECTRICAL CONTROL CENTER
+
+          </div>
+
+          <h2>
+            الشبكة تحت المراقبة
+          </h2>
+
+          <p>
+
+            متابعة مباشرة للمشتركين والعدادات والفواتير
+            والأعطال وحالة علب التوزيع من لوحة تحكم واحدة.
+
+          </p>
+
+        </div>
+
+        <div class="control-grid-visual">
+
+          <div class="grid-orbit"></div>
+
+          <div class="grid-core">
+
+            <i data-lucide="zap"></i>
+
+          </div>
+
+        </div>
+
+      </section>
+
+      <section class="control-stats">
+
+        ${adminKpi(
+          "users-round",
+          "المشتركون",
+          ps.length,
+          "",
+          "CUSTOMERS"
+        )}
+
+        ${adminKpi(
+          "circle-check-big",
+          "اشتراكات فعّالة",
+          active,
+          "green",
+          "ACTIVE"
+        )}
+
+        ${adminKpi(
+          "circle-x",
+          "غير فعّالة",
+          inactive,
+          "red",
+          "INACTIVE"
+        )}
+
+        ${adminKpi(
+          "receipt-text",
+          "إجمالي المستحق",
+          money(unpaid),
+          "gold",
+          "OUTSTANDING"
+        )}
+
+        ${adminKpi(
+          "wrench",
+          "أعطال مفتوحة",
+          open,
+          "blue",
+          "INCIDENTS"
+        )}
+
+        ${adminKpi(
+          "boxes",
+          "علب التوزيع",
+          areasData.length,
+          "teal",
+          `${stableAreas} STABLE`
+        )}
+
+        ${adminKpi(
+          "gauge",
+          "العدادات",
+          meterCount,
+          "lime",
+          "SMART METERS"
+        )}
+
+      </section>
+
+      <section class="network-overview">
+
+        <div class="network-overview-head">
+
+          <div>
+
+            <h3>
+              حالة شبكة التوزيع
+            </h3>
+
+            <p>
+
+              مؤشر سريع لكل علبة —
+              التفاصيل الكاملة موجودة في صفحة العلب والمناطق.
+
+            </p>
+
+          </div>
+
+          <button
+            class="network-open-btn"
+            onclick="renderAdmin('areas')">
+
+            <i data-lucide="circuit-board"></i>
+
+            فتح مركز العلب
+
+          </button>
+
+        </div>
+
+        <div class="network-mini-grid">
+
+          ${
+            areasData
+            .map(
+              a=>`
+
+              <div
+                class="network-mini ${a.network_status||"stable"}"
+                onclick="renderAdmin('areas')">
+
+                <span class="network-mini-led"></span>
+
+                <div>
+
+                  <b>
+                    ${a.name}
+                  </b>
+
+                  <small>
+                    ${stateAr(a.network_status)}
+                  </small>
+
+                </div>
+
+              </div>
+
+              `
+            )
+            .join("")
+          }
+
+        </div>
+
+      </section>
+
+    </div>
+
+    `;
+
+}
+
+
+meters=
+async function(c){
+
+  let ms=
+    (
+      await sb
+      .from("meters")
+      .select(
+        "*,profiles(full_name),meter_readings(*)"
+      )
+      .order(
+        "created_at",
+        {
+          ascending:false
+        }
+      )
+    ).data||
+    [];
+
+  let readingValues=[];
+
+  let cards=
+    ms.map(
+      m=>{
+
+        let rr=
+          (
+            m.meter_readings||
+            []
+          )
+          .sort(
+            (a,b)=>
+
+              new Date(
+                b.reading_date
+              )
+
+              -
+
+              new Date(
+                a.reading_date
+              )
+          )[0];
+
+        let reading=
+          Number(
+            rr?.reading_value??
+            0
+          );
+
+        readingValues
+          .push(
+            reading
+          );
+
+        let display=
+          String(
+            Math.trunc(
+              reading
+            )
+          )
+          .padStart(
+            7,
+            "0"
+          );
+
+        let isActive=
+          m.active!==
+          false;
+
+        return `
+
+          <article class="meter-admin-unit ${isActive?"":"inactive"}">
+
+            <div class="meter-admin-head">
+
+              <div class="meter-user">
+
+                <div class="meter-user-icon">
+
+                  <i data-lucide="gauge"></i>
+
+                  <span class="meter-user-led"></span>
+
+                </div>
+
+                <div>
+
+                  <b>
+
+                    ${
+                      m.profiles
+                      ?.full_name||
+                      "مشترك غير معروف"
+                    }
+
+                  </b>
+
+                  <small>
+
+                    METER ID ·
+                    ${m.id}
+
+                  </small>
+
+                </div>
+
+              </div>
+
+              <span class="meter-state-pill">
+
+                ${
+                  isActive
+                  ?"ONLINE"
+                  :"OFFLINE"
+                }
+
+              </span>
+
+            </div>
+
+            <div class="meter-digital">
+
+              <strong>
+                ${display}
+              </strong>
+
+              <span>
+                kWh
+              </span>
+
+            </div>
+
+            <div class="meter-wavebar">
+
+              <svg
+                viewBox="0 0 120 28"
+                aria-hidden="true">
+
+                <polyline
+                  points="
+                  0,14
+                  12,14
+                  18,4
+                  25,24
+                  33,7
+                  41,20
+                  49,14
+                  60,14
+                  67,6
+                  75,23
+                  83,9
+                  91,19
+                  101,14
+                  120,14
+                  ">
+                </polyline>
+
+              </svg>
+
+              <label>
+
+                POWER SIGNAL
+
+                <b>
+
+                  ${
+                    isActive
+                    ?"LIVE"
+                    :"OFFLINE"
+                  }
+
+                </b>
+
+              </label>
+
+            </div>
+
+            <div class="meter-admin-controls">
+
+              <label>
+
+                رقم العداد
+
+                <input
+                  id="mn_${m.id}"
+                  value="${m.meter_number||""}"
+                  autocomplete="off">
+
+              </label>
+
+              <span class="meter-state-pill">
+
+                READ
+                ${rr?.reading_date||"--"}
+
+              </span>
+
+            </div>
+
+            <div class="meter-admin-actions">
+
+              <button
+                onclick="saveMeter('${m.id}')">
+
+                <i data-lucide="save"></i>
+
+                حفظ الرقم
+
+              </button>
+
+              <button
+                class="primary-meter"
+                onclick="addReading('${m.id}')">
+
+                <i data-lucide="plus-circle"></i>
+
+                قراءة جديدة
+
+              </button>
+
+            </div>
+
+          </article>
+
+        `;
+
+      }
+    )
+    .join("");
+
+  let maxReading=
+    readingValues.length
+    ?
+    Math.max(
+      ...readingValues
+    )
+    :
+    0;
+
+  let avgReading=
+
+    readingValues.length
+
+    ?
+
+    readingValues
+    .reduce(
+      (a,b)=>
+      a+b,
+      0
+    )
+    /
+    readingValues.length
+
+    :
+
+    0;
+
+  c.innerHTML=
+
+    header(
+      "العدادات",
+      "Smart Meter Center — مراقبة القراءات وإدارة أرقام العدادات."
+    )
+
+    +
+
+    `
+
+      <section class="meters-summary">
+
+        <div class="meter-summary-card">
+
+          <i data-lucide="gauge"></i>
+
+          <div>
+
+            <small>
+              إجمالي العدادات
+            </small>
+
+            <b>
+              ${ms.length}
+            </b>
+
+          </div>
+
+        </div>
+
+        <div class="meter-summary-card">
+
+          <i data-lucide="activity"></i>
+
+          <div>
+
+            <small>
+              متوسط آخر قراءة
+            </small>
+
+            <b>
+              ${Math.round(avgReading)} kWh
+            </b>
+
+          </div>
+
+        </div>
+
+        <div class="meter-summary-card">
+
+          <i data-lucide="arrow-up-right"></i>
+
+          <div>
+
+            <small>
+              أعلى قراءة حالية
+            </small>
+
+            <b>
+              ${Math.round(maxReading)} kWh
+            </b>
+
+          </div>
+
+        </div>
+
+      </section>
+
+      <section class="meters-control-grid">
+
+        ${
+          cards
+          ||
+          `
+          <div class="panel admin-card">
+            <p>
+              لا توجد عدادات بعد.
+            </p>
+          </div>
+          `
+        }
+
+      </section>
+
+    `;
+
+};
+
+
+const renderAdminOriginalV2=
+  renderAdmin;
+
+
+renderAdmin=
+async function(
+  page="dashboard"
+){
+
+  injectAdminPremiumV2Styles();
+
+  if(
+    page!==
+    "dashboard"
+  ){
+
+    return renderAdminOriginalV2(
+      page
+    );
+
+  }
+
+  currentPage=
+    page;
+
+  document
+    .querySelectorAll(
+      ".side"
+    )
+    .forEach(
+      b=>
+
+      b.classList.toggle(
+        "active",
+        b.dataset.page===
+        page
+      )
+
+    );
+
+  let c=
+    A("adminContent");
+
+  await renderDashboardPremium(
+    c
+  );
+
+  icons();
+
+};
+
+
+injectAdminPremiumV2Styles();
 injectEnhancedStyles();
 
 boot();
