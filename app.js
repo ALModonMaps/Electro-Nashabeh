@@ -8599,6 +8599,1959 @@ async function(
 };
 
 
+
+
+/* =========================================================
+   ADMIN PREMIUM V3
+   POWER GRID CORE + INCIDENTS + ALERT CENTER
+   ========================================================= */
+
+function injectAdminPremiumV3Styles(){
+
+  if(A("nashabehAdminPremiumV3"))return;
+
+  let st=
+    document.createElement("style");
+
+  st.id=
+    "nashabehAdminPremiumV3";
+
+  st.textContent=`
+
+  /* =========================
+     POWER GRID CORE
+     ========================= */
+
+  .power-grid-core{
+    position:relative;
+    width:100%;
+    min-height:150px;
+    overflow:hidden;
+    display:grid;
+    place-items:center;
+  }
+
+  .power-grid-board{
+    position:absolute;
+    inset:14px;
+    border-radius:18px;
+    overflow:hidden;
+
+    border:
+      1px solid rgba(43,226,255,.18);
+
+    background:
+      linear-gradient(
+        rgba(36,207,235,.045) 1px,
+        transparent 1px
+      ),
+      linear-gradient(
+        90deg,
+        rgba(36,207,235,.045) 1px,
+        transparent 1px
+      ),
+      radial-gradient(
+        circle at center,
+        rgba(0,218,255,.08),
+        transparent 55%
+      );
+
+    background-size:
+      20px 20px,
+      20px 20px,
+      auto;
+  }
+
+  .power-grid-board::after{
+    content:"";
+    position:absolute;
+    inset:0;
+
+    background:
+      linear-gradient(
+        90deg,
+        transparent,
+        rgba(45,236,255,.10),
+        transparent
+      );
+
+    transform:translateX(-110%);
+    animation:gridBoardScan 4.2s linear infinite;
+  }
+
+  .power-circuit-line{
+    position:absolute;
+    z-index:2;
+    height:1px;
+    background:
+      linear-gradient(
+        90deg,
+        transparent,
+        rgba(42,225,255,.35),
+        #38ecff,
+        rgba(42,225,255,.35),
+        transparent
+      );
+
+    box-shadow:
+      0 0 8px rgba(42,225,255,.38);
+  }
+
+  .power-circuit-line.horizontal-a{
+    width:34%;
+    left:3%;
+    top:50%;
+  }
+
+  .power-circuit-line.horizontal-b{
+    width:34%;
+    right:3%;
+    top:50%;
+  }
+
+  .power-circuit-line.vertical-a{
+    width:27%;
+    left:36.5%;
+    top:18%;
+    transform:rotate(90deg);
+  }
+
+  .power-circuit-line.vertical-b{
+    width:27%;
+    left:36.5%;
+    bottom:18%;
+    transform:rotate(90deg);
+  }
+
+  .power-node{
+    position:absolute;
+    z-index:4;
+
+    width:9px;
+    height:9px;
+
+    border-radius:50%;
+
+    background:#2cf27a;
+
+    box-shadow:
+      0 0 5px #2cf27a,
+      0 0 14px rgba(44,242,122,.75);
+
+    animation:
+      powerNodePulse 1.4s ease-in-out infinite;
+  }
+
+  .power-node.n1{
+    left:13%;
+    top:47%;
+  }
+
+  .power-node.n2{
+    right:13%;
+    top:47%;
+    animation-delay:.35s;
+  }
+
+  .power-node.n3{
+    left:49%;
+    top:15%;
+    background:#ffd12c;
+    box-shadow:
+      0 0 5px #ffd12c,
+      0 0 14px rgba(255,209,44,.75);
+    animation-delay:.7s;
+  }
+
+  .power-node.n4{
+    left:49%;
+    bottom:15%;
+    animation-delay:1s;
+  }
+
+  .power-core-shell{
+    position:relative;
+    z-index:5;
+
+    width:122px;
+    height:122px;
+
+    display:grid;
+    place-items:center;
+
+    clip-path:
+      polygon(
+        25% 6%,
+        75% 6%,
+        96% 25%,
+        96% 75%,
+        75% 94%,
+        25% 94%,
+        4% 75%,
+        4% 25%
+      );
+
+    background:
+      linear-gradient(
+        145deg,
+        rgba(42,228,255,.75),
+        rgba(14,73,91,.22) 28%,
+        rgba(2,17,24,.98) 48%,
+        rgba(19,117,133,.40)
+      );
+
+    filter:
+      drop-shadow(
+        0 0 16px rgba(40,226,255,.22)
+      );
+  }
+
+  .power-core-inner{
+    width:104px;
+    height:104px;
+
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+
+    clip-path:
+      polygon(
+        25% 5%,
+        75% 5%,
+        95% 25%,
+        95% 75%,
+        75% 95%,
+        25% 95%,
+        5% 75%,
+        5% 25%
+      );
+
+    background:
+      radial-gradient(
+        circle at 50% 40%,
+        rgba(24,220,255,.17),
+        transparent 38%
+      ),
+      linear-gradient(
+        145deg,
+        #061c27,
+        #020b10
+      );
+
+    border:
+      1px solid rgba(75,235,255,.28);
+
+    text-align:center;
+  }
+
+  .power-core-icon{
+    width:32px;
+    height:32px;
+
+    margin-bottom:5px;
+
+    color:#45efff;
+
+    filter:
+      drop-shadow(
+        0 0 7px rgba(69,239,255,.75)
+      );
+
+    animation:
+      coreEnergyPulse 2s ease-in-out infinite;
+  }
+
+  .power-core-inner strong{
+    color:#dffbff;
+    font-size:8px;
+    letter-spacing:.08em;
+  }
+
+  .power-core-inner small{
+    margin-top:3px;
+    color:#3ff17c;
+    font-size:6px;
+    font-weight:900;
+    letter-spacing:.08em;
+  }
+
+  .power-spec{
+    position:absolute;
+    z-index:6;
+
+    padding:5px 7px;
+
+    border-radius:7px;
+
+    border:
+      1px solid rgba(49,210,235,.17);
+
+    background:
+      rgba(2,14,20,.78);
+
+    color:#688f9f;
+
+    font-size:6px;
+    font-weight:800;
+  }
+
+  .power-spec.voltage{
+    left:8%;
+    bottom:15%;
+  }
+
+  .power-spec.frequency{
+    right:8%;
+    bottom:15%;
+  }
+
+  .power-data-stream{
+    position:absolute;
+    z-index:3;
+
+    width:7px;
+    height:7px;
+
+    border-radius:50%;
+
+    background:#7ef8ff;
+
+    box-shadow:
+      0 0 7px #52efff;
+
+    animation:
+      powerDataMove 2.3s linear infinite;
+  }
+
+
+  /* =========================
+     INCIDENT CONTROL CENTER
+     ========================= */
+
+  .incident-summary{
+    display:grid;
+    grid-template-columns:
+      repeat(4,minmax(0,1fr));
+
+    gap:11px;
+    margin-bottom:16px;
+  }
+
+  .incident-stat{
+    --incident:#4deaff;
+
+    display:flex;
+    align-items:center;
+    gap:10px;
+
+    min-height:72px;
+
+    padding:12px;
+
+    border-radius:14px;
+
+    border:
+      1px solid
+      color-mix(
+        in srgb,
+        var(--incident) 26%,
+        #183b49
+      );
+
+    background:
+      radial-gradient(
+        circle at 85% 10%,
+        color-mix(
+          in srgb,
+          var(--incident) 10%,
+          transparent
+        ),
+        transparent 38%
+      ),
+      linear-gradient(
+        145deg,
+        #061c27,
+        #03141c
+      );
+  }
+
+  .incident-stat.open{
+    --incident:#ff5b68;
+  }
+
+  .incident-stat.repairing{
+    --incident:#ffae32;
+  }
+
+  .incident-stat.resolved{
+    --incident:#39ef78;
+  }
+
+  .incident-stat.total{
+    --incident:#42e9ff;
+  }
+
+  .incident-stat-icon{
+    width:39px;
+    height:39px;
+
+    display:grid;
+    place-items:center;
+
+    flex:0 0 39px;
+
+    border-radius:11px;
+
+    color:var(--incident);
+
+    border:
+      1px solid
+      color-mix(
+        in srgb,
+        var(--incident) 35%,
+        transparent
+      );
+
+    background:
+      rgba(2,14,20,.68);
+
+    box-shadow:
+      0 0 13px
+      color-mix(
+        in srgb,
+        var(--incident) 10%,
+        transparent
+      );
+  }
+
+  .incident-stat-icon svg{
+    width:18px;
+    height:18px;
+  }
+
+  .incident-stat small{
+    display:block;
+    color:#7496a5;
+    font-size:7px;
+  }
+
+  .incident-stat b{
+    display:block;
+    margin-top:2px;
+    color:#f2fbff;
+    font-size:17px;
+  }
+
+  .incident-grid{
+    display:grid;
+    grid-template-columns:
+      repeat(2,minmax(0,1fr));
+
+    gap:14px;
+  }
+
+  .incident-card{
+    --incident:#ff5b68;
+
+    position:relative;
+    overflow:hidden;
+
+    padding:15px;
+
+    border-radius:18px;
+
+    border:
+      1px solid
+      color-mix(
+        in srgb,
+        var(--incident) 29%,
+        #193a48
+      );
+
+    background:
+      radial-gradient(
+        circle at 92% 0%,
+        color-mix(
+          in srgb,
+          var(--incident) 10%,
+          transparent
+        ),
+        transparent 36%
+      ),
+      linear-gradient(
+        145deg,
+        #071e29,
+        #03131c
+      );
+
+    box-shadow:
+      inset 0 0 24px rgba(0,0,0,.30);
+
+    transition:.22s ease;
+  }
+
+  .incident-card:hover{
+    transform:translateY(-3px);
+
+    box-shadow:
+      inset 0 0 24px rgba(0,0,0,.32),
+      0 13px 28px rgba(0,0,0,.22),
+      0 0 18px
+      color-mix(
+        in srgb,
+        var(--incident) 8%,
+        transparent
+      );
+  }
+
+  .incident-card.scheduled{
+    --incident:#ffd13b;
+  }
+
+  .incident-card.repairing{
+    --incident:#ff9e32;
+  }
+
+  .incident-card.resolved{
+    --incident:#39ef78;
+  }
+
+  .incident-card::after{
+    content:"";
+
+    position:absolute;
+    left:-35%;
+    bottom:0;
+
+    width:30%;
+    height:1px;
+
+    background:
+      linear-gradient(
+        90deg,
+        transparent,
+        var(--incident),
+        transparent
+      );
+
+    box-shadow:
+      0 0 8px var(--incident);
+
+    animation:
+      incidentSweep 3.5s linear infinite;
+  }
+
+  .incident-card-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+
+    margin-bottom:13px;
+  }
+
+  .incident-number{
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+
+  .incident-led{
+    width:9px;
+    height:9px;
+
+    border-radius:50%;
+
+    background:var(--incident);
+
+    box-shadow:
+      0 0 5px var(--incident),
+      0 0 12px var(--incident);
+
+    animation:
+      powerNodePulse 1.25s ease-in-out infinite;
+  }
+
+  .incident-number small{
+    display:block;
+    color:#668a9a;
+    font-size:6px;
+  }
+
+  .incident-number b{
+    display:block;
+    color:#effaff;
+    font-size:10px;
+  }
+
+  .incident-status{
+    padding:5px 8px;
+
+    border-radius:999px;
+
+    color:var(--incident);
+
+    border:
+      1px solid
+      color-mix(
+        in srgb,
+        var(--incident) 38%,
+        transparent
+      );
+
+    background:
+      color-mix(
+        in srgb,
+        var(--incident) 7%,
+        transparent
+      );
+
+    font-size:6px;
+    font-weight:900;
+    letter-spacing:.06em;
+  }
+
+  .incident-title{
+    display:flex;
+    align-items:center;
+    gap:9px;
+
+    margin-bottom:12px;
+  }
+
+  .incident-title-icon{
+    width:37px;
+    height:37px;
+
+    display:grid;
+    place-items:center;
+
+    border-radius:10px;
+
+    color:var(--incident);
+
+    border:
+      1px solid
+      color-mix(
+        in srgb,
+        var(--incident) 28%,
+        transparent
+      );
+
+    background:#051720;
+  }
+
+  .incident-title-icon svg{
+    width:18px;
+    height:18px;
+  }
+
+  .incident-title h4{
+    margin:0;
+    color:#f0f9fd;
+    font-size:11px;
+  }
+
+  .incident-title p{
+    margin:3px 0 0;
+    color:#7193a1;
+    font-size:7px;
+  }
+
+  .incident-data{
+    display:grid;
+    grid-template-columns:
+      repeat(3,minmax(0,1fr));
+
+    gap:7px;
+
+    margin-bottom:12px;
+  }
+
+  .incident-data div{
+    padding:8px;
+
+    border-radius:9px;
+
+    border:
+      1px solid #163946;
+
+    background:
+      rgba(2,14,20,.52);
+  }
+
+  .incident-data small{
+    display:block;
+    color:#628593;
+    font-size:6px;
+  }
+
+  .incident-data b{
+    display:block;
+
+    margin-top:3px;
+
+    color:#dff3fa;
+
+    font-size:8px;
+
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+
+  .incident-open{
+    width:100%;
+
+    min-height:35px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+
+    border-radius:9px;
+
+    border:
+      1px solid
+      color-mix(
+        in srgb,
+        var(--incident) 40%,
+        #244654
+      );
+
+    background:
+      color-mix(
+        in srgb,
+        var(--incident) 6%,
+        #061923
+      );
+
+    color:var(--incident);
+
+    font-size:8px;
+    font-weight:900;
+
+    cursor:pointer;
+
+    transition:.2s ease;
+  }
+
+  .incident-open:hover{
+    filter:brightness(1.18);
+    transform:translateY(-1px);
+  }
+
+  .incident-open svg{
+    width:13px;
+    height:13px;
+  }
+
+
+  /* =========================
+     NETWORK ALERT CENTER
+     ========================= */
+
+  .alert-center-top{
+    position:relative;
+    overflow:hidden;
+
+    display:grid;
+    grid-template-columns:
+      1fr auto;
+
+    gap:15px;
+    align-items:center;
+
+    margin-bottom:15px;
+    padding:17px;
+
+    border-radius:18px;
+
+    border:
+      1px solid rgba(50,220,255,.24);
+
+    background:
+      radial-gradient(
+        circle at 10% 30%,
+        rgba(28,218,255,.10),
+        transparent 30%
+      ),
+      linear-gradient(
+        145deg,
+        #071e29,
+        #03141d
+      );
+  }
+
+  .alert-center-title{
+    display:flex;
+    align-items:center;
+    gap:11px;
+  }
+
+  .alert-radio{
+    position:relative;
+
+    width:46px;
+    height:46px;
+
+    display:grid;
+    place-items:center;
+
+    border-radius:14px;
+
+    color:#47ecff;
+
+    border:
+      1px solid rgba(71,236,255,.35);
+
+    background:#041821;
+
+    box-shadow:
+      0 0 17px rgba(48,228,255,.10);
+  }
+
+  .alert-radio svg{
+    width:22px;
+    height:22px;
+  }
+
+  .alert-radio::before,
+  .alert-radio::after{
+    content:"";
+
+    position:absolute;
+
+    border:
+      1px solid rgba(61,232,255,.28);
+
+    border-radius:50%;
+
+    animation:
+      radioWave 2s ease-out infinite;
+  }
+
+  .alert-radio::before{
+    width:56px;
+    height:56px;
+  }
+
+  .alert-radio::after{
+    width:70px;
+    height:70px;
+    animation-delay:.8s;
+  }
+
+  .alert-center-title h3{
+    margin:0;
+    color:#f1fbff;
+    font-size:14px;
+  }
+
+  .alert-center-title p{
+    margin:4px 0 0;
+    color:#7395a3;
+    font-size:7px;
+  }
+
+  .new-alert-btn{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+
+    min-height:39px;
+
+    padding:0 14px;
+
+    border-radius:10px;
+
+    border:
+      1px solid rgba(255,204,45,.48);
+
+    background:
+      linear-gradient(
+        145deg,
+        rgba(255,198,30,.17),
+        rgba(110,75,0,.14)
+      );
+
+    color:#ffd448;
+
+    font-size:8px;
+    font-weight:900;
+
+    cursor:pointer;
+  }
+
+  .new-alert-btn svg{
+    width:14px;
+    height:14px;
+  }
+
+  .alert-summary{
+    display:grid;
+    grid-template-columns:
+      repeat(3,minmax(0,1fr));
+
+    gap:10px;
+    margin-bottom:15px;
+  }
+
+  .alert-summary-card{
+    display:flex;
+    align-items:center;
+    gap:10px;
+
+    padding:11px;
+
+    border-radius:12px;
+
+    border:
+      1px solid #193d4b;
+
+    background:
+      linear-gradient(
+        145deg,
+        #061b25,
+        #03131b
+      );
+  }
+
+  .alert-summary-card svg{
+    width:18px;
+    height:18px;
+    color:#42e9ff;
+  }
+
+  .alert-summary-card small{
+    display:block;
+    color:#6f919f;
+    font-size:6px;
+  }
+
+  .alert-summary-card b{
+    display:block;
+    margin-top:2px;
+    color:#effaff;
+    font-size:14px;
+  }
+
+  .alert-feed{
+    display:grid;
+    gap:10px;
+  }
+
+  .network-alert{
+    position:relative;
+
+    display:grid;
+    grid-template-columns:auto 1fr auto;
+
+    gap:12px;
+    align-items:center;
+
+    padding:13px;
+
+    border-radius:14px;
+
+    border:
+      1px solid #193e4c;
+
+    background:
+      linear-gradient(
+        145deg,
+        rgba(7,28,38,.98),
+        rgba(3,15,22,.98)
+      );
+
+    transition:.2s ease;
+  }
+
+  .network-alert:hover{
+    transform:translateX(-3px);
+    border-color:#286074;
+  }
+
+  .network-alert-icon{
+    position:relative;
+
+    width:42px;
+    height:42px;
+
+    display:grid;
+    place-items:center;
+
+    border-radius:12px;
+
+    color:#ffc934;
+
+    border:
+      1px solid rgba(255,201,52,.28);
+
+    background:
+      rgba(255,201,52,.06);
+  }
+
+  .network-alert-icon svg{
+    width:19px;
+    height:19px;
+  }
+
+  .network-alert-icon::after{
+    content:"";
+
+    position:absolute;
+    right:4px;
+    top:4px;
+
+    width:6px;
+    height:6px;
+
+    border-radius:50%;
+
+    background:#39ef78;
+
+    box-shadow:
+      0 0 6px #39ef78;
+  }
+
+  .network-alert h4{
+    margin:0;
+    color:#f1f9fc;
+    font-size:10px;
+  }
+
+  .network-alert p{
+    margin:4px 0 0;
+
+    color:#7899a6;
+
+    font-size:8px;
+    line-height:1.6;
+  }
+
+  .alert-target{
+    text-align:left;
+    min-width:105px;
+  }
+
+  .alert-target span{
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+
+    padding:5px 7px;
+
+    border-radius:999px;
+
+    color:#43e9ff;
+
+    border:
+      1px solid rgba(67,233,255,.25);
+
+    background:
+      rgba(67,233,255,.05);
+
+    font-size:6px;
+    font-weight:900;
+  }
+
+  .alert-target small{
+    display:block;
+
+    margin-top:5px;
+
+    color:#557b89;
+
+    font-size:6px;
+  }
+
+  .empty-control-state{
+    padding:28px;
+
+    text-align:center;
+
+    border-radius:16px;
+
+    border:
+      1px dashed #245061;
+
+    color:#7194a1;
+
+    background:
+      rgba(3,17,24,.45);
+  }
+
+  .empty-control-state svg{
+    width:28px;
+    height:28px;
+    margin-bottom:8px;
+    color:#3fdff5;
+  }
+
+
+  /* =========================
+     ANIMATIONS
+     ========================= */
+
+  @keyframes gridBoardScan{
+
+    from{
+      transform:translateX(-110%);
+    }
+
+    to{
+      transform:translateX(110%);
+    }
+
+  }
+
+  @keyframes powerNodePulse{
+
+    0%,100%{
+      opacity:.48;
+      transform:scale(.78);
+    }
+
+    50%{
+      opacity:1;
+      transform:scale(1.2);
+    }
+
+  }
+
+  @keyframes coreEnergyPulse{
+
+    0%,100%{
+      opacity:.72;
+      transform:scale(.92);
+    }
+
+    50%{
+      opacity:1;
+      transform:scale(1.08);
+    }
+
+  }
+
+  @keyframes powerDataMove{
+
+    0%{
+      left:12%;
+      top:49%;
+      opacity:0;
+    }
+
+    15%{
+      opacity:1;
+    }
+
+    50%{
+      left:49%;
+      top:49%;
+    }
+
+    85%{
+      opacity:1;
+    }
+
+    100%{
+      left:86%;
+      top:49%;
+      opacity:0;
+    }
+
+  }
+
+  @keyframes incidentSweep{
+
+    from{
+      left:-35%;
+    }
+
+    to{
+      left:120%;
+    }
+
+  }
+
+  @keyframes radioWave{
+
+    0%{
+      transform:scale(.6);
+      opacity:.8;
+    }
+
+    100%{
+      transform:scale(1.25);
+      opacity:0;
+    }
+
+  }
+
+
+  /* =========================
+     RESPONSIVE
+     ========================= */
+
+  @media(max-width:1050px){
+
+    .incident-summary{
+      grid-template-columns:
+        repeat(2,minmax(0,1fr));
+    }
+
+    .incident-grid{
+      grid-template-columns:1fr;
+    }
+
+  }
+
+  @media(max-width:700px){
+
+    .incident-summary{
+      grid-template-columns:1fr 1fr;
+    }
+
+    .incident-data{
+      grid-template-columns:1fr;
+    }
+
+    .alert-center-top{
+      grid-template-columns:1fr;
+    }
+
+    .new-alert-btn{
+      width:100%;
+    }
+
+    .alert-summary{
+      grid-template-columns:1fr;
+    }
+
+    .network-alert{
+      grid-template-columns:auto 1fr;
+    }
+
+    .alert-target{
+      grid-column:1/-1;
+      text-align:right;
+    }
+
+    .power-grid-core{
+      min-height:135px;
+    }
+
+    .power-core-shell{
+      width:108px;
+      height:108px;
+    }
+
+    .power-core-inner{
+      width:91px;
+      height:91px;
+    }
+
+  }
+
+  `;
+
+  document.head
+    .appendChild(st);
+
+}
+
+
+/* =========================================================
+   NEW POWER GRID VISUAL
+   ========================================================= */
+
+function buildPowerGridCore(){
+
+  return `
+
+    <div class="power-grid-core">
+
+      <div class="power-grid-board"></div>
+
+      <div class="power-circuit-line horizontal-a"></div>
+      <div class="power-circuit-line horizontal-b"></div>
+      <div class="power-circuit-line vertical-a"></div>
+      <div class="power-circuit-line vertical-b"></div>
+
+      <span class="power-node n1"></span>
+      <span class="power-node n2"></span>
+      <span class="power-node n3"></span>
+      <span class="power-node n4"></span>
+
+      <span class="power-data-stream"></span>
+
+      <div class="power-core-shell">
+
+        <div class="power-core-inner">
+
+          <i
+            class="power-core-icon"
+            data-lucide="cpu">
+          </i>
+
+          <strong>
+            GRID CORE
+          </strong>
+
+          <small>
+            SYSTEM ONLINE
+          </small>
+
+        </div>
+
+      </div>
+
+      <span class="power-spec voltage">
+        230V · LIVE
+      </span>
+
+      <span class="power-spec frequency">
+        50Hz · STABLE
+      </span>
+
+    </div>
+
+  `;
+
+}
+
+
+/* Replace only the old rotating dashboard visual */
+
+function upgradeDashboardPowerCore(){
+
+  let visual=
+    document.querySelector(
+      ".control-grid-visual"
+    );
+
+  if(!visual)return;
+
+  visual.innerHTML=
+    buildPowerGridCore();
+
+}
+
+
+/* =========================================================
+   INCIDENT CONTROL CENTER
+   ========================================================= */
+
+function incidentStatusName(status){
+
+  return({
+
+    open:"OPEN",
+
+    scheduled:"SCHEDULED",
+
+    repairing:"REPAIRING",
+
+    resolved:"RESOLVED"
+
+  })[status]||
+  String(status||"OPEN")
+  .toUpperCase();
+
+}
+
+
+function incidentStatusArabic(status){
+
+  return({
+
+    open:"بلاغ مفتوح",
+
+    scheduled:"مجدول",
+
+    repairing:"قيد التصليح",
+
+    resolved:"تم الحل"
+
+  })[status]||
+  status;
+
+}
+
+
+faults=
+async function(c){
+
+  let fs=
+    (
+      await sb
+      .from("fault_reports")
+      .select(
+        "*,profiles(full_name),areas(name),meters(meter_number)"
+      )
+      .order(
+        "created_at",
+        {
+          ascending:false
+        }
+      )
+    ).data||
+    [];
+
+  window._faults=
+    fs;
+
+  let openCount=
+    fs.filter(
+      x=>x.status==="open"
+    ).length;
+
+  let repairingCount=
+    fs.filter(
+      x=>
+      x.status==="repairing"||
+      x.status==="scheduled"
+    ).length;
+
+  let resolvedCount=
+    fs.filter(
+      x=>x.status==="resolved"
+    ).length;
+
+  c.innerHTML=
+
+    header(
+      "الأعطال",
+      "Incident Control Center — متابعة البلاغات وحالة أعمال الصيانة."
+    )
+
+    +
+
+    `
+
+      <section class="incident-summary">
+
+        <article class="incident-stat total">
+
+          <div class="incident-stat-icon">
+            <i data-lucide="radio-tower"></i>
+          </div>
+
+          <div>
+            <small>
+              إجمالي البلاغات
+            </small>
+
+            <b>
+              ${fs.length}
+            </b>
+          </div>
+
+        </article>
+
+
+        <article class="incident-stat open">
+
+          <div class="incident-stat-icon">
+            <i data-lucide="triangle-alert"></i>
+          </div>
+
+          <div>
+            <small>
+              بلاغات مفتوحة
+            </small>
+
+            <b>
+              ${openCount}
+            </b>
+          </div>
+
+        </article>
+
+
+        <article class="incident-stat repairing">
+
+          <div class="incident-stat-icon">
+            <i data-lucide="wrench"></i>
+          </div>
+
+          <div>
+            <small>
+              قيد المعالجة
+            </small>
+
+            <b>
+              ${repairingCount}
+            </b>
+          </div>
+
+        </article>
+
+
+        <article class="incident-stat resolved">
+
+          <div class="incident-stat-icon">
+            <i data-lucide="circle-check-big"></i>
+          </div>
+
+          <div>
+            <small>
+              تم حلها
+            </small>
+
+            <b>
+              ${resolvedCount}
+            </b>
+          </div>
+
+        </article>
+
+      </section>
+
+
+      <section class="incident-grid">
+
+        ${
+          fs.map(
+            f=>`
+
+            <article
+              class="incident-card ${f.status||"open"}">
+
+              <div class="incident-card-head">
+
+                <div class="incident-number">
+
+                  <span class="incident-led"></span>
+
+                  <div>
+
+                    <small>
+                      INCIDENT REPORT
+                    </small>
+
+                    <b>
+                      #${f.id}
+                    </b>
+
+                  </div>
+
+                </div>
+
+                <span class="incident-status">
+
+                  ${incidentStatusName(f.status)}
+
+                </span>
+
+              </div>
+
+
+              <div class="incident-title">
+
+                <div class="incident-title-icon">
+
+                  <i data-lucide="zap-off"></i>
+
+                </div>
+
+                <div>
+
+                  <h4>
+                    ${f.fault_type||"عطل كهربائي"}
+                  </h4>
+
+                  <p>
+                    ${incidentStatusArabic(f.status)}
+                  </p>
+
+                </div>
+
+              </div>
+
+
+              <div class="incident-data">
+
+                <div>
+
+                  <small>
+                    المشترك
+                  </small>
+
+                  <b>
+                    ${
+                      f.profiles
+                      ?.full_name||
+                      "-"
+                    }
+                  </b>
+
+                </div>
+
+                <div>
+
+                  <small>
+                    المنطقة
+                  </small>
+
+                  <b>
+                    ${
+                      f.areas
+                      ?.name||
+                      "-"
+                    }
+                  </b>
+
+                </div>
+
+                <div>
+
+                  <small>
+                    رقم العداد
+                  </small>
+
+                  <b>
+                    ${
+                      f.meters
+                      ?.meter_number||
+                      "-"
+                    }
+                  </b>
+
+                </div>
+
+              </div>
+
+
+              <button
+                class="incident-open"
+                onclick="openFaultAdmin(${f.id})">
+
+                <i data-lucide="scan-search"></i>
+
+                فتح مركز البلاغ
+
+              </button>
+
+            </article>
+
+            `
+          )
+          .join("")
+
+          ||
+
+          `
+
+          <div class="empty-control-state">
+
+            <i data-lucide="shield-check"></i>
+
+            <div>
+              لا توجد بلاغات أعطال حاليًا
+            </div>
+
+          </div>
+
+          `
+        }
+
+      </section>
+
+    `;
+
+}
+
+
+/* =========================================================
+   NETWORK ALERT CENTER
+   ========================================================= */
+
+notifications=
+async function(c){
+
+  let ar=
+    (
+      await sb
+      .from("areas")
+      .select("*")
+    ).data||
+    [];
+
+  let ns=
+    (
+      await sb
+      .from("notifications")
+      .select(
+        "*,areas(name)"
+      )
+      .order(
+        "created_at",
+        {
+          ascending:false
+        }
+      )
+    ).data||
+    [];
+
+  window._areas=
+    ar;
+
+  let allNetwork=
+    ns.filter(
+      n=>!n.area_id
+    ).length;
+
+  let areaAlerts=
+    ns.filter(
+      n=>!!n.area_id
+    ).length;
+
+  c.innerHTML=
+
+    header(
+      "التنبيهات",
+      "Network Alert Center — إدارة رسائل الشبكة والمشتركين."
+    )
+
+    +
+
+    `
+
+      <section class="alert-center-top">
+
+        <div class="alert-center-title">
+
+          <div class="alert-radio">
+
+            <i data-lucide="radio"></i>
+
+          </div>
+
+          <div>
+
+            <h3>
+              مركز بث التنبيهات
+            </h3>
+
+            <p>
+              إرسال تحديثات الشبكة والتنبيهات
+              العامة أو المخصصة لمنطقة محددة.
+            </p>
+
+          </div>
+
+        </div>
+
+
+        <button
+          class="new-alert-btn"
+          onclick="openNotificationDialog()">
+
+          <i data-lucide="send"></i>
+
+          NEW ALERT · إرسال تنبيه
+
+        </button>
+
+      </section>
+
+
+      <section class="alert-summary">
+
+        <article class="alert-summary-card">
+
+          <i data-lucide="bell-ring"></i>
+
+          <div>
+
+            <small>
+              إجمالي التنبيهات
+            </small>
+
+            <b>
+              ${ns.length}
+            </b>
+
+          </div>
+
+        </article>
+
+
+        <article class="alert-summary-card">
+
+          <i data-lucide="radio-tower"></i>
+
+          <div>
+
+            <small>
+              بث لكل الشبكة
+            </small>
+
+            <b>
+              ${allNetwork}
+            </b>
+
+          </div>
+
+        </article>
+
+
+        <article class="alert-summary-card">
+
+          <i data-lucide="map-pin"></i>
+
+          <div>
+
+            <small>
+              تنبيهات المناطق
+            </small>
+
+            <b>
+              ${areaAlerts}
+            </b>
+
+          </div>
+
+        </article>
+
+      </section>
+
+
+      <section class="alert-feed">
+
+        ${
+          ns.map(
+            n=>{
+
+              let when=
+                n.created_at
+                ?
+                new Date(
+                  n.created_at
+                )
+                .toLocaleString(
+                  "ar-LB"
+                )
+                :
+                "-";
+
+              return `
+
+                <article class="network-alert">
+
+                  <div class="network-alert-icon">
+
+                    <i data-lucide="bell-ring"></i>
+
+                  </div>
+
+                  <div>
+
+                    <h4>
+                      ${n.title||"تنبيه الشبكة"}
+                    </h4>
+
+                    <p>
+                      ${n.message||""}
+                    </p>
+
+                  </div>
+
+                  <div class="alert-target">
+
+                    <span>
+
+                      <i data-lucide="${
+                        n.area_id
+                        ?"map-pin"
+                        :"radio-tower"
+                      }"></i>
+
+                      ${
+                        n.areas
+                        ?.name||
+                        "ALL NETWORK"
+                      }
+
+                    </span>
+
+                    <small>
+                      ${when}
+                    </small>
+
+                  </div>
+
+                </article>
+
+              `;
+
+            }
+          )
+          .join("")
+
+          ||
+
+          `
+
+            <div class="empty-control-state">
+
+              <i data-lucide="bell-off"></i>
+
+              <div>
+                لا توجد تنبيهات مرسلة بعد
+              </div>
+
+            </div>
+
+          `
+        }
+
+      </section>
+
+    `;
+
+}
+
+
+/* =========================================================
+   CONNECT V3 TO CURRENT PREMIUM DASHBOARD
+   ========================================================= */
+
+const renderAdminPremiumV2=
+  renderAdmin;
+
+
+renderAdmin=
+async function(
+  page="dashboard"
+){
+
+  injectAdminPremiumV3Styles();
+
+  await renderAdminPremiumV2(
+    page
+  );
+
+  if(
+    page==="dashboard"
+  ){
+
+    upgradeDashboardPowerCore();
+
+    icons();
+
+  }
+
+};
+
+
+injectAdminPremiumV3Styles();
+
 injectAdminPremiumV2Styles();
 injectEnhancedStyles();
 
