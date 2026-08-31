@@ -13536,6 +13536,1848 @@ function(){
    LOAD V4 STYLES
    ========================================================= */
 
+/* =========================================================
+   ADMIN PREMIUM V5
+   CUSTOMER MANAGEMENT + SYSTEM CONFIGURATION
+   ========================================================= */
+
+function injectAdminPremiumV5Styles(){
+
+  if(A("nashabehAdminPremiumV5"))return;
+
+  let st=
+    document.createElement("style");
+
+  st.id=
+    "nashabehAdminPremiumV5";
+
+  st.textContent=`
+
+  /* =====================================================
+     CUSTOMERS SUMMARY
+     ===================================================== */
+
+  .customer-admin-summary{
+    display:grid;
+    grid-template-columns:
+      repeat(3,minmax(0,1fr));
+
+    gap:11px;
+
+    margin-bottom:16px;
+  }
+
+  .customer-admin-stat{
+    --cust:#43eaff;
+
+    min-height:78px;
+
+    display:flex;
+    align-items:center;
+    gap:11px;
+
+    padding:13px;
+
+    border-radius:15px;
+
+    border:
+      1px solid
+      color-mix(
+        in srgb,
+        var(--cust) 27%,
+        #173b49
+      );
+
+    background:
+      radial-gradient(
+        circle at 88% 8%,
+        color-mix(
+          in srgb,
+          var(--cust) 10%,
+          transparent
+        ),
+        transparent 40%
+      ),
+      linear-gradient(
+        145deg,
+        #061d28,
+        #03141c
+      );
+
+    box-shadow:
+      inset 0 0 22px rgba(0,0,0,.28);
+  }
+
+  .customer-admin-stat.active{
+    --cust:#39ef78;
+  }
+
+  .customer-admin-stat.inactive{
+    --cust:#ff5d69;
+  }
+
+  .customer-admin-stat-icon{
+    width:42px;
+    height:42px;
+
+    flex:0 0 42px;
+
+    display:grid;
+    place-items:center;
+
+    border-radius:12px;
+
+    color:var(--cust);
+
+    border:
+      1px solid
+      color-mix(
+        in srgb,
+        var(--cust) 35%,
+        transparent
+      );
+
+    background:#041820;
+
+    box-shadow:
+      0 0 14px
+      color-mix(
+        in srgb,
+        var(--cust) 9%,
+        transparent
+      );
+  }
+
+  .customer-admin-stat-icon svg{
+    width:20px;
+    height:20px;
+  }
+
+  .customer-admin-stat small{
+    display:block;
+
+    color:#6f919f;
+
+    font-size:7px;
+  }
+
+  .customer-admin-stat b{
+    display:block;
+
+    margin-top:2px;
+
+    color:#effaff;
+
+    font-size:19px;
+  }
+
+  .customer-admin-stat em{
+    display:block;
+
+    margin-top:3px;
+
+    color:var(--cust);
+
+    font-size:6px;
+    font-style:normal;
+    font-weight:900;
+  }
+
+
+  /* =====================================================
+     NEW CUSTOMER TERMINAL
+     ===================================================== */
+
+  .customer-create-terminal{
+    position:relative;
+    overflow:hidden;
+
+    margin-bottom:16px;
+
+    padding:17px;
+
+    border-radius:20px;
+
+    border:
+      1px solid rgba(46,220,255,.24);
+
+    background:
+      radial-gradient(
+        circle at 92% 0%,
+        rgba(39,223,255,.10),
+        transparent 34%
+      ),
+      linear-gradient(
+        145deg,
+        #071e29,
+        #03141d
+      );
+
+    box-shadow:
+      inset 0 0 27px rgba(0,0,0,.28);
+  }
+
+  .customer-create-terminal::after{
+    content:"";
+
+    position:absolute;
+
+    left:-30%;
+    bottom:0;
+
+    width:28%;
+    height:1px;
+
+    background:
+      linear-gradient(
+        90deg,
+        transparent,
+        #43eaff,
+        transparent
+      );
+
+    box-shadow:
+      0 0 8px #43eaff;
+
+    animation:
+      customerAdminSweep 4s linear infinite;
+  }
+
+  .customer-create-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+
+    margin-bottom:15px;
+  }
+
+  .customer-create-title{
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+
+  .customer-create-icon{
+    position:relative;
+
+    width:44px;
+    height:44px;
+
+    display:grid;
+    place-items:center;
+
+    border-radius:13px;
+
+    color:#43eaff;
+
+    border:
+      1px solid rgba(67,234,255,.34);
+
+    background:#041821;
+  }
+
+  .customer-create-icon svg{
+    width:21px;
+    height:21px;
+  }
+
+  .customer-create-icon::after{
+    content:"";
+
+    position:absolute;
+
+    right:4px;
+    top:4px;
+
+    width:6px;
+    height:6px;
+
+    border-radius:50%;
+
+    background:#39ef78;
+
+    box-shadow:
+      0 0 6px #39ef78;
+
+    animation:
+      financeLed 1.4s ease-in-out infinite;
+  }
+
+  .customer-create-title h3{
+    margin:0;
+
+    color:#f2fbff;
+
+    font-size:13px;
+  }
+
+  .customer-create-title p{
+    margin:3px 0 0;
+
+    color:#7194a2;
+
+    font-size:7px;
+  }
+
+  .customer-create-tag{
+    padding:6px 9px;
+
+    border-radius:999px;
+
+    border:
+      1px solid rgba(57,239,120,.27);
+
+    background:
+      rgba(57,239,120,.05);
+
+    color:#3def7c;
+
+    font-size:6px;
+    font-weight:900;
+  }
+
+  .customer-create-grid{
+    display:grid;
+
+    grid-template-columns:
+      repeat(4,minmax(0,1fr));
+
+    gap:10px;
+  }
+
+  .customer-create-field{
+    min-width:0;
+  }
+
+  .customer-create-field.span2{
+    grid-column:span 2;
+  }
+
+  .customer-create-field label{
+    display:block;
+
+    margin-bottom:5px;
+
+    color:#7798a6;
+
+    font-size:7px;
+  }
+
+  .customer-create-field input,
+  .customer-create-field select{
+    width:100%;
+
+    box-sizing:border-box;
+
+    min-height:39px;
+
+    padding:9px 10px;
+
+    border-radius:10px;
+
+    border:
+      1px solid #214a5a;
+
+    outline:none;
+
+    background:#061923;
+
+    color:#ecf8fc;
+  }
+
+  .customer-create-field input:focus,
+  .customer-create-field select:focus{
+    border-color:#43eaff;
+
+    box-shadow:
+      0 0 0 2px rgba(67,234,255,.08);
+  }
+
+  .create-customer-btn{
+    width:100%;
+
+    min-height:41px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+
+    margin-top:12px;
+
+    border-radius:10px;
+
+    border:
+      1px solid rgba(57,239,120,.38);
+
+    background:
+      linear-gradient(
+        145deg,
+        rgba(57,239,120,.12),
+        rgba(3,35,22,.76)
+      );
+
+    color:#43ef7e;
+
+    font-size:8px;
+    font-weight:900;
+
+    cursor:pointer;
+
+    transition:.2s ease;
+  }
+
+  .create-customer-btn:hover{
+    transform:translateY(-1px);
+
+    box-shadow:
+      0 0 16px rgba(57,239,120,.09);
+  }
+
+  .create-customer-btn svg{
+    width:14px;
+    height:14px;
+  }
+
+
+  /* =====================================================
+     CUSTOMER CARDS
+     ===================================================== */
+
+  .customers-center{
+    border-radius:19px;
+
+    border:
+      1px solid #173d4b;
+
+    background:
+      linear-gradient(
+        145deg,
+        #061c27,
+        #03141c
+      );
+
+    overflow:hidden;
+  }
+
+  .customers-center-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+
+    padding:14px 15px;
+
+    border-bottom:
+      1px solid #173846;
+  }
+
+  .customers-center-head h3{
+    margin:0;
+
+    color:#effaff;
+
+    font-size:12px;
+  }
+
+  .customers-center-head p{
+    margin:3px 0 0;
+
+    color:#658997;
+
+    font-size:7px;
+  }
+
+  .customers-grid{
+    display:grid;
+
+    grid-template-columns:
+      repeat(3,minmax(250px,1fr));
+
+    gap:12px;
+
+    padding:14px;
+  }
+
+  .customer-unit{
+    --customer-state:#39ef78;
+
+    position:relative;
+    overflow:hidden;
+
+    padding:14px;
+
+    border-radius:16px;
+
+    border:
+      1px solid
+      color-mix(
+        in srgb,
+        var(--customer-state) 25%,
+        #173b49
+      );
+
+    background:
+      radial-gradient(
+        circle at 92% 4%,
+        color-mix(
+          in srgb,
+          var(--customer-state) 9%,
+          transparent
+        ),
+        transparent 36%
+      ),
+      linear-gradient(
+        145deg,
+        #071e29,
+        #03141c
+      );
+
+    transition:.2s ease;
+  }
+
+  .customer-unit.inactive{
+    --customer-state:#ff5d69;
+  }
+
+  .customer-unit:hover{
+    transform:translateY(-3px);
+
+    box-shadow:
+      0 12px 25px rgba(0,0,0,.20);
+  }
+
+  .customer-unit-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+
+    margin-bottom:13px;
+  }
+
+  .customer-avatar{
+    display:flex;
+    align-items:center;
+    gap:9px;
+
+    min-width:0;
+  }
+
+  .customer-avatar-icon{
+    position:relative;
+
+    width:42px;
+    height:42px;
+
+    flex:0 0 42px;
+
+    display:grid;
+    place-items:center;
+
+    border-radius:12px;
+
+    color:var(--customer-state);
+
+    border:
+      1px solid
+      color-mix(
+        in srgb,
+        var(--customer-state) 32%,
+        transparent
+      );
+
+    background:#041720;
+  }
+
+  .customer-avatar-icon svg{
+    width:20px;
+    height:20px;
+  }
+
+  .customer-avatar-icon::after{
+    content:"";
+
+    position:absolute;
+
+    right:3px;
+    top:3px;
+
+    width:7px;
+    height:7px;
+
+    border-radius:50%;
+
+    background:var(--customer-state);
+
+    box-shadow:
+      0 0 6px var(--customer-state);
+  }
+
+  .customer-avatar b{
+    display:block;
+
+    color:#eff9fd;
+
+    font-size:10px;
+
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+
+  .customer-avatar small{
+    display:block;
+
+    margin-top:2px;
+
+    color:#668996;
+
+    font-size:6px;
+  }
+
+  .customer-state{
+    padding:5px 8px;
+
+    border-radius:999px;
+
+    color:var(--customer-state);
+
+    border:
+      1px solid
+      color-mix(
+        in srgb,
+        var(--customer-state) 35%,
+        transparent
+      );
+
+    background:
+      color-mix(
+        in srgb,
+        var(--customer-state) 6%,
+        transparent
+      );
+
+    font-size:6px;
+    font-weight:900;
+  }
+
+  .customer-data-grid{
+    display:grid;
+
+    grid-template-columns:
+      repeat(2,minmax(0,1fr));
+
+    gap:7px;
+
+    margin-bottom:11px;
+  }
+
+  .customer-data-box{
+    padding:8px;
+
+    border-radius:9px;
+
+    border:
+      1px solid #163946;
+
+    background:
+      rgba(2,14,20,.52);
+  }
+
+  .customer-data-box small{
+    display:block;
+
+    color:#608491;
+
+    font-size:6px;
+  }
+
+  .customer-data-box b{
+    display:block;
+
+    margin-top:3px;
+
+    color:#dff2f8;
+
+    font-size:8px;
+
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+
+  .customer-toggle{
+    width:100%;
+
+    min-height:35px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+
+    border-radius:9px;
+
+    border:
+      1px solid
+      color-mix(
+        in srgb,
+        var(--customer-state) 35%,
+        #234754
+      );
+
+    background:
+      color-mix(
+        in srgb,
+        var(--customer-state) 5%,
+        #061923
+      );
+
+    color:var(--customer-state);
+
+    font-size:8px;
+    font-weight:900;
+
+    cursor:pointer;
+  }
+
+  .customer-toggle svg{
+    width:13px;
+    height:13px;
+  }
+
+
+  /* =====================================================
+     SYSTEM CONFIGURATION
+     ===================================================== */
+
+  .system-config-layout{
+    display:grid;
+
+    grid-template-columns:
+      minmax(0,1.15fr)
+      minmax(280px,.55fr);
+
+    gap:15px;
+  }
+
+  .config-console,
+  .rate-monitor{
+    position:relative;
+    overflow:hidden;
+
+    border-radius:20px;
+
+    border:
+      1px solid #193f4e;
+
+    background:
+      linear-gradient(
+        145deg,
+        #071e29,
+        #03141d
+      );
+
+    box-shadow:
+      inset 0 0 27px rgba(0,0,0,.28);
+  }
+
+  .config-console{
+    padding:17px;
+  }
+
+  .config-console-head{
+    display:flex;
+    align-items:center;
+    gap:10px;
+
+    margin-bottom:16px;
+  }
+
+  .config-console-icon{
+    width:44px;
+    height:44px;
+
+    display:grid;
+    place-items:center;
+
+    border-radius:13px;
+
+    color:#42eaff;
+
+    border:
+      1px solid rgba(66,234,255,.32);
+
+    background:#041821;
+  }
+
+  .config-console-icon svg{
+    width:21px;
+    height:21px;
+  }
+
+  .config-console-head h3{
+    margin:0;
+
+    color:#effaff;
+
+    font-size:13px;
+  }
+
+  .config-console-head p{
+    margin:3px 0 0;
+
+    color:#7093a0;
+
+    font-size:7px;
+  }
+
+  .config-field{
+    margin-bottom:11px;
+  }
+
+  .config-field label{
+    display:block;
+
+    margin-bottom:5px;
+
+    color:#7596a4;
+
+    font-size:7px;
+  }
+
+  .config-field input{
+    width:100%;
+
+    box-sizing:border-box;
+
+    min-height:41px;
+
+    padding:9px 11px;
+
+    border-radius:10px;
+
+    border:
+      1px solid #214a5a;
+
+    background:#061923;
+
+    color:#ecf8fc;
+
+    outline:none;
+
+    font-size:12px;
+  }
+
+  .config-field input:focus{
+    border-color:#ffd043;
+
+    box-shadow:
+      0 0 0 2px rgba(255,208,67,.07);
+  }
+
+  .config-field input[readonly]{
+    color:#45eaff;
+  }
+
+  .config-warning{
+    display:flex;
+    align-items:flex-start;
+    gap:8px;
+
+    margin:12px 0;
+
+    padding:10px;
+
+    border-radius:10px;
+
+    border:
+      1px solid rgba(255,202,45,.22);
+
+    background:
+      rgba(255,202,45,.045);
+
+    color:#a99452;
+
+    font-size:7px;
+    line-height:1.7;
+  }
+
+  .config-warning svg{
+    width:15px;
+    height:15px;
+
+    flex:0 0 15px;
+
+    color:#ffd043;
+  }
+
+  .config-save{
+    width:100%;
+
+    min-height:41px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+
+    border-radius:10px;
+
+    border:
+      1px solid rgba(255,208,67,.37);
+
+    background:
+      linear-gradient(
+        145deg,
+        rgba(255,205,53,.13),
+        rgba(53,39,3,.7)
+      );
+
+    color:#ffd044;
+
+    font-size:8px;
+    font-weight:900;
+
+    cursor:pointer;
+  }
+
+  .config-save svg{
+    width:14px;
+    height:14px;
+  }
+
+  .rate-monitor{
+    min-height:295px;
+
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+
+    padding:18px;
+
+    text-align:center;
+  }
+
+  .rate-monitor::before{
+    content:"";
+
+    position:absolute;
+
+    inset:15px;
+
+    border-radius:14px;
+
+    border:
+      1px dashed rgba(255,208,67,.17);
+  }
+
+  .rate-monitor-icon{
+    position:relative;
+    z-index:2;
+
+    width:62px;
+    height:62px;
+
+    display:grid;
+    place-items:center;
+
+    margin-bottom:11px;
+
+    border-radius:19px;
+
+    color:#ffd043;
+
+    border:
+      1px solid rgba(255,208,67,.32);
+
+    background:
+      radial-gradient(
+        circle,
+        rgba(255,208,67,.11),
+        #171305 70%
+      );
+
+    box-shadow:
+      0 0 22px rgba(255,208,67,.08);
+  }
+
+  .rate-monitor-icon svg{
+    width:28px;
+    height:28px;
+  }
+
+  .rate-monitor small{
+    position:relative;
+    z-index:2;
+
+    color:#817749;
+
+    font-size:6px;
+    font-weight:900;
+  }
+
+  .rate-monitor strong{
+    position:relative;
+    z-index:2;
+
+    display:block;
+
+    margin-top:6px;
+
+    color:#ffd94b;
+
+    font-family:
+      "Courier New",
+      monospace;
+
+    font-size:29px;
+
+    text-shadow:
+      0 0 10px rgba(255,208,67,.22);
+  }
+
+  .rate-monitor span{
+    position:relative;
+    z-index:2;
+
+    display:inline-flex;
+
+    margin-top:8px;
+
+    padding:5px 8px;
+
+    border-radius:999px;
+
+    color:#39ef78;
+
+    border:
+      1px solid rgba(57,239,120,.24);
+
+    background:
+      rgba(57,239,120,.05);
+
+    font-size:6px;
+    font-weight:900;
+  }
+
+
+  /* =====================================================
+     ANIMATIONS / RESPONSIVE
+     ===================================================== */
+
+  @keyframes customerAdminSweep{
+
+    from{
+      left:-30%;
+    }
+
+    to{
+      left:120%;
+    }
+
+  }
+
+  @media(max-width:1200px){
+
+    .customers-grid{
+      grid-template-columns:
+        repeat(2,minmax(240px,1fr));
+    }
+
+    .customer-create-grid{
+      grid-template-columns:
+        repeat(2,minmax(0,1fr));
+    }
+
+  }
+
+  @media(max-width:800px){
+
+    .customer-admin-summary{
+      grid-template-columns:1fr;
+    }
+
+    .customers-grid{
+      grid-template-columns:1fr;
+    }
+
+    .customer-create-grid{
+      grid-template-columns:1fr;
+    }
+
+    .customer-create-field.span2{
+      grid-column:auto;
+    }
+
+    .system-config-layout{
+      grid-template-columns:1fr;
+    }
+
+  }
+
+  `;
+
+  document.head
+    .appendChild(st);
+
+}
+
+
+/* =========================================================
+   CUSTOMER MANAGEMENT CENTER
+   ========================================================= */
+
+subscribers=
+async function(c){
+
+  let[
+    areasResult,
+    profilesResult,
+    metersResult
+  ]=
+  await Promise.all([
+
+    sb.from("areas")
+      .select("*")
+      .order("name"),
+
+    sb.from("profiles")
+      .select(
+        "*,areas(name)"
+      )
+      .eq(
+        "role",
+        "customer"
+      )
+      .order(
+        "created_at",
+        {
+          ascending:false
+        }
+      ),
+
+    sb.from("meters")
+      .select(
+        "customer_id,meter_number"
+      )
+
+  ]);
+
+
+  let areas=
+    areasResult.data||
+    [];
+
+  let ps=
+    profilesResult.data||
+    [];
+
+  let metersData=
+    metersResult.data||
+    [];
+
+
+  let meterMap={};
+
+  metersData
+  .forEach(
+    m=>{
+
+      meterMap[
+        m.customer_id
+      ]=
+        m.meter_number;
+
+    }
+  );
+
+
+  let active=
+    ps.filter(
+      p=>p.active
+    ).length;
+
+
+  let inactive=
+    ps.length-
+    active;
+
+
+  c.innerHTML=
+
+    header(
+      "المشتركون",
+      "Customer Management Center — إنشاء وإدارة حسابات المشتركين."
+    )
+
+    +
+
+    `
+
+      <section class="customer-admin-summary">
+
+        <article class="customer-admin-stat">
+
+          <div class="customer-admin-stat-icon">
+
+            <i data-lucide="users-round"></i>
+
+          </div>
+
+          <div>
+
+            <small>
+              إجمالي المشتركين
+            </small>
+
+            <b>
+              ${ps.length}
+            </b>
+
+            <em>
+              CUSTOMERS
+            </em>
+
+          </div>
+
+        </article>
+
+
+        <article class="customer-admin-stat active">
+
+          <div class="customer-admin-stat-icon">
+
+            <i data-lucide="circle-check-big"></i>
+
+          </div>
+
+          <div>
+
+            <small>
+              اشتراكات فعّالة
+            </small>
+
+            <b>
+              ${active}
+            </b>
+
+            <em>
+              ACTIVE
+            </em>
+
+          </div>
+
+        </article>
+
+
+        <article class="customer-admin-stat inactive">
+
+          <div class="customer-admin-stat-icon">
+
+            <i data-lucide="circle-x"></i>
+
+          </div>
+
+          <div>
+
+            <small>
+              اشتراكات غير فعّالة
+            </small>
+
+            <b>
+              ${inactive}
+            </b>
+
+            <em>
+              INACTIVE
+            </em>
+
+          </div>
+
+        </article>
+
+      </section>
+
+
+      <section class="customer-create-terminal">
+
+        <div class="customer-create-head">
+
+          <div class="customer-create-title">
+
+            <div class="customer-create-icon">
+
+              <i data-lucide="user-plus"></i>
+
+            </div>
+
+            <div>
+
+              <h3>
+                إضافة مشترك جديد
+              </h3>
+
+              <p>
+                إنشاء الحساب وربطه مباشرة بالمنطقة والعداد والقراءة الافتتاحية.
+              </p>
+
+            </div>
+
+          </div>
+
+          <span class="customer-create-tag">
+            NEW CUSTOMER TERMINAL
+          </span>
+
+        </div>
+
+
+        <div class="customer-create-grid">
+
+          <div class="customer-create-field span2">
+
+            <label>
+              الاسم الكامل
+            </label>
+
+            <input
+              id="newName"
+              autocomplete="off"
+              placeholder="اسم المشترك">
+
+          </div>
+
+
+          <div class="customer-create-field">
+
+            <label>
+              رقم الهاتف
+            </label>
+
+            <input
+              id="newPhone"
+              autocomplete="off"
+              placeholder="+961 ...">
+
+          </div>
+
+
+          <div class="customer-create-field">
+
+            <label>
+              البريد الإلكتروني
+            </label>
+
+            <input
+              id="newEmail"
+              type="email"
+              autocomplete="off"
+              placeholder="email@example.com">
+
+          </div>
+
+
+          <div class="customer-create-field">
+
+            <label>
+              كلمة المرور
+            </label>
+
+            <input
+              id="newPassword"
+              type="password"
+              autocomplete="new-password"
+              placeholder="8 أحرف على الأقل">
+
+          </div>
+
+
+          <div class="customer-create-field">
+
+            <label>
+              المنطقة / العلبة
+            </label>
+
+            <select id="newArea">
+
+              ${
+                areas.map(
+                  a=>`
+
+                    <option
+                      value="${a.id}">
+
+                      ${a.name}
+
+                    </option>
+
+                  `
+                )
+                .join("")
+              }
+
+            </select>
+
+          </div>
+
+
+          <div class="customer-create-field">
+
+            <label>
+              رقم العداد
+            </label>
+
+            <input
+              id="newMeter"
+              autocomplete="off"
+              placeholder="مثال: 756">
+
+          </div>
+
+
+          <div class="customer-create-field">
+
+            <label>
+              القراءة الافتتاحية
+            </label>
+
+            <input
+              id="newInitialReading"
+              type="text"
+              inputmode="numeric"
+              autocomplete="off"
+              placeholder="مثال: 850">
+
+          </div>
+
+        </div>
+
+
+        <button
+          class="create-customer-btn"
+          onclick="createCustomer()">
+
+          <i data-lucide="user-plus"></i>
+
+          إنشاء حساب المشترك وتفعيل العداد
+
+        </button>
+
+      </section>
+
+
+      <section class="customers-center">
+
+        <div class="customers-center-head">
+
+          <div>
+
+            <h3>
+              قاعدة المشتركين
+            </h3>
+
+            <p>
+              Customer Registry · جميع المشتركين المسجلين في النظام
+            </p>
+
+          </div>
+
+          <span class="ledger-count">
+            ${ps.length} CUSTOMERS
+          </span>
+
+        </div>
+
+
+        <div class="customers-grid">
+
+          ${
+            ps.map(
+              p=>{
+
+                let isActive=
+                  !!p.active;
+
+                return `
+
+                  <article
+                    class="customer-unit ${
+                      isActive
+                      ?""
+                      :"inactive"
+                    }">
+
+                    <div class="customer-unit-head">
+
+                      <div class="customer-avatar">
+
+                        <div class="customer-avatar-icon">
+
+                          <i data-lucide="user-round"></i>
+
+                        </div>
+
+                        <div>
+
+                          <b>
+                            ${p.full_name}
+                          </b>
+
+                          <small>
+                            CUSTOMER ACCOUNT
+                          </small>
+
+                        </div>
+
+                      </div>
+
+                      <span class="customer-state">
+
+                        ${
+                          isActive
+                          ?"ACTIVE"
+                          :"INACTIVE"
+                        }
+
+                      </span>
+
+                    </div>
+
+
+                    <div class="customer-data-grid">
+
+                      <div class="customer-data-box">
+
+                        <small>
+                          الهاتف
+                        </small>
+
+                        <b>
+                          ${p.phone||"-"}
+                        </b>
+
+                      </div>
+
+
+                      <div class="customer-data-box">
+
+                        <small>
+                          المنطقة
+                        </small>
+
+                        <b>
+                          ${
+                            p.areas
+                            ?.name||
+                            "-"
+                          }
+                        </b>
+
+                      </div>
+
+
+                      <div class="customer-data-box">
+
+                        <small>
+                          رقم العداد
+                        </small>
+
+                        <b>
+                          ${
+                            meterMap[
+                              p.id
+                            ]||
+                            "-"
+                          }
+                        </b>
+
+                      </div>
+
+
+                      <div class="customer-data-box">
+
+                        <small>
+                          الحالة
+                        </small>
+
+                        <b>
+
+                          ${
+                            isActive
+                            ?"اشتراك فعّال"
+                            :"موقوف"
+                          }
+
+                        </b>
+
+                      </div>
+
+                    </div>
+
+
+                    <button
+                      class="customer-toggle"
+                      onclick="toggleCustomer(
+                        '${p.id}',
+                        ${!isActive}
+                      )">
+
+                      <i
+                        data-lucide="${
+                          isActive
+                          ?"circle-x"
+                          :"circle-check-big"
+                        }">
+                      </i>
+
+                      ${
+                        isActive
+                        ?"تعطيل الاشتراك"
+                        :"تفعيل الاشتراك"
+                      }
+
+                    </button>
+
+                  </article>
+
+                `;
+
+              }
+            )
+            .join("")
+
+            ||
+
+            `
+
+              <div class="finance-empty">
+
+                <i data-lucide="users-round"></i>
+
+                <div>
+                  لا يوجد مشتركون حتى الآن
+                </div>
+
+              </div>
+
+            `
+          }
+
+        </div>
+
+      </section>
+
+    `;
+
+}
+
+
+/* =========================================================
+   SYSTEM CONFIGURATION CENTER
+   ========================================================= */
+
+settings=
+async function(c){
+
+  let s=
+    (
+      await sb
+      .from(
+        "app_settings"
+      )
+      .select("*")
+      .eq(
+        "id",
+        1
+      )
+      .single()
+    ).data
+    ||
+    {
+      kwh_price:.65,
+      currency:"USD"
+    };
+
+
+  c.innerHTML=
+
+    header(
+      "الإعدادات",
+      "System Configuration — إدارة التسعير والإعدادات العامة."
+    )
+
+    +
+
+    `
+
+      <section class="system-config-layout">
+
+        <article class="config-console">
+
+          <div class="config-console-head">
+
+            <div class="config-console-icon">
+
+              <i data-lucide="settings"></i>
+
+            </div>
+
+            <div>
+
+              <h3>
+                إعدادات التسعير
+              </h3>
+
+              <p>
+                التحكم بالسعر المعتمد للفواتير الجديدة.
+              </p>
+
+            </div>
+
+          </div>
+
+
+          <div class="config-field">
+
+            <label>
+              سعر 1 kWh بالدولار
+            </label>
+
+            <input
+              id="setKwhPrice"
+              type="text"
+              inputmode="decimal"
+              value="${Number(s.kwh_price).toFixed(2)}"
+              oninput="syncRateMonitor()">
+
+          </div>
+
+
+          <div class="config-field">
+
+            <label>
+              العملة
+            </label>
+
+            <input
+              value="${s.currency||"USD"}"
+              readonly>
+
+          </div>
+
+
+          <div class="config-warning">
+
+            <i data-lucide="triangle-alert"></i>
+
+            <div>
+
+              تغيير سعر الكيلوواط يؤثر فقط على
+              الفواتير الجديدة.
+
+              الفواتير القديمة تحتفظ بالسعر الذي
+              تم إصدارها عليه.
+
+            </div>
+
+          </div>
+
+
+          <button
+            class="config-save"
+            onclick="saveSettings()">
+
+            <i data-lucide="save"></i>
+
+            حفظ إعدادات التسعير
+
+          </button>
+
+        </article>
+
+
+        <aside class="rate-monitor">
+
+          <div class="rate-monitor-icon">
+
+            <i data-lucide="circle-dollar-sign"></i>
+
+          </div>
+
+          <small>
+            CURRENT ENERGY RATE
+          </small>
+
+          <strong id="rateMonitorValue">
+
+            $${Number(s.kwh_price).toFixed(2)}
+
+          </strong>
+
+          <span>
+            USD / kWh · ACTIVE
+          </span>
+
+        </aside>
+
+      </section>
+
+    `;
+
+}
+
+
+/* =========================================================
+   RATE MONITOR
+   ========================================================= */
+
+function syncRateMonitor(){
+
+  let field=
+    A("setKwhPrice");
+
+  let monitor=
+    A("rateMonitorValue");
+
+
+  if(
+    !field||
+    !monitor
+  )return;
+
+
+  let value=
+    Number(
+      field.value
+    );
+
+
+  monitor.textContent=
+
+    Number.isFinite(value)
+
+    ?
+
+    "$"+
+    value.toFixed(2)
+
+    :
+
+    "$0.00";
+
+}
+
+
+/* =========================================================
+   LOAD V5
+   ========================================================= */
+
+injectAdminPremiumV5Styles();
+
 injectAdminPremiumV4Styles();
 
 injectAdminPremiumV3Styles();
