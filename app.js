@@ -16200,7 +16200,142 @@ function injectPhoneAuthStyles(){
 /* =========================================================
    INITIALIZE PART 13A
    ========================================================= */
+/* =========================================================
+   PART 13A FIX
+   PHONE LOGIN WITHOUT TWILIO
+   ========================================================= */
 
+function nashabehAuthEmailFromPhone(value){
+
+  let phone=
+    normalizeNashabehPhone(
+      value
+    );
+
+  let digits=
+    phone.replace(
+      /\D/g,
+      ""
+    );
+
+  return (
+    "nashabeh."+
+    digits+
+    "@auth.local"
+  );
+
+}
+
+
+login=
+async function(){
+
+  try{
+
+    let identity=
+      A("loginEmail")
+      ?.value
+      ?.trim()||
+      "";
+
+    let password=
+      A("loginPassword")
+      ?.value||
+      "";
+
+    if(
+      !identity||
+      !password
+    ){
+
+      return authMsg(
+        "أدخل رقم الهاتف وكلمة المرور"
+      );
+
+    }
+
+    let credentials={
+      password
+    };
+
+    if(
+      identity.includes("@")
+    ){
+
+      /*
+        ADMIN LOGIN
+      */
+
+      credentials.email=
+        identity;
+
+    }
+    else{
+
+      /*
+        CUSTOMER PHONE LOGIN
+        no SMS / no OTP / no Twilio
+      */
+
+      let phone=
+        normalizeNashabehPhone(
+          identity
+        );
+
+      if(
+        !/^\+\d{8,15}$/
+        .test(phone)
+      ){
+
+        return authMsg(
+          "رقم الهاتف غير صحيح"
+        );
+
+      }
+
+      credentials.email=
+        nashabehAuthEmailFromPhone(
+          phone
+        );
+
+    }
+
+    let{
+      error
+    }=
+    await sb.auth
+    .signInWithPassword(
+      credentials
+    );
+
+    if(error){
+
+      console.error(
+        "LOGIN ERROR:",
+        error
+      );
+
+      return authMsg(
+        "تعذر تسجيل الدخول. تحقق من رقم الهاتف وكلمة المرور."
+      );
+
+    }
+
+    await boot();
+
+  }
+  catch(e){
+
+    console.error(e);
+
+    authMsg(
+      e?.message||
+      "تعذر الاتصال بالخدمة."
+    );
+
+  }
+
+};
 injectPhoneAuthStyles();
 
 preparePhoneLoginUI();
