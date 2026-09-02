@@ -18741,6 +18741,1085 @@ injectNashabehMeterOCRStyles();
 /* =========================================================
    END PART 13B
    ========================================================= */
+/* =========================================================
+   PART 13B.2
+   NASHABEH MECHANICAL METER OCR
+   BLACK DIGITS + RED DECIMAL WHEEL
+   ========================================================= */
+
+
+/* ---------------------------------------------------------
+   NASHABEH MECHANICAL NUMBER RULE
+
+   Examples:
+
+   007062
+   black = 00706
+   red   = 2
+   final = 706
+
+   07062
+   black = 0706
+   red   = 2
+   final = 706
+
+   7062
+   black = 706
+   red   = 2
+   final = 706
+   --------------------------------------------------------- */
+
+function nshMechanicalReadingFromRaw(
+  raw
+){
+
+  raw=
+    String(
+      raw||""
+    )
+    .replace(/\D/g,"");
+
+
+  if(
+    raw.length<4||
+    raw.length>8
+  ){
+
+    return null;
+
+  }
+
+
+  let redDigit=
+    raw.slice(
+      -1
+    );
+
+
+  let blackDigits=
+    raw.slice(
+      0,
+      -1
+    );
+
+
+  let reading=
+    Number(
+      blackDigits
+    );
+
+
+  if(
+    !Number.isFinite(
+      reading
+    )
+  ){
+
+    return null;
+
+  }
+
+
+  return{
+
+    raw,
+
+    blackDigits,
+
+    redDigit,
+
+    reading
+
+  };
+
+}
+
+
+/* ---------------------------------------------------------
+   EXTRACT ALL POSSIBLE MECHANICAL NUMBERS
+   --------------------------------------------------------- */
+
+function nshMechanicalCandidates(
+  text
+){
+
+  text=
+    String(
+      text||""
+    )
+    .replace(/[OoQ]/g,"0")
+    .replace(/[Il|!]/g,"1")
+    .replace(/[Zz]/g,"2")
+    .replace(/[Ss]/g,"5")
+    .replace(/[Bb]/g,"8");
+
+
+  let groups=
+    text.match(
+      /\d{4,8}/g
+    )||[];
+
+
+  let out=[];
+
+
+  for(
+    let group of groups
+  ){
+
+    let parsed=
+      nshMechanicalReadingFromRaw(
+        group
+      );
+
+
+    if(parsed){
+
+      out.push(
+        parsed
+      );
+
+    }
+
+  }
+
+
+  return out;
+
+}
+
+
+/* ---------------------------------------------------------
+   CREATE BETTER MECHANICAL METER CROP
+
+   Tries several center regions because customer
+   photos are not always perfectly aligned.
+   --------------------------------------------------------- */
+
+function nshMechanicalCrop(
+  img,
+  config={}
+){
+
+  let{
+
+    x=.5,
+    y=.43,
+
+    width=.52,
+    height=.38,
+
+    rotation=0,
+
+    threshold=false,
+
+    invert=false
+
+  }=config;
+
+
+  let cropW=
+    Math.max(
+      80,
+      Math.round(
+        img.naturalWidth*
+        width
+      )
+    );
+
+
+  let cropH=
+    Math.max(
+      80,
+      Math.round(
+        img.naturalHeight*
+        height
+      )
+    );
+
+
+  let centerX=
+    img.naturalWidth*
+    x;
+
+
+  let centerY=
+    img.naturalHeight*
+    y;
+
+
+  let sx=
+    Math.round(
+      centerX-
+      cropW/2
+    );
+
+
+  let sy=
+    Math.round(
+      centerY-
+      cropH/2
+    );
+
+
+  sx=
+    Math.max(
+      0,
+      Math.min(
+        img.naturalWidth-
+        cropW,
+        sx
+      )
+    );
+
+
+  sy=
+    Math.max(
+      0,
+      Math.min(
+        img.naturalHeight-
+        cropH,
+        sy
+      )
+    );
+
+
+  let crop=
+    document.createElement(
+      "canvas"
+    );
+
+
+  crop.width=
+    cropW;
+
+
+  crop.height=
+    cropH;
+
+
+  let ctx=
+    crop.getContext(
+      "2d",
+      {
+        willReadFrequently:true
+      }
+    );
+
+
+  ctx.drawImage(
+
+    img,
+
+    sx,
+    sy,
+    cropW,
+    cropH,
+
+    0,
+    0,
+    cropW,
+    cropH
+
+  );
+
+
+  /*
+    GRAYSCALE + HIGH CONTRAST
+  */
+
+  let imageData=
+    ctx.getImageData(
+      0,
+      0,
+      cropW,
+      cropH
+    );
+
+
+  let data=
+    imageData.data;
+
+
+  for(
+    let i=0;
+    i<data.length;
+    i+=4
+  ){
+
+    let gray=
+      (
+        data[i]*.299+
+        data[i+1]*.587+
+        data[i+2]*.114
+      );
+
+
+    /*
+      contrast
+    */
+
+    gray=
+      (
+        gray-
+        128
+      )*
+      2.15+
+      128;
+
+
+    gray=
+      Math.max(
+        0,
+        Math.min(
+          255,
+          gray
+        )
+      );
+
+
+    if(threshold){
+
+      gray=
+        gray>115
+        ?255
+        :0;
+
+    }
+
+
+    if(invert){
+
+      gray=
+        255-
+        gray;
+
+    }
+
+
+    data[i]=gray;
+    data[i+1]=gray;
+    data[i+2]=gray;
+
+  }
+
+
+  ctx.putImageData(
+    imageData,
+    0,
+    0
+  );
+
+
+  /*
+    SCALE UP FOR OCR
+  */
+
+  let zoom=2.4;
+
+
+  let enlarged=
+    document.createElement(
+      "canvas"
+    );
+
+
+  enlarged.width=
+    Math.round(
+      cropW*
+      zoom
+    );
+
+
+  enlarged.height=
+    Math.round(
+      cropH*
+      zoom
+    );
+
+
+  let ectx=
+    enlarged.getContext(
+      "2d"
+    );
+
+
+  ectx.imageSmoothingEnabled=
+    true;
+
+
+  ectx.drawImage(
+
+    crop,
+
+    0,
+    0,
+
+    enlarged.width,
+    enlarged.height
+
+  );
+
+
+  /*
+    ROTATION
+  */
+
+  rotation=
+    Number(
+      rotation||0
+    );
+
+
+  if(!rotation){
+
+    return enlarged;
+
+  }
+
+
+  let swap=
+    Math.abs(
+      rotation
+    )===90;
+
+
+  let finalCanvas=
+    document.createElement(
+      "canvas"
+    );
+
+
+  finalCanvas.width=
+    swap
+    ?enlarged.height
+    :enlarged.width;
+
+
+  finalCanvas.height=
+    swap
+    ?enlarged.width
+    :enlarged.height;
+
+
+  let fctx=
+    finalCanvas.getContext(
+      "2d"
+    );
+
+
+  fctx.translate(
+
+    finalCanvas.width/2,
+    finalCanvas.height/2
+
+  );
+
+
+  fctx.rotate(
+
+    rotation*
+    Math.PI/
+    180
+
+  );
+
+
+  fctx.drawImage(
+
+    enlarged,
+
+    -enlarged.width/2,
+    -enlarged.height/2
+
+  );
+
+
+  return finalCanvas;
+
+}
+
+
+/* ---------------------------------------------------------
+   REPLACEMENT OCR ENGINE
+   --------------------------------------------------------- */
+
+nshReadMeterFree=
+async function(
+  file,
+  previousReading=0,
+  progressCallback=()=>{}
+){
+
+  let T=
+    await loadNashabehOCR();
+
+
+  let img=
+    await nshLoadImage(
+      file
+    );
+
+
+  let worker=
+    await T.createWorker(
+      "eng"
+    );
+
+
+  await worker.setParameters({
+
+    tessedit_char_whitelist:
+      "0123456789",
+
+    preserve_interword_spaces:
+      "0"
+
+  });
+
+
+  /*
+    Nashabeh meters are often photographed vertically.
+
+    We try:
+    - rotated right
+    - rotated left
+    - normal
+    - different crops
+    - threshold image
+  */
+
+  let variants=[
+
+    {
+      x:.50,
+      y:.42,
+      width:.52,
+      height:.40,
+      rotation:90,
+      threshold:false
+    },
+
+    {
+      x:.50,
+      y:.42,
+      width:.52,
+      height:.40,
+      rotation:-90,
+      threshold:false
+    },
+
+    {
+      x:.50,
+      y:.38,
+      width:.58,
+      height:.42,
+      rotation:90,
+      threshold:false
+    },
+
+    {
+      x:.50,
+      y:.38,
+      width:.58,
+      height:.42,
+      rotation:-90,
+      threshold:false
+    },
+
+    {
+      x:.50,
+      y:.45,
+      width:.65,
+      height:.48,
+      rotation:90,
+      threshold:true
+    },
+
+    {
+      x:.50,
+      y:.45,
+      width:.65,
+      height:.48,
+      rotation:-90,
+      threshold:true
+    },
+
+    {
+      x:.50,
+      y:.42,
+      width:.60,
+      height:.45,
+      rotation:0,
+      threshold:false
+    },
+
+    {
+      x:.50,
+      y:.42,
+      width:.60,
+      height:.45,
+      rotation:180,
+      threshold:false
+    }
+
+  ];
+
+
+  let results=[];
+
+
+  let total=
+    variants.length*
+    2;
+
+
+  let current=0;
+
+
+  for(
+    let variant of variants
+  ){
+
+    let canvas=
+      nshMechanicalCrop(
+        img,
+        variant
+      );
+
+
+    /*
+      First:
+      single line
+    */
+
+    for(
+      let psm of[
+        "7",
+        "13"
+      ]
+    ){
+
+      current++;
+
+
+      progressCallback(
+        Math.round(
+          current/
+          total*
+          100
+        )
+      );
+
+
+      await worker.setParameters({
+
+        tessedit_char_whitelist:
+          "0123456789",
+
+        tessedit_pageseg_mode:
+          psm
+
+      });
+
+
+      try{
+
+        let result=
+          await worker.recognize(
+            canvas
+          );
+
+
+        let text=
+          String(
+            result?.data?.text||
+            ""
+          );
+
+
+        let baseConfidence=
+          Number(
+            result
+            ?.data
+            ?.confidence||
+            0
+          )/
+          100;
+
+
+        let candidates=
+          nshMechanicalCandidates(
+            text
+          );
+
+
+        for(
+          let candidate of candidates
+        ){
+
+          let reading=
+            Number(
+              candidate.reading
+            );
+
+
+          let usage=
+            reading-
+            Number(
+              previousReading||0
+            );
+
+
+          let score=
+            baseConfidence*
+            100;
+
+
+          /*
+            Nashabeh raw display generally
+            contains 4 to 7 recognized digits.
+          */
+
+          if(
+            candidate.raw.length>=5&&
+            candidate.raw.length<=7
+          ){
+
+            score+=25;
+
+          }
+
+
+          /*
+            Reading cannot normally go backwards.
+          */
+
+          if(
+            reading>=
+            Number(
+              previousReading||0
+            )
+          ){
+
+            score+=35;
+
+          }
+          else{
+
+            score-=100;
+
+          }
+
+
+          /*
+            Typical sanity range.
+          */
+
+          if(
+            usage>=0&&
+            usage<=2000
+          ){
+
+            score+=15;
+
+          }
+
+
+          if(
+            usage>5000
+          ){
+
+            score-=70;
+
+          }
+
+
+          results.push({
+
+            reading,
+
+            raw:
+              candidate.raw,
+
+            blackDigits:
+              candidate.blackDigits,
+
+            redDigit:
+              candidate.redDigit,
+
+            baseConfidence,
+
+            score,
+
+            rotation:
+              variant.rotation,
+
+            threshold:
+              !!variant.threshold,
+
+            psm,
+
+            text
+
+          });
+
+        }
+
+      }
+      catch(error){
+
+        console.warn(
+          "Mechanical OCR variant failed",
+          error
+        );
+
+      }
+
+    }
+
+  }
+
+
+  await worker.terminate();
+
+
+  if(!results.length){
+
+    return{
+
+      ok:false,
+
+      reading:null,
+
+      confidence:0,
+
+      candidates:[]
+
+    };
+
+  }
+
+
+  /*
+    CONSENSUS
+
+    If several image variants independently
+    recognize the same final reading,
+    that is stronger than one OCR confidence.
+  */
+
+  let groups=
+    new Map();
+
+
+  for(
+    let result of results
+  ){
+
+    let key=
+      String(
+        result.reading
+      );
+
+
+    if(
+      !groups.has(
+        key
+      )
+    ){
+
+      groups.set(
+        key,
+        []
+      );
+
+    }
+
+
+    groups
+    .get(
+      key
+    )
+    .push(
+      result
+    );
+
+  }
+
+
+  let ranked=[];
+
+
+  for(
+    let[
+      reading,
+      items
+    ]of groups
+  ){
+
+    items.sort(
+      (
+        a,
+        b
+      )=>
+        b.score-
+        a.score
+    );
+
+
+    let best=
+      items[0];
+
+
+    let consensus=
+      items.length;
+
+
+    let finalScore=
+      best.score+
+      Math.min(
+        60,
+        (
+          consensus-
+          1
+        )*
+        20
+      );
+
+
+    ranked.push({
+
+      ...best,
+
+      reading:
+        Number(
+          reading
+        ),
+
+      consensus,
+
+      finalScore
+
+    });
+
+  }
+
+
+  ranked.sort(
+    (
+      a,
+      b
+    )=>
+      b.finalScore-
+      a.finalScore
+  );
+
+
+  let best=
+    ranked[0];
+
+
+  /*
+    Confidence logic:
+
+    3+ matching OCR variants = strong confidence
+    2 matching variants      = acceptable confidence
+    only 1                   = conservative
+  */
+
+  let confidence=
+    best.baseConfidence;
+
+
+  if(
+    best.consensus>=3
+  ){
+
+    confidence=
+      Math.max(
+        confidence,
+        .91
+      );
+
+  }
+  else if(
+    best.consensus===2
+  ){
+
+    confidence=
+      Math.max(
+        confidence,
+        .80
+      );
+
+  }
+  else{
+
+    confidence=
+      Math.min(
+        confidence,
+        .69
+      );
+
+  }
+
+
+  /*
+    Extra safety:
+    backward reading never auto-approves
+  */
+
+  if(
+    best.reading<
+    Number(
+      previousReading||0
+    )
+  ){
+
+    confidence=0;
+
+  }
+
+
+  return{
+
+    ok:true,
+
+    reading:
+      best.reading,
+
+    raw:
+      best.raw,
+
+    blackDigits:
+      best.blackDigits,
+
+    redDigit:
+      best.redDigit,
+
+    confidence,
+
+    consensus:
+      best.consensus,
+
+    rotation:
+      best.rotation,
+
+    candidates:
+      ranked.slice(
+        0,
+        8
+      )
+
+  };
+
+};
+
+
+/* =========================================================
+   END PART 13B.2
+   ========================================================= */
 injectPhoneAuthStyles();
 
 preparePhoneLoginUI();
