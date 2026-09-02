@@ -34801,13 +34801,7 @@ function nshFastScore13F1(
     Number(
       confidence || 0
     ) * 100;
-  /*
-    Nashabeh meter interpretation bonus
-  */
-  score +=
-    Number(
-      candidate.meterBonus || 0
-    );
+
   /*
     Normal mechanical meter digit length
   */
@@ -35797,186 +35791,54 @@ function nshOrientationCanvas13F3(
 ){
 
   /*
-    =====================================================
-    NASHABEH OCR ORIENTATION FIX
-
-    IMPORTANT:
-    1) Rotate the FULL image first.
-    2) Crop the meter window AFTER rotation.
-    3) Enlarge the crop for Tesseract.
-
-    This is critical for portrait photos where
-    the meter digits are physically sideways.
-    =====================================================
+    Wide center crop around meter counter.
   */
 
-  const sourceW =
-    img.naturalWidth;
-
-  const sourceH =
-    img.naturalHeight;
-
-
-  /* ===============================================
-     STEP 1 — ROTATE FULL IMAGE
-     =============================================== */
-
-  const rotated =
-    document.createElement(
-      "canvas"
+  const cropW =
+    Math.round(
+      img.naturalWidth * .78
     );
 
-  if(
-    rotation===90 ||
-    rotation===-90
-  ){
-
-    rotated.width =
-      sourceH;
-
-    rotated.height =
-      sourceW;
-
-  }
-  else{
-
-    rotated.width =
-      sourceW;
-
-    rotated.height =
-      sourceH;
-
-  }
-
-
-  const rctx =
-    rotated.getContext(
-      "2d"
+  const cropH =
+    Math.round(
+      img.naturalHeight * .58
     );
-
-
-  rctx.fillStyle =
-    "#ffffff";
-
-  rctx.fillRect(
-    0,
-    0,
-    rotated.width,
-    rotated.height
-  );
-
-
-  rctx.save();
-
-  rctx.translate(
-    rotated.width / 2,
-    rotated.height / 2
-  );
-
-  rctx.rotate(
-    rotation *
-    Math.PI /
-    180
-  );
-
-  rctx.drawImage(
-    img,
-    -sourceW / 2,
-    -sourceH / 2,
-    sourceW,
-    sourceH
-  );
-
-  rctx.restore();
-
-
-  /* ===============================================
-     STEP 2 — CROP AFTER ROTATION
-
-     After rotation the mechanical counter is now
-     a horizontal strip near the middle.
-     =============================================== */
-
-  const rw =
-    rotated.width;
-
-  const rh =
-    rotated.height;
-
-
-const cropX =
-    .24;
-
-const cropY =
-    .19;
-
-const cropW =
-    .52;
-
-const cropH =
-    .62;
 
 
   const sx =
     Math.round(
-      rw * cropX
+      (
+        img.naturalWidth -
+        cropW
+      ) / 2
     );
+
 
   const sy =
     Math.round(
-      rh * cropY
-    );
-
-  const sw =
-    Math.max(
-      1,
-      Math.round(
-        rw * cropW
-      )
-    );
-
-  const sh =
-    Math.max(
-      1,
-      Math.round(
-        rh * cropH
-      )
+      (
+        img.naturalHeight -
+        cropH
+      ) / 2
     );
 
 
-  /*
-    Slight enlargement helps Tesseract distinguish
-    0 / 6 / 4 on old mechanical wheels.
-  */
-
-  const scale =
-    1.8;
-
-
-  const canvas =
+  const temp =
     document.createElement(
       "canvas"
     );
 
-  canvas.width =
-    Math.max(
-      1,
-      Math.round(
-        sw * scale
-      )
-    );
 
-  canvas.height =
-    Math.max(
-      1,
-      Math.round(
-        sh * scale
-      )
-    );
+  temp.width =
+    cropW;
 
 
-  const ctx =
-    canvas.getContext(
+  temp.height =
+    cropH;
+
+
+  const tctx =
+    temp.getContext(
       "2d",
       {
         willReadFrequently:true
@@ -35984,38 +35846,31 @@ const cropH =
     );
 
 
-  ctx.imageSmoothingEnabled =
-    true;
-
-  ctx.imageSmoothingQuality =
-    "high";
-
-
-  ctx.drawImage(
-    rotated,
+  tctx.drawImage(
+    img,
 
     sx,
     sy,
-    sw,
-    sh,
+    cropW,
+    cropH,
 
     0,
     0,
-    canvas.width,
-    canvas.height
+    cropW,
+    cropH
   );
 
 
-  /* ===============================================
-     STEP 3 — GRAYSCALE + CONTRAST
-     =============================================== */
+  /*
+    Lightweight grayscale + contrast.
+  */
 
   const imageData =
-    ctx.getImageData(
+    tctx.getImageData(
       0,
       0,
-      canvas.width,
-      canvas.height
+      cropW,
+      cropH
     );
 
 
@@ -36030,12 +35885,11 @@ const cropH =
   ){
 
     let gray =
-
-      d[i] * .299 +
-
-      d[i+1] * .587 +
-
-      d[i+2] * .114;
+      (
+        d[i] * .299 +
+        d[i+1] * .587 +
+        d[i+2] * .114
+      );
 
 
     gray =
@@ -36080,10 +35934,80 @@ const cropH =
   }
 
 
-  ctx.putImageData(
+  tctx.putImageData(
     imageData,
     0,
     0
+  );
+
+
+  /*
+    No rotation
+  */
+
+  if(
+    rotation===0
+  ){
+
+    return temp;
+
+  }
+
+
+  /*
+    +90 / -90 degrees only.
+    Very cheap because image was already resized.
+  */
+
+  const canvas =
+    document.createElement(
+      "canvas"
+    );
+
+
+  canvas.width =
+    cropH;
+
+
+  canvas.height =
+    cropW;
+
+
+  const ctx =
+    canvas.getContext(
+      "2d"
+    );
+
+
+  ctx.fillStyle =
+    "#fff";
+
+
+  ctx.fillRect(
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
+
+
+  ctx.translate(
+    canvas.width/2,
+    canvas.height/2
+  );
+
+
+  ctx.rotate(
+    rotation *
+    Math.PI /
+    180
+  );
+
+
+  ctx.drawImage(
+    temp,
+    -cropW/2,
+    -cropH/2
   );
 
 
