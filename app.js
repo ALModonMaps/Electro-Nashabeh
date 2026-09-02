@@ -35801,14 +35801,14 @@ function nshOrientationCanvas13F3(
   */
 
   const cropW =
-    Math.round(
-      img.naturalWidth * .78
-    );
+  Math.round(
+    img.naturalWidth * .94
+  );
 
-  const cropH =
-    Math.round(
-      img.naturalHeight * .58
-    );
+const cropH =
+  Math.round(
+    img.naturalHeight * .78
+  );
 
 
   const sx =
@@ -35902,7 +35902,7 @@ function nshOrientationCanvas13F3(
       (
         gray - 128
       ) *
-      1.55 +
+      1.9 +
       128;
 
 
