@@ -19820,6 +19820,978 @@ async function(
 /* =========================================================
    END PART 13B.2
    ========================================================= */
+/* =========================================================
+   PART 13B.3
+   SMART ASSIST + MANUAL CONFIRM
+   ========================================================= */
+
+let nshSmartAssistState = {
+  file:null,
+  suggested:null,
+  confidence:0,
+  raw:null,
+  blackDigits:null,
+  redDigit:null
+};
+
+
+/* ---------------------------------------------------------
+   ENHANCE READINGS UI
+   --------------------------------------------------------- */
+
+const __nshOldCustomerTab13B3 = showCustomerTab;
+
+showCustomerTab = async function(type, btn){
+
+  await __nshOldCustomerTab13B3(type, btn);
+
+  if(type !== "readings") return;
+
+  setTimeout(()=>{
+    nshUpgradeMeterAssistUI();
+  },50);
+
+};
+
+
+/* ---------------------------------------------------------
+   REPLACE GUIDE WITH REAL INPUT
+   --------------------------------------------------------- */
+
+function nshUpgradeMeterAssistUI(){
+
+  let guide =
+    document.querySelector(".nsh-guide-box");
+
+  if(!guide) return;
+
+  guide.innerHTML = `
+    <label class="nsh-real-reading-label">
+      القراءة النهائية
+    </label>
+
+    <div class="nsh-reading-input-wrap">
+
+      <input
+        id="nshManualReading"
+        type="number"
+        inputmode="numeric"
+        min="0"
+        placeholder="مثال: 706"
+      >
+
+      <span>
+        kWh
+      </span>
+
+    </div>
+
+    <small id="nshReadingHint">
+      صوّر العداد أولاً وسيحاول النظام اقتراح القراءة
+    </small>
+  `;
+
+
+  let cameraCard =
+    document.querySelector(".nsh-camera-card");
+
+  if(
+    cameraCard &&
+    !A("nshConfirmReadingBtn")
+  ){
+
+    let confirm =
+      document.createElement("button");
+
+    confirm.id =
+      "nshConfirmReadingBtn";
+
+    confirm.className =
+      "nsh-confirm-reading-btn";
+
+    confirm.disabled =
+      true;
+
+    confirm.innerHTML = `
+      <i data-lucide="circle-check-big"></i>
+      اعتماد القراءة وإصدار الفاتورة
+    `;
+
+    confirm.onclick =
+      nshConfirmMeterReading;
+
+    let status =
+      A("nshMeterOCRStatus");
+
+    status?.insertAdjacentElement(
+      "beforebegin",
+      confirm
+    );
+
+  }
+
+  icons();
+
+}
+
+
+/* ---------------------------------------------------------
+   OVERRIDE PHOTO PROCESS
+
+   IMPORTANT:
+   No invoice here.
+   OCR only suggests.
+   --------------------------------------------------------- */
+
+processNashabehMeterPhoto =
+async function(input){
+
+  if(nshMeterOCRBusy) return;
+
+  let file =
+    input?.files?.[0];
+
+  if(!file) return;
+
+
+  if(!customer?.meter?.id){
+
+    return alert(
+      "لا يوجد عداد مربوط بهذا الحساب"
+    );
+
+  }
+
+
+  nshMeterOCRBusy = true;
+
+  nshSmartAssistState = {
+    file,
+    suggested:null,
+    confidence:0,
+    raw:null,
+    blackDigits:null,
+    redDigit:null
+  };
+
+
+  let btn =
+    A("nshMeterCaptureBtn");
+
+  if(btn){
+    btn.disabled = true;
+  }
+
+
+  let confirm =
+    A("nshConfirmReadingBtn");
+
+  if(confirm){
+    confirm.disabled = true;
+  }
+
+
+  try{
+
+    nshPreviewMeterPhoto(file);
+
+
+    nshMeterStatus(
+      `
+        <div class="nsh-meter-spinner"></div>
+
+        <b>
+          جاري تحليل صورة العداد...
+        </b>
+
+        <small>
+          النظام سيقترح القراءة ولن يصدر فاتورة قبل اعتمادها
+        </small>
+      `,
+      "working"
+    );
+
+
+    let previousReading =
+      Number(
+        customer
+        ?.readings
+        ?.[0]
+        ?.reading_value
+        ||0
+      );
+
+
+    let ocr =
+      await nshReadMeterFree(
+        file,
+        previousReading,
+        percent=>{
+
+          let p =
+            A("nshOCRPercent");
+
+          if(p){
+            p.textContent =
+              percent + "%";
+          }
+
+        }
+      );
+
+
+    let inputReading =
+      A("nshManualReading");
+
+
+    if(
+      ocr?.ok &&
+      ocr.reading !== null
+    ){
+
+      nshSmartAssistState.suggested =
+        Number(ocr.reading);
+
+      nshSmartAssistState.confidence =
+        Number(ocr.confidence||0);
+
+      nshSmartAssistState.raw =
+        ocr.raw||null;
+
+      nshSmartAssistState.blackDigits =
+        ocr.blackDigits||null;
+
+      nshSmartAssistState.redDigit =
+        ocr.redDigit||null;
+
+
+      if(inputReading){
+
+        inputReading.value =
+          String(
+            ocr.reading
+          );
+
+      }
+
+
+      let hint =
+        A("nshReadingHint");
+
+
+      if(hint){
+
+        hint.innerHTML = `
+          OCR اقترح:
+          <b>${ocr.reading}</b>
+
+          ${
+            ocr.raw
+            ?` · الرقم الخام: ${ocr.raw}`
+            :""
+          }
+
+          ${
+            ocr.redDigit
+            ?` · الأحمر المهمل: ${ocr.redDigit}`
+            :""
+          }
+        `;
+
+      }
+
+
+      nshMeterStatus(
+        `
+          <i data-lucide="scan-line"></i>
+
+          <b>
+            تم اقتراح قراءة:
+            ${ocr.reading}
+          </b>
+
+          <small>
+            تحقق من الرقم فوق وعدّله إذا لزم قبل الاعتماد.
+          </small>
+        `,
+        "review"
+      );
+
+    }
+    else{
+
+      if(inputReading){
+        inputReading.value = "";
+      }
+
+
+      nshMeterStatus(
+        `
+          <i data-lucide="triangle-alert"></i>
+
+          <b>
+            لم نستطع تحديد القراءة تلقائياً
+          </b>
+
+          <small>
+            أدخل القراءة الصحيحة يدوياً ثم اضغط اعتماد.
+          </small>
+        `,
+        "review"
+      );
+
+    }
+
+
+    if(confirm){
+      confirm.disabled = false;
+    }
+
+
+    icons();
+
+  }
+  catch(e){
+
+    console.error(e);
+
+    nshMeterStatus(
+      `
+        <i data-lucide="circle-alert"></i>
+
+        <b>
+          تعذر تحليل الصورة
+        </b>
+
+        <small>
+          يمكنك إدخال القراءة يدوياً.
+        </small>
+      `,
+      "error"
+    );
+
+
+    if(confirm){
+      confirm.disabled = false;
+    }
+
+  }
+  finally{
+
+    nshMeterOCRBusy = false;
+
+    if(btn){
+      btn.disabled = false;
+    }
+
+  }
+
+};
+
+
+/* ---------------------------------------------------------
+   CONFIRM FINAL READING
+   --------------------------------------------------------- */
+
+async function nshConfirmMeterReading(){
+
+  if(nshMeterOCRBusy){
+    return;
+  }
+
+
+  let reading =
+    Number(
+      A("nshManualReading")
+      ?.value
+    );
+
+
+  if(
+    !Number.isFinite(reading) ||
+    reading < 0
+  ){
+
+    return alert(
+      "أدخل قراءة صحيحة للعداد"
+    );
+
+  }
+
+
+  let previousReading =
+    Number(
+      customer
+      ?.readings
+      ?.[0]
+      ?.reading_value
+      ||0
+    );
+
+
+  if(
+    reading <
+    previousReading
+  ){
+
+    return alert(
+      "القراءة الجديدة لا يمكن أن تكون أقل من القراءة السابقة ("+
+      previousReading+
+      ")"
+    );
+
+  }
+
+
+  let consumption =
+    reading -
+    previousReading;
+
+
+  if(consumption > 5000){
+
+    let proceed =
+      confirm(
+        "الاستهلاك المحسوب "+
+        consumption+
+        " kWh وهو مرتفع جداً. هل أنت متأكد من القراءة؟"
+      );
+
+    if(!proceed){
+      return;
+    }
+
+  }
+
+
+  if(
+    !nshSmartAssistState.file
+  ){
+
+    return alert(
+      "يجب تصوير العداد أولاً قبل اعتماد القراءة"
+    );
+
+  }
+
+
+  nshMeterOCRBusy = true;
+
+
+  let confirmBtn =
+    A("nshConfirmReadingBtn");
+
+
+  if(confirmBtn){
+    confirmBtn.disabled = true;
+  }
+
+
+  try{
+
+    let billingMonth =
+      nshBillingMonth();
+
+
+    /*
+      CHECK PREVIOUS SUBMISSION
+    */
+
+    let existing =
+      await sb
+      .from(
+        "meter_photo_submissions"
+      )
+      .select(
+        "id,status,invoice_id"
+      )
+      .eq(
+        "customer_id",
+        session.user.id
+      )
+      .eq(
+        "meter_id",
+        customer.meter.id
+      )
+      .eq(
+        "billing_month",
+        billingMonth
+      )
+      .maybeSingle();
+
+
+    if(existing.data?.id){
+
+      if(
+        existing.data.status === "completed" ||
+        existing.data.invoice_id
+      ){
+
+        throw new Error(
+          "تم إصدار فاتورة هذا الشهر مسبقاً."
+        );
+
+      }
+
+
+      nshMeterStatus(
+        `
+          <div class="nsh-meter-spinner"></div>
+
+          <b>
+            جاري استبدال المحاولة السابقة...
+          </b>
+        `,
+        "working"
+      );
+
+
+      let reset =
+        await sb.functions.invoke(
+          "reset-meter-photo",
+          {
+            body:{
+              submission_id:
+                existing.data.id
+            }
+          }
+        );
+
+
+      if(reset.error){
+
+        throw new Error(
+          "تعذر حذف المحاولة السابقة"
+        );
+
+      }
+
+    }
+
+
+    /*
+      UPLOAD FINAL PHOTO
+    */
+
+    nshMeterStatus(
+      `
+        <div class="nsh-meter-spinner"></div>
+
+        <b>
+          جاري حفظ صورة العداد...
+        </b>
+
+        <small>
+          الصورة ستبقى محفوظة كإثبات
+        </small>
+      `,
+      "working"
+    );
+
+
+    let compressed =
+      await nshCompressMeterPhoto(
+        nshSmartAssistState.file
+      );
+
+
+    let path =
+      session.user.id+
+      "/"+
+      customer.meter.id+
+      "/"+
+      Date.now()+
+      ".jpg";
+
+
+    let upload =
+      await sb.storage
+      .from("meter-images")
+      .upload(
+        path,
+        compressed,
+        {
+          contentType:
+            "image/jpeg",
+
+          upsert:false
+        }
+      );
+
+
+    if(upload.error){
+
+      throw new Error(
+        "فشل رفع الصورة: "+
+        upload.error.message
+      );
+
+    }
+
+
+    /*
+      CREATE SUBMISSION
+    */
+
+    let submission =
+      await sb
+      .from(
+        "meter_photo_submissions"
+      )
+      .insert({
+
+        customer_id:
+          session.user.id,
+
+        meter_id:
+          customer.meter.id,
+
+        image_path:
+          path,
+
+        billing_month:
+          billingMonth,
+
+        previous_reading:
+          previousReading,
+
+        detected_reading:
+          reading,
+
+        /*
+          Manual confirmation gives backend
+          enough confidence to process.
+        */
+
+        ocr_confidence:
+          1,
+
+        status:
+          "processing"
+
+      })
+      .select("id")
+      .single();
+
+
+    if(submission.error){
+
+      await sb.storage
+      .from("meter-images")
+      .remove([path]);
+
+
+      throw new Error(
+        submission.error.message
+      );
+
+    }
+
+
+    nshMeterStatus(
+      `
+        <div class="nsh-meter-spinner"></div>
+
+        <b>
+          جاري حساب الاستهلاك والفاتورة...
+        </b>
+      `,
+      "working"
+    );
+
+
+    /*
+      FINALIZE
+    */
+
+    let result =
+      await sb.functions.invoke(
+        "finalize-meter-photo",
+        {
+          body:{
+
+            submission_id:
+              submission.data.id,
+
+            detected_reading:
+              reading,
+
+            /*
+              user manually checked it
+            */
+
+            ocr_confidence:
+              1
+
+          }
+        }
+      );
+
+
+    if(result.error){
+
+      throw new Error(
+        result.error.message||
+        "تعذر إصدار الفاتورة"
+      );
+
+    }
+
+
+    let data =
+      result.data||{};
+
+
+    if(
+      data.status ===
+      "completed"
+    ){
+
+      nshMeterStatus(
+        `
+          <i data-lucide="circle-check-big"></i>
+
+          <b>
+            تم إصدار الفاتورة بنجاح
+          </b>
+
+          <div class="nsh-meter-result-grid">
+
+            <span>
+              القراءة السابقة
+              <strong>
+                ${data.previous_reading}
+              </strong>
+            </span>
+
+            <span>
+              القراءة الحالية
+              <strong>
+                ${data.detected_reading}
+              </strong>
+            </span>
+
+            <span>
+              الاستهلاك
+              <strong>
+                ${data.consumption_kwh}
+                kWh
+              </strong>
+            </span>
+
+            <span>
+              سعر الكيلوواط
+              <strong>
+                $${Number(
+                  data.kwh_price||0
+                ).toFixed(2)}
+              </strong>
+            </span>
+
+            <span class="full">
+              قيمة الفاتورة
+
+              <strong>
+                $${Number(
+                  data.amount||0
+                ).toFixed(2)}
+              </strong>
+            </span>
+
+          </div>
+        `,
+        "success"
+      );
+
+
+      await loadCustomer();
+
+      icons();
+
+    }
+    else{
+
+      nshMeterStatus(
+        `
+          <i data-lucide="shield-alert"></i>
+
+          <b>
+            القراءة بحاجة إلى مراجعة
+          </b>
+
+          <small>
+            ${data.reason||
+              "تم حفظ القراءة للمراجعة"}
+          </small>
+        `,
+        "review"
+      );
+
+    }
+
+  }
+  catch(e){
+
+    console.error(e);
+
+    nshMeterStatus(
+      `
+        <i data-lucide="circle-alert"></i>
+
+        <b>
+          تعذر اعتماد القراءة
+        </b>
+
+        <small>
+          ${e?.message||""}
+        </small>
+      `,
+      "error"
+    );
+
+  }
+  finally{
+
+    nshMeterOCRBusy = false;
+
+    if(confirmBtn){
+      confirmBtn.disabled = false;
+    }
+
+    icons();
+
+  }
+
+}
+
+
+/* ---------------------------------------------------------
+   STYLES
+   --------------------------------------------------------- */
+
+function injectNashabehSmartAssistStyles(){
+
+  if(
+    document.getElementById(
+      "nshSmartAssistStyles"
+    )
+  ){
+    return;
+  }
+
+
+  let st =
+    document.createElement("style");
+
+  st.id =
+    "nshSmartAssistStyles";
+
+
+  st.textContent = `
+
+    .nsh-real-reading-label{
+      display:block;
+      color:#9eff72;
+      font-weight:900;
+      font-size:12px;
+      margin-bottom:9px;
+    }
+
+    .nsh-reading-input-wrap{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      direction:ltr;
+    }
+
+    #nshManualReading{
+      width:170px;
+      max-width:65%;
+      box-sizing:border-box;
+      padding:10px 12px;
+      border-radius:9px;
+      border:1px solid #13dfff;
+      outline:none;
+      text-align:center;
+      font-family:"Courier New",monospace;
+      font-size:25px;
+      font-weight:900;
+      letter-spacing:.08em;
+      color:#a5ff72;
+      background:#030a08;
+      box-shadow:
+        inset 0 0 15px rgba(0,0,0,.75),
+        0 0 14px rgba(18,216,255,.15);
+    }
+
+    #nshManualReading:focus{
+      border-color:#8cff61;
+      box-shadow:
+        0 0 20px rgba(114,255,88,.18),
+        inset 0 0 15px rgba(0,0,0,.8);
+    }
+
+    .nsh-reading-input-wrap span{
+      color:#fff;
+      opacity:.65;
+      font-size:11px;
+    }
+
+    #nshReadingHint{
+      display:block;
+      margin-top:8px;
+      line-height:1.6;
+    }
+
+    #nshReadingHint b{
+      color:#ffc72c;
+      font-size:13px;
+    }
+
+    .nsh-confirm-reading-btn{
+      width:min(100%,430px);
+      min-height:54px;
+      border:0;
+      border-radius:14px;
+      cursor:pointer;
+      margin:13px auto 0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:9px;
+      color:#061007;
+      font-weight:900;
+      background:
+        linear-gradient(
+          135deg,
+          #a5ff69,
+          #4ddd4d
+        );
+      box-shadow:
+        0 8px 25px
+        rgba(78,255,72,.18);
+    }
+
+    .nsh-confirm-reading-btn:disabled{
+      opacity:.38;
+      cursor:not-allowed;
+    }
+
+  `;
+
+
+  document.head.appendChild(st);
+
+}
+
+
+injectNashabehSmartAssistStyles();
+
+/* =========================================================
+   END PART 13B.3
+   ========================================================= */
+
 injectPhoneAuthStyles();
 
 preparePhoneLoginUI();
