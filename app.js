@@ -35689,6 +35689,991 @@ setTimeout(
    END PART 13F.2
    ========================================================= */
 
+/* =========================================================
+   PART 13F.3
+   SMART ORIENTATION OCR
+   PORTRAIT METER FIX
+   FAST + WINDOWS + MOBILE SAFE
+   ========================================================= */
+
+
+/* =========================================================
+   SMALL ROTATED OCR CANVAS
+   ========================================================= */
+
+function nshOrientationCanvas13F3(
+  img,
+  rotation=0,
+  threshold=null
+){
+
+  /*
+    Wide center crop around meter counter.
+  */
+
+  const cropW =
+    Math.round(
+      img.naturalWidth * .78
+    );
+
+  const cropH =
+    Math.round(
+      img.naturalHeight * .58
+    );
+
+
+  const sx =
+    Math.round(
+      (
+        img.naturalWidth -
+        cropW
+      ) / 2
+    );
+
+
+  const sy =
+    Math.round(
+      (
+        img.naturalHeight -
+        cropH
+      ) / 2
+    );
+
+
+  const temp =
+    document.createElement(
+      "canvas"
+    );
+
+
+  temp.width =
+    cropW;
+
+
+  temp.height =
+    cropH;
+
+
+  const tctx =
+    temp.getContext(
+      "2d",
+      {
+        willReadFrequently:true
+      }
+    );
+
+
+  tctx.drawImage(
+    img,
+
+    sx,
+    sy,
+    cropW,
+    cropH,
+
+    0,
+    0,
+    cropW,
+    cropH
+  );
+
+
+  /*
+    Lightweight grayscale + contrast.
+  */
+
+  const imageData =
+    tctx.getImageData(
+      0,
+      0,
+      cropW,
+      cropH
+    );
+
+
+  const d =
+    imageData.data;
+
+
+  for(
+    let i=0;
+    i<d.length;
+    i+=4
+  ){
+
+    let gray =
+      (
+        d[i] * .299 +
+        d[i+1] * .587 +
+        d[i+2] * .114
+      );
+
+
+    gray =
+      (
+        gray - 128
+      ) *
+      1.9 +
+      128;
+
+
+    gray =
+      Math.max(
+        0,
+        Math.min(
+          255,
+          gray
+        )
+      );
+
+
+    if(
+      threshold !== null
+    ){
+
+      gray =
+        gray >= threshold
+          ?255
+          :0;
+
+    }
+
+
+    d[i] =
+      gray;
+
+    d[i+1] =
+      gray;
+
+    d[i+2] =
+      gray;
+
+  }
+
+
+  tctx.putImageData(
+    imageData,
+    0,
+    0
+  );
+
+
+  /*
+    No rotation
+  */
+
+  if(
+    rotation===0
+  ){
+
+    return temp;
+
+  }
+
+
+  /*
+    +90 / -90 degrees only.
+    Very cheap because image was already resized.
+  */
+
+  const canvas =
+    document.createElement(
+      "canvas"
+    );
+
+
+  canvas.width =
+    cropH;
+
+
+  canvas.height =
+    cropW;
+
+
+  const ctx =
+    canvas.getContext(
+      "2d"
+    );
+
+
+  ctx.fillStyle =
+    "#fff";
+
+
+  ctx.fillRect(
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
+
+
+  ctx.translate(
+    canvas.width/2,
+    canvas.height/2
+  );
+
+
+  ctx.rotate(
+    rotation *
+    Math.PI /
+    180
+  );
+
+
+  ctx.drawImage(
+    temp,
+    -cropW/2,
+    -cropH/2
+  );
+
+
+  return canvas;
+
+}
+
+
+
+/* =========================================================
+   PART 13F.3 OCR ENGINE
+   OVERRIDE 13F.1
+   ========================================================= */
+
+nshReadMeterFree =
+async function(
+  file,
+  previousReading=0,
+  progressCallback=()=>{}
+){
+
+  const T =
+    await loadNashabehOCR();
+
+
+  progressCallback(3);
+
+
+  /*
+    Resize original photo first.
+    Keep it small so mobile/Windows stays responsive.
+  */
+
+  const img =
+    await nshPrepareOCRImage13F1(
+      file
+    );
+
+
+  progressCallback(8);
+
+
+  /*
+    Detect orientation automatically.
+  */
+
+  const portrait =
+    img.naturalHeight >
+    img.naturalWidth;
+
+
+  console.log(
+    "NASHABEH OCR 13F.3 IMAGE:",
+    {
+      width:
+        img.naturalWidth,
+
+      height:
+        img.naturalHeight,
+
+      portrait
+    }
+  );
+
+
+  window.__nshOCR13F = {
+
+    version:
+      "13F.3 SMART ORIENTATION",
+
+    passes:[],
+
+    candidates:[],
+
+    selected:null,
+
+    consensus:0
+
+  };
+
+
+  const worker =
+    await T.createWorker(
+      "eng",
+      1
+    );
+
+
+  await worker.setParameters({
+
+    tessedit_char_whitelist:
+      "0123456789",
+
+    tessedit_pageseg_mode:
+      "7",
+
+    preserve_interword_spaces:
+      "1",
+
+    user_defined_dpi:
+      "200"
+
+  });
+
+
+  /*
+    IMPORTANT:
+
+    Portrait meter photo:
+      try +90 and -90.
+
+    Landscape:
+      normal first.
+
+    Maximum initial passes = 2.
+  */
+
+  let passes;
+
+
+  if(portrait){
+
+    passes = [
+
+      {
+        name:
+          "PORTRAIT RIGHT",
+
+        rotation:
+          90,
+
+        threshold:
+          null
+      },
+
+      {
+        name:
+          "PORTRAIT LEFT",
+
+        rotation:
+          -90,
+
+        threshold:
+          null
+      }
+
+    ];
+
+  }
+  else{
+
+    passes = [
+
+      {
+        name:
+          "LANDSCAPE",
+
+        rotation:
+          0,
+
+        threshold:
+          null
+      },
+
+      {
+        name:
+          "LANDSCAPE THRESHOLD",
+
+        rotation:
+          0,
+
+        threshold:
+          130
+      }
+
+    ];
+
+  }
+
+
+  const all=[];
+
+
+
+  async function runPass(
+    pass,
+    progress
+  ){
+
+    progressCallback(
+      progress
+    );
+
+
+    /*
+      Give UI time to repaint.
+  */
+
+    await new Promise(
+      resolve=>
+        setTimeout(
+          resolve,
+          40
+        )
+    );
+
+
+    const canvas =
+      nshOrientationCanvas13F3(
+
+        img,
+
+        pass.rotation,
+
+        pass.threshold
+
+      );
+
+
+    const result =
+      await worker.recognize(
+        canvas
+      );
+
+
+    const text =
+      String(
+        result?.data?.text ||
+        ""
+      );
+
+
+    const confidence =
+      Math.max(
+        0,
+        Math.min(
+          1,
+          Number(
+            result
+            ?.data
+            ?.confidence ||
+            0
+          ) / 100
+        )
+      );
+
+
+    const candidates =
+      nshExtractCandidates13F(
+        text
+      );
+
+
+    window.__nshOCR13F
+      .passes
+      .push({
+
+        pass:
+          pass.name,
+
+        rotation:
+          pass.rotation,
+
+        text:
+          text.trim(),
+
+        confidence,
+
+        candidates:
+          candidates.map(
+            c=>({
+
+              raw:
+                c.raw,
+
+              reading:
+                c.reading
+
+            })
+          )
+
+      });
+
+
+    for(
+      const candidate
+      of candidates
+    ){
+
+      all.push({
+
+        ...candidate,
+
+        confidence,
+
+        pass:
+          pass.name,
+
+        rotation:
+          pass.rotation,
+
+        text:
+          text.trim(),
+
+        score:
+          nshFastScore13F1(
+
+            candidate,
+
+            confidence,
+
+            previousReading
+
+          )
+
+      });
+
+    }
+
+  }
+
+
+
+  try{
+
+    await runPass(
+      passes[0],
+      20
+    );
+
+
+    await runPass(
+      passes[1],
+      55
+    );
+
+
+    /* =====================================================
+       RESCUE PASS
+
+       Only if first two found nothing.
+       ===================================================== */
+
+    if(
+      all.length===0
+    ){
+
+      progressCallback(
+        75
+      );
+
+
+      const rescueRotation =
+        portrait
+          ?90
+          :0;
+
+
+      await runPass(
+
+        {
+          name:
+            "RESCUE",
+
+          rotation:
+            rescueRotation,
+
+          threshold:
+            125
+        },
+
+        78
+
+      );
+
+    }
+
+  }
+  catch(error){
+
+    console.warn(
+      "NASHABEH OCR 13F.3:",
+      error
+    );
+
+  }
+  finally{
+
+    await worker
+      .terminate();
+
+  }
+
+
+  progressCallback(
+    90
+  );
+
+
+  /* =====================================================
+     NOTHING FOUND
+     ===================================================== */
+
+  if(
+    all.length===0
+  ){
+
+    progressCallback(
+      100
+    );
+
+
+    return{
+
+      ok:false,
+
+      reading:null,
+
+      confidence:0,
+
+      consensus:0,
+
+      engine:
+        "13F.3 SMART ORIENTATION"
+
+    };
+
+  }
+
+
+
+  /* =====================================================
+     GROUP SAME READINGS
+     ===================================================== */
+
+  const grouped =
+    new Map();
+
+
+  for(
+    const item
+    of all
+  ){
+
+    const key =
+      String(
+        item.reading
+      );
+
+
+    if(
+      !grouped.has(
+        key
+      )
+    ){
+
+      grouped.set(
+        key,
+        []
+      );
+
+    }
+
+
+    grouped
+      .get(key)
+      .push(
+        item
+      );
+
+  }
+
+
+
+  const ranked=[];
+
+
+
+  for(
+    const [
+      key,
+      items
+    ]
+    of grouped
+  ){
+
+    const independentPasses =
+      new Set(
+        items.map(
+          x=>x.pass
+        )
+      ).size;
+
+
+    const best =
+      [...items]
+      .sort(
+        (a,b)=>
+          b.score-
+          a.score
+      )[0];
+
+
+    const avgConfidence =
+      items.reduce(
+        (
+          total,
+          item
+        )=>
+          total+
+          Number(
+            item.confidence||0
+          ),
+        0
+      ) /
+      items.length;
+
+
+    /*
+      Consensus strongly preferred.
+    */
+
+    const finalScore =
+
+      best.score +
+
+      (
+        independentPasses *
+        45
+      ) +
+
+      (
+        avgConfidence *
+        15
+      );
+
+
+    ranked.push({
+
+      reading:
+        Number(key),
+
+      consensus:
+        independentPasses,
+
+      avgConfidence,
+
+      finalScore,
+
+      best
+
+    });
+
+  }
+
+
+
+  ranked.sort(
+    (
+      a,
+      b
+    )=>
+      b.finalScore-
+      a.finalScore
+  );
+
+
+
+  const winner =
+    ranked[0];
+
+
+  const best =
+    winner.best;
+
+
+
+  /* =====================================================
+     FINAL CONFIDENCE
+     ===================================================== */
+
+  let finalConfidence =
+
+    (
+      winner.avgConfidence *
+      .65
+    )
+
+    +
+
+    (
+      Math.min(
+        1,
+        winner.consensus/2
+      ) *
+      .35
+    );
+
+
+  /*
+    Single orientation result remains
+    a suggestion, not absolute truth.
+  */
+
+  if(
+    winner.consensus===1
+  ){
+
+    finalConfidence =
+      Math.min(
+        finalConfidence,
+        .67
+      );
+
+  }
+
+
+
+  window.__nshOCR13F
+    .candidates =
+      ranked.map(
+        x=>({
+
+          reading:
+            x.reading,
+
+          consensus:
+            x.consensus,
+
+          confidence:
+            x.avgConfidence,
+
+          score:
+            x.finalScore,
+
+          raw:
+            x.best.raw,
+
+          rotation:
+            x.best.rotation
+
+        })
+      );
+
+
+
+  window.__nshOCR13F
+    .selected = {
+
+      reading:
+        winner.reading,
+
+      raw:
+        best.raw,
+
+      blackDigits:
+        best.blackDigits,
+
+      redDigit:
+        best.redDigit,
+
+      consensus:
+        winner.consensus,
+
+      confidence:
+        finalConfidence,
+
+      pass:
+        best.pass,
+
+      rotation:
+        best.rotation
+
+    };
+
+
+
+  window.__nshOCR13F
+    .consensus =
+      winner.consensus;
+
+
+
+  progressCallback(
+    100
+  );
+
+
+
+  console.log(
+
+    "NASHABEH OCR 13F.3 RESULT:",
+
+    window.__nshOCR13F
+
+  );
+
+
+
+  return{
+
+    ok:true,
+
+    reading:
+      winner.reading,
+
+    raw:
+      best.raw,
+
+    blackDigits:
+      best.blackDigits,
+
+    redDigit:
+      best.redDigit,
+
+    confidence:
+      finalConfidence,
+
+    consensus:
+      winner.consensus,
+
+    rotation:
+      best.rotation,
+
+    pass:
+      best.pass,
+
+    engine:
+      "13F.3 SMART ORIENTATION",
+
+    candidates:
+      window
+      .__nshOCR13F
+      .candidates
+      .slice(
+        0,
+        5
+      )
+
+  };
+
+};
+
+
+
+/* =========================================================
+   END PART 13F.3
+   ========================================================= */
+
 injectPhoneAuthStyles();
 
 preparePhoneLoginUI();
