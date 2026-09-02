@@ -34801,7 +34801,13 @@ function nshFastScore13F1(
     Number(
       confidence || 0
     ) * 100;
-
+  /*
+    Nashabeh meter interpretation bonus
+  */
+  score +=
+    Number(
+      candidate.meterBonus || 0
+    );
   /*
     Normal mechanical meter digit length
   */
@@ -35896,7 +35902,7 @@ function nshOrientationCanvas13F3(
       (
         gray - 128
       ) *
-      1.9 +
+      1.55 +
       128;
 
 
