@@ -35904,17 +35904,17 @@ function nshOrientationCanvas13F3(
     rotated.height;
 
 
-  const cropX =
-    .04;
+const cropX =
+    .24;
 
-  const cropY =
-    .23;
+const cropY =
+    .19;
 
-  const cropW =
-    .92;
+const cropW =
+    .52;
 
-  const cropH =
-    .54;
+const cropH =
+    .62;
 
 
   const sx =
