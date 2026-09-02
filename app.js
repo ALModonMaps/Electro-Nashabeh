@@ -26524,6 +26524,595 @@ setTimeout(
    END PART 13E-A
    ========================================================= */
 
+/* =========================================================
+   PART 13E-A.1
+   DASHBOARD VISUAL FIX
+   KPI GRID + NETWORK AREA CARDS
+   ========================================================= */
+
+
+/* =========================================================
+   DASHBOARD VISUAL PATCH
+   ========================================================= */
+
+function nshFixDashboard13EVisual(){
+
+  const page =
+    document.querySelector(
+      ".admin-main, .admin-content, main"
+    );
+
+  if(!page){
+    return;
+  }
+
+
+  /* =====================================================
+     KPI GRID
+     ===================================================== */
+
+  const stats =
+    document.querySelector(
+      ".control-stats"
+    );
+
+  if(stats){
+
+    stats.classList.add(
+      "nsh-control-stats-13e1"
+    );
+
+  }
+
+
+  /* =====================================================
+     NETWORK AREA CARDS
+     ===================================================== */
+
+  const networkGrid =
+    document.querySelector(
+      ".network-mini-grid"
+    );
+
+  if(networkGrid){
+
+    networkGrid.classList.add(
+      "nsh-network-grid-13e1"
+    );
+
+  }
+
+
+  const networkCards =
+    document.querySelectorAll(
+      ".network-mini-card"
+    );
+
+  networkCards.forEach(
+    card=>{
+
+      card.classList.add(
+        "nsh-network-card-13e1"
+      );
+
+    }
+  );
+
+}
+
+
+
+/* =========================================================
+   OBSERVER
+   ========================================================= */
+
+const nshDashboardVisualObserver13E1 =
+new MutationObserver(
+  ()=>{
+
+    nshFixDashboard13EVisual();
+
+  }
+);
+
+
+nshDashboardVisualObserver13E1.observe(
+  document.body,
+  {
+    childList:true,
+    subtree:true
+  }
+);
+
+
+
+/* =========================================================
+   STYLES
+   ========================================================= */
+
+function injectDashboardVisual13E1Styles(){
+
+  if(
+    document.getElementById(
+      "nshDashboardVisual13E1Styles"
+    )
+  ){
+    return;
+  }
+
+
+  const st =
+    document.createElement(
+      "style"
+    );
+
+
+  st.id =
+    "nshDashboardVisual13E1Styles";
+
+
+  st.textContent = `
+
+
+  /* =====================================================
+     KPI CARDS
+     ===================================================== */
+
+  .control-stats.nsh-control-stats-13e1{
+
+    display:grid !important;
+
+    grid-template-columns:
+      repeat(
+        3,
+        minmax(0,1fr)
+      ) !important;
+
+    gap:10px !important;
+
+    align-items:stretch !important;
+
+    margin-bottom:14px !important;
+
+  }
+
+
+  .control-stats.nsh-control-stats-13e1
+  > *{
+
+    width:auto !important;
+
+    min-width:0 !important;
+
+    margin:0 !important;
+
+  }
+
+
+  .control-stats.nsh-control-stats-13e1
+  .control-stat,
+  .control-stats.nsh-control-stats-13e1
+  .admin-kpi,
+  .control-stats.nsh-control-stats-13e1
+  article{
+
+    min-height:78px !important;
+
+    box-sizing:border-box;
+
+  }
+
+
+
+  /* =====================================================
+     NETWORK BOX
+     ===================================================== */
+
+  .nsh-dashboard-health{
+
+    padding:15px !important;
+
+    border-radius:18px !important;
+
+  }
+
+
+  .nsh-dashboard-health-head{
+
+    padding-bottom:12px;
+
+    border-bottom:
+      1px solid
+      rgba(63,224,255,.08);
+
+    margin-bottom:13px !important;
+
+  }
+
+
+
+  /* =====================================================
+     NETWORK GRID
+     ===================================================== */
+
+  .network-mini-grid.nsh-network-grid-13e1{
+
+    display:grid !important;
+
+    grid-template-columns:
+      repeat(
+        4,
+        minmax(0,1fr)
+      ) !important;
+
+    gap:10px !important;
+
+    align-items:stretch;
+
+  }
+
+
+
+  /* =====================================================
+     NETWORK CARD
+     ===================================================== */
+
+  .network-mini-card.nsh-network-card-13e1{
+
+    position:relative;
+
+    min-height:105px;
+
+    display:flex !important;
+
+    align-items:center !important;
+
+    gap:10px !important;
+
+    padding:12px !important;
+
+    overflow:hidden;
+
+    border-radius:14px !important;
+
+    border:
+      1px solid
+      rgba(58,228,255,.20) !important;
+
+    background:
+      radial-gradient(
+        circle at 88% 8%,
+        rgba(53,224,255,.08),
+        transparent 42%
+      ),
+      linear-gradient(
+        145deg,
+        #071e29,
+        #03141c
+      ) !important;
+
+    box-shadow:
+      inset 0 0 0 1px
+      rgba(255,255,255,.015);
+
+  }
+
+
+  .network-mini-card.nsh-network-card-13e1::after{
+
+    content:"";
+
+    position:absolute;
+
+    left:10px;
+    right:10px;
+    bottom:0;
+
+    height:1px;
+
+    background:
+      linear-gradient(
+        90deg,
+        transparent,
+        rgba(61,226,255,.55),
+        transparent
+      );
+
+    opacity:.8;
+
+  }
+
+
+  .network-mini-card.nsh-network-card-13e1.offline{
+
+    border-color:
+      rgba(255,77,91,.28)
+      !important;
+
+    background:
+      radial-gradient(
+        circle at 88% 8%,
+        rgba(255,72,84,.11),
+        transparent 42%
+      ),
+      linear-gradient(
+        145deg,
+        #241015,
+        #10090c
+      ) !important;
+
+  }
+
+
+  .network-mini-card.nsh-network-card-13e1.offline::after{
+
+    background:
+      linear-gradient(
+        90deg,
+        transparent,
+        rgba(255,77,91,.65),
+        transparent
+      );
+
+  }
+
+
+
+  /* =====================================================
+     CARD ICON
+     ===================================================== */
+
+  .network-mini-card.nsh-network-card-13e1
+  .network-mini-icon{
+
+    width:42px !important;
+    height:42px !important;
+
+    flex:0 0 42px;
+
+    display:grid !important;
+
+    place-items:center;
+
+    border-radius:11px;
+
+    border:
+      1px solid
+      rgba(57,226,255,.26);
+
+    background:
+      rgba(3,21,29,.78);
+
+    color:#44e5ff;
+
+    box-shadow:
+      0 0 15px
+      rgba(60,222,255,.08);
+
+  }
+
+
+  .network-mini-card.nsh-network-card-13e1.offline
+  .network-mini-icon{
+
+    border-color:
+      rgba(255,83,96,.30);
+
+    color:#ff5866;
+
+    background:
+      rgba(30,9,12,.82);
+
+  }
+
+
+  .network-mini-card.nsh-network-card-13e1
+  .network-mini-icon svg{
+
+    width:20px;
+    height:20px;
+
+  }
+
+
+
+  /* =====================================================
+     CARD TEXT
+     ===================================================== */
+
+  .network-mini-card.nsh-network-card-13e1
+  > div:nth-child(2){
+
+    min-width:0;
+
+    flex:1;
+
+  }
+
+
+  .network-mini-card.nsh-network-card-13e1
+  b{
+
+    display:block;
+
+    color:#eefaff !important;
+
+    font-size:10px !important;
+
+    line-height:1.35;
+
+    margin-bottom:4px;
+
+  }
+
+
+  .network-mini-card.nsh-network-card-13e1
+  small{
+
+    display:block;
+
+    color:#7e9eaa !important;
+
+    font-size:6px !important;
+
+    line-height:1.45;
+
+  }
+
+
+
+  /* =====================================================
+     ONLINE / OUTAGE BADGE
+     ===================================================== */
+
+  .network-mini-card.nsh-network-card-13e1
+  > span{
+
+    position:absolute;
+
+    top:9px;
+    left:9px;
+
+    padding:
+      3px 6px;
+
+    border-radius:999px;
+
+    border:
+      1px solid
+      rgba(54,238,119,.28);
+
+    background:
+      rgba(54,238,119,.07);
+
+    color:#49ef83 !important;
+
+    font-size:5px !important;
+    font-weight:900;
+
+    letter-spacing:.3px;
+
+  }
+
+
+  .network-mini-card.nsh-network-card-13e1.offline
+  > span{
+
+    border-color:
+      rgba(255,80,94,.35);
+
+    background:
+      rgba(255,80,94,.08);
+
+    color:#ff6874 !important;
+
+  }
+
+
+
+  /* =====================================================
+     RESPONSIVE
+     ===================================================== */
+
+  @media(max-width:1250px){
+
+    .network-mini-grid.nsh-network-grid-13e1{
+
+      grid-template-columns:
+        repeat(
+          3,
+          minmax(0,1fr)
+        ) !important;
+
+    }
+
+  }
+
+
+  @media(max-width:950px){
+
+    .control-stats.nsh-control-stats-13e1{
+
+      grid-template-columns:
+        repeat(
+          2,
+          minmax(0,1fr)
+        ) !important;
+
+    }
+
+
+    .network-mini-grid.nsh-network-grid-13e1{
+
+      grid-template-columns:
+        repeat(
+          2,
+          minmax(0,1fr)
+        ) !important;
+
+    }
+
+  }
+
+
+  @media(max-width:620px){
+
+    .control-stats.nsh-control-stats-13e1{
+
+      grid-template-columns:
+        1fr !important;
+
+    }
+
+
+    .network-mini-grid.nsh-network-grid-13e1{
+
+      grid-template-columns:
+        1fr !important;
+
+    }
+
+
+    .network-mini-card.nsh-network-card-13e1{
+
+      min-height:90px;
+
+    }
+
+  }
+
+
+  `;
+
+
+  document.head
+    .appendChild(st);
+
+}
+
+
+
+/* =========================================================
+   BOOT VISUAL PATCH
+   ========================================================= */
+
+injectDashboardVisual13E1Styles();
+
+setTimeout(
+  nshFixDashboard13EVisual,
+  300
+);
+
+setTimeout(
+  nshFixDashboard13EVisual,
+  900
+);
+
+
+/* =========================================================
+   END PART 13E-A.1
+   ========================================================= */
+
 injectPhoneAuthStyles();
 
 preparePhoneLoginUI();
