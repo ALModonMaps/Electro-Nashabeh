@@ -34431,6 +34431,1034 @@ injectNashabehOCR13FStyles();
    END PART 13F
    ========================================================= */
 
+/* =========================================================
+   PART 13F.1
+   NASHABEH FAST OCR ENGINE
+   PERFORMANCE FIX FOR WINDOWS + MOBILE
+   KEEP PART 13F - THIS OVERRIDES OCR ONLY
+   ========================================================= */
+
+const NSH_OCR_FAST_13F1 = {
+  maxImageSide: 1100,
+  normalConsumptionLimit: 5000
+};
+
+
+/* =========================================================
+   PREPARE SMALL OCR IMAGE
+   Prevent huge phone photos from freezing browser
+   ========================================================= */
+
+async function nshPrepareOCRImage13F1(file){
+
+  const img =
+    await nshLoadImage(file);
+
+  const maxSide =
+    NSH_OCR_FAST_13F1.maxImageSide;
+
+  const largest =
+    Math.max(
+      img.naturalWidth,
+      img.naturalHeight
+    );
+
+  const ratio =
+    Math.min(
+      1,
+      maxSide / largest
+    );
+
+  const canvas =
+    document.createElement("canvas");
+
+  canvas.width =
+    Math.max(
+      1,
+      Math.round(
+        img.naturalWidth * ratio
+      )
+    );
+
+  canvas.height =
+    Math.max(
+      1,
+      Math.round(
+        img.naturalHeight * ratio
+      )
+    );
+
+  const ctx =
+    canvas.getContext("2d");
+
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+
+  ctx.drawImage(
+    img,
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
+
+  /*
+    Return image generated from the SMALL canvas.
+
+    This means all OCR passes work on ~1100px image,
+    not the original 4K/12MP phone photo.
+  */
+
+  const prepared =
+    new Image();
+
+  await new Promise(
+    (resolve,reject)=>{
+
+      prepared.onload =
+        ()=>resolve();
+
+      prepared.onerror =
+        ()=>reject(
+          new Error(
+            "تعذر تجهيز صورة العداد"
+          )
+        );
+
+      prepared.src =
+        canvas.toDataURL(
+          "image/jpeg",
+          .90
+        );
+
+    }
+  );
+
+  return prepared;
+}
+
+
+/* =========================================================
+   FAST OCR CANVAS
+   ========================================================= */
+
+function nshFastCanvas13F1(
+  img,
+  options={}
+){
+
+  const {
+    threshold=null,
+    contrast=1.9,
+    brightness=0
+  } = options;
+
+  /*
+    The meter number window is normally around
+    the middle of the submitted photo.
+
+    Keep a generous crop because customers
+    will not always photograph perfectly.
+  */
+
+  const sx =
+    Math.round(
+      img.naturalWidth * .12
+    );
+
+  const sy =
+    Math.round(
+      img.naturalHeight * .22
+    );
+
+  const sw =
+    Math.round(
+      img.naturalWidth * .76
+    );
+
+  const sh =
+    Math.round(
+      img.naturalHeight * .56
+    );
+
+  const canvas =
+    document.createElement("canvas");
+
+  /*
+    Important performance rule:
+    DO NOT upscale 2x / 2.6x anymore.
+  */
+
+  canvas.width =
+    Math.max(
+      1,
+      sw
+    );
+
+  canvas.height =
+    Math.max(
+      1,
+      sh
+    );
+
+  const ctx =
+    canvas.getContext(
+      "2d",
+      {
+        willReadFrequently:true
+      }
+    );
+
+  ctx.drawImage(
+    img,
+
+    sx,
+    sy,
+    sw,
+    sh,
+
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
+
+  const imageData =
+    ctx.getImageData(
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
+
+  const d =
+    imageData.data;
+
+  for(
+    let i=0;
+    i<d.length;
+    i+=4
+  ){
+
+    let gray =
+      (
+        d[i] * .299 +
+        d[i+1] * .587 +
+        d[i+2] * .114
+      );
+
+    gray =
+      (
+        gray - 128
+      ) *
+      contrast +
+      128 +
+      brightness;
+
+    gray =
+      Math.max(
+        0,
+        Math.min(
+          255,
+          gray
+        )
+      );
+
+    if(
+      threshold !== null
+    ){
+
+      gray =
+        gray >= threshold
+          ?255
+          :0;
+
+    }
+
+    d[i] = gray;
+    d[i+1] = gray;
+    d[i+2] = gray;
+
+  }
+
+  ctx.putImageData(
+    imageData,
+    0,
+    0
+  );
+
+  return canvas;
+}
+
+
+/* =========================================================
+   FAST CANDIDATE SCORE
+   ========================================================= */
+
+function nshFastScore13F1(
+  candidate,
+  confidence,
+  previousReading
+){
+
+  const previous =
+    Number(
+      previousReading || 0
+    );
+
+  const reading =
+    Number(
+      candidate.reading
+    );
+
+  const usage =
+    reading - previous;
+
+  let score =
+    Number(
+      confidence || 0
+    ) * 100;
+
+  /*
+    Normal mechanical meter digit length
+  */
+
+  if(
+    candidate.raw.length >= 5 &&
+    candidate.raw.length <= 7
+  ){
+    score += 15;
+  }
+
+  /*
+    Never prefer backwards reading
+  */
+
+  if(
+    reading >= previous
+  ){
+    score += 30;
+  }
+  else{
+    score -= 120;
+  }
+
+  /*
+    Reasonable consumption
+  */
+
+  if(
+    usage >= 0 &&
+    usage <=
+      NSH_OCR_FAST_13F1
+      .normalConsumptionLimit
+  ){
+    score += 20;
+  }
+
+  if(
+    usage >
+      NSH_OCR_FAST_13F1
+      .normalConsumptionLimit
+  ){
+    score -= 50;
+  }
+
+  return score;
+}
+
+
+/* =========================================================
+   FAST OCR ENGINE
+   OVERRIDES PART 13F nshReadMeterFree()
+   ========================================================= */
+
+nshReadMeterFree =
+async function(
+  file,
+  previousReading=0,
+  progressCallback=()=>{}
+){
+
+  const T =
+    await loadNashabehOCR();
+
+  progressCallback(3);
+
+  /*
+    Critical performance fix
+  */
+
+  const img =
+    await nshPrepareOCRImage13F1(
+      file
+    );
+
+  progressCallback(8);
+
+  window.__nshOCR13F = {
+    version:"13F.1 FAST",
+    passes:[],
+    candidates:[],
+    selected:null,
+    consensus:0
+  };
+
+
+  const worker =
+    await T.createWorker(
+      "eng",
+      1
+    );
+
+
+  await worker.setParameters({
+
+    tessedit_char_whitelist:
+      "0123456789",
+
+    tessedit_pageseg_mode:
+      "7",
+
+    preserve_interword_spaces:
+      "1",
+
+    user_defined_dpi:
+      "200"
+
+  });
+
+
+  /*
+    Start with ONLY 3 passes.
+  */
+
+  const basePasses = [
+
+    {
+      name:"FAST CONTRAST",
+      contrast:1.9,
+      brightness:5,
+      threshold:null
+    },
+
+    {
+      name:"FAST LIGHT",
+      contrast:1.55,
+      brightness:15,
+      threshold:null
+    },
+
+    {
+      name:"FAST THRESHOLD",
+      contrast:1.4,
+      brightness:0,
+      threshold:130
+    }
+
+  ];
+
+
+  const all=[];
+
+
+  async function runPass(
+    pass,
+    progress
+  ){
+
+    progressCallback(
+      progress
+    );
+
+    /*
+      Give browser a chance to repaint
+      the "جاري التحليل" UI.
+    */
+
+    await new Promise(
+      resolve=>
+        setTimeout(
+          resolve,
+          30
+        )
+    );
+
+
+    const canvas =
+      nshFastCanvas13F1(
+        img,
+        pass
+      );
+
+
+    const result =
+      await worker.recognize(
+        canvas
+      );
+
+
+    const text =
+      String(
+        result?.data?.text ||
+        ""
+      );
+
+
+    const confidence =
+      Math.max(
+        0,
+        Math.min(
+          1,
+          Number(
+            result
+            ?.data
+            ?.confidence ||
+            0
+          ) / 100
+        )
+      );
+
+
+    /*
+      Reuse PART 13F mechanical meter parser.
+
+      It already removes the final RED decimal wheel.
+    */
+
+    const candidates =
+      nshExtractCandidates13F(
+        text
+      );
+
+
+    window.__nshOCR13F
+      .passes
+      .push({
+
+        pass:
+          pass.name,
+
+        text:
+          text.trim(),
+
+        confidence,
+
+        candidates:
+          candidates.map(
+            c=>({
+              raw:c.raw,
+              reading:c.reading
+            })
+          )
+
+      });
+
+
+    for(
+      const candidate
+      of candidates
+    ){
+
+      all.push({
+
+        ...candidate,
+
+        confidence,
+
+        pass:
+          pass.name,
+
+        text:
+          text.trim(),
+
+        score:
+          nshFastScore13F1(
+            candidate,
+            confidence,
+            previousReading
+          )
+
+      });
+
+    }
+
+  }
+
+
+  try{
+
+    await runPass(
+      basePasses[0],
+      15
+    );
+
+    await runPass(
+      basePasses[1],
+      38
+    );
+
+    await runPass(
+      basePasses[2],
+      62
+    );
+
+
+    /* =====================================================
+       CHECK EARLY CONSENSUS
+       ===================================================== */
+
+    const firstCounts =
+      new Map();
+
+
+    for(
+      const item
+      of all
+    ){
+
+      const key =
+        String(
+          item.reading
+        );
+
+      if(
+        !firstCounts.has(key)
+      ){
+        firstCounts.set(
+          key,
+          new Set()
+        );
+      }
+
+      firstCounts
+        .get(key)
+        .add(
+          item.pass
+        );
+
+    }
+
+
+    let strongest =
+      0;
+
+
+    for(
+      const set
+      of firstCounts.values()
+    ){
+
+      strongest =
+        Math.max(
+          strongest,
+          set.size
+        );
+
+    }
+
+
+    /*
+      If fewer than 2 independent passes agree,
+      run ONE rescue pass only.
+    */
+
+    if(
+      strongest < 2
+    ){
+
+      await runPass(
+        {
+          name:"FAST RESCUE",
+          contrast:2.2,
+          brightness:-5,
+          threshold:115
+        },
+        78
+      );
+
+    }
+
+  }
+  catch(error){
+
+    console.warn(
+      "NASHABEH FAST OCR:",
+      error
+    );
+
+  }
+  finally{
+
+    await worker
+      .terminate();
+
+  }
+
+
+  progressCallback(90);
+
+
+  if(!all.length){
+
+    progressCallback(100);
+
+    return{
+      ok:false,
+      reading:null,
+      confidence:0,
+      raw:null,
+      blackDigits:null,
+      redDigit:null,
+      consensus:0,
+      engine:"13F.1 FAST"
+    };
+
+  }
+
+
+  /* =====================================================
+     CONSENSUS
+     ===================================================== */
+
+  const grouped =
+    new Map();
+
+
+  for(
+    const item
+    of all
+  ){
+
+    const key =
+      String(
+        item.reading
+      );
+
+
+    if(
+      !grouped.has(key)
+    ){
+
+      grouped.set(
+        key,
+        []
+      );
+
+    }
+
+
+    grouped
+      .get(key)
+      .push(item);
+
+  }
+
+
+  const ranked=[];
+
+
+  for(
+    const [
+      key,
+      items
+    ]
+    of grouped
+  ){
+
+    const independentPasses =
+      new Set(
+        items.map(
+          x=>x.pass
+        )
+      ).size;
+
+
+    const best =
+      [...items]
+      .sort(
+        (a,b)=>
+          b.score-a.score
+      )[0];
+
+
+    const avgConfidence =
+      items.reduce(
+        (
+          sum,
+          x
+        )=>
+          sum+
+          Number(
+            x.confidence||0
+          ),
+        0
+      ) /
+      items.length;
+
+
+    /*
+      Agreement matters more than
+      one lucky Tesseract confidence.
+    */
+
+    const finalScore =
+      best.score +
+      (
+        independentPasses *
+        40
+      ) +
+      (
+        avgConfidence *
+        15
+      );
+
+
+    ranked.push({
+
+      reading:
+        Number(key),
+
+      consensus:
+        independentPasses,
+
+      avgConfidence,
+
+      finalScore,
+
+      best
+
+    });
+
+  }
+
+
+  ranked.sort(
+    (a,b)=>
+      b.finalScore-
+      a.finalScore
+  );
+
+
+  const winner =
+    ranked[0];
+
+
+  /*
+    Final confidence =
+    OCR confidence + agreement.
+  */
+
+  let finalConfidence =
+    (
+      winner.avgConfidence *
+      .65
+    )
+    +
+    (
+      Math.min(
+        1,
+        winner.consensus/3
+      ) *
+      .35
+    );
+
+
+  /*
+    One-pass result must remain
+    a cautious suggestion.
+  */
+
+  if(
+    winner.consensus===1
+  ){
+
+    finalConfidence =
+      Math.min(
+        finalConfidence,
+        .60
+      );
+
+  }
+
+
+  if(
+    winner.consensus===2
+  ){
+
+    finalConfidence =
+      Math.min(
+        finalConfidence,
+        .82
+      );
+
+  }
+
+
+  const best =
+    winner.best;
+
+
+  window.__nshOCR13F
+    .candidates =
+      ranked.map(
+        x=>({
+
+          reading:
+            x.reading,
+
+          consensus:
+            x.consensus,
+
+          confidence:
+            x.avgConfidence,
+
+          score:
+            x.finalScore,
+
+          raw:
+            x.best.raw
+
+        })
+      );
+
+
+  window.__nshOCR13F
+    .selected = {
+
+      reading:
+        winner.reading,
+
+      raw:
+        best.raw,
+
+      blackDigits:
+        best.blackDigits,
+
+      redDigit:
+        best.redDigit,
+
+      consensus:
+        winner.consensus,
+
+      confidence:
+        finalConfidence,
+
+      pass:
+        best.pass
+
+    };
+
+
+  window.__nshOCR13F
+    .consensus =
+      winner.consensus;
+
+
+  progressCallback(100);
+
+
+  console.log(
+    "NASHABEH OCR 13F.1 FAST:",
+    window.__nshOCR13F
+  );
+
+
+  return{
+
+    ok:true,
+
+    reading:
+      winner.reading,
+
+    raw:
+      best.raw,
+
+    blackDigits:
+      best.blackDigits,
+
+    redDigit:
+      best.redDigit,
+
+    confidence:
+      finalConfidence,
+
+    consensus:
+      winner.consensus,
+
+    pass:
+      best.pass,
+
+    engine:
+      "13F.1 FAST",
+
+    candidates:
+      window
+      .__nshOCR13F
+      .candidates
+      .slice(
+        0,
+        5
+      )
+
+  };
+
+};
+
+
+/* =========================================================
+   FAST ENGINE UI LABEL
+   ========================================================= */
+
+function nshMarkFastOCR13F1(){
+
+  const indicator =
+    A(
+      "nshOCR13FIndicator"
+    );
+
+  if(!indicator){
+    return;
+  }
+
+  indicator.innerHTML = `
+
+    <span
+      class="nsh-ocr13f-dot"
+    ></span>
+
+    <small>
+      SMART OCR · FAST ENGINE
+    </small>
+
+  `;
+
+}
+
+
+const nshFastUIObserver13F1 =
+  new MutationObserver(
+    ()=>{
+
+      nshMarkFastOCR13F1();
+
+    }
+  );
+
+
+nshFastUIObserver13F1.observe(
+  document.body,
+  {
+    childList:true,
+    subtree:true
+  }
+);
+
+
+/* =========================================================
+   END PART 13F.1
+   ========================================================= */
+
 injectPhoneAuthStyles();
 
 preparePhoneLoginUI();
