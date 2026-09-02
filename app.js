@@ -27699,6 +27699,616 @@ setTimeout(
    END PART 13E-A.2
    ========================================================= */
 
+/* =========================================================
+   PART 13E-A.3
+   DASHBOARD AREA STATUS - RELIABLE FIX
+   RUN AFTER EVERY DASHBOARD RENDER
+   ========================================================= */
+
+
+/* =========================================================
+   EXACT DATABASE STATUS MAP
+   ========================================================= */
+
+function nshAreaState13E3(value){
+
+  const s =
+    String(value || "")
+      .trim()
+      .toLowerCase();
+
+
+  if(
+    s === "outage" ||
+    s === "offline"
+  ){
+
+    return {
+      cls: "outage",
+      badge: "OUTAGE",
+      text: "انقطاع عام",
+      icon: "power-off"
+    };
+
+  }
+
+
+  if(
+    s === "high_load" ||
+    s === "high load"
+  ){
+
+    return {
+      cls: "high-load",
+      badge: "HIGH LOAD",
+      text: "ضغط مرتفع",
+      icon: "triangle-alert"
+    };
+
+  }
+
+
+  if(
+    s === "monitoring" ||
+    s === "monitor"
+  ){
+
+    return {
+      cls: "monitor",
+      badge: "MONITOR",
+      text: "متابعة",
+      icon: "eye"
+    };
+
+  }
+
+
+  return {
+    cls: "stable",
+    badge: "ONLINE",
+    text: "الشبكة مستقرة",
+    icon: "zap"
+  };
+
+}
+
+
+
+/* =========================================================
+   APPLY DATABASE STATE TO DASHBOARD
+   ========================================================= */
+
+async function nshApplyDashboardAreas13E3(){
+
+  const grid =
+    document.querySelector(
+      ".network-mini-grid"
+    );
+
+
+  if(!grid){
+    return;
+  }
+
+
+  const {data, error} =
+    await sb
+      .from("areas")
+      .select(
+        "name,network_status,status_message"
+      );
+
+
+  if(error){
+
+    console.error(
+      "13E-A.3:",
+      error
+    );
+
+    return;
+
+  }
+
+
+  const areaMap =
+    new Map();
+
+
+  (data || []).forEach(
+    area=>{
+
+      areaMap.set(
+        String(
+          area.name || ""
+        ).trim(),
+        area
+      );
+
+    }
+  );
+
+
+  grid
+    .querySelectorAll(
+      ".network-mini-card"
+    )
+    .forEach(
+      card=>{
+
+        const name =
+          card
+            .querySelector("b")
+            ?.textContent
+            ?.trim();
+
+
+        if(!name){
+          return;
+        }
+
+
+        const area =
+          areaMap.get(name);
+
+
+        if(!area){
+          return;
+        }
+
+
+        const state =
+          nshAreaState13E3(
+            area.network_status
+          );
+
+
+        /* REMOVE EVERYTHING OLD */
+
+        card.classList.remove(
+          "offline",
+          "nsh-area-online-13e2",
+          "nsh-area-monitor-13e2",
+          "nsh-area-high-load-13e2",
+          "nsh-area-outage-13e2",
+          "nsh13e3-stable",
+          "nsh13e3-monitor",
+          "nsh13e3-high-load",
+          "nsh13e3-outage"
+        );
+
+
+        /* ADD REAL STATUS */
+
+        card.classList.add(
+          "nsh13e3-" +
+          state.cls
+        );
+
+
+        const badge =
+          card.querySelector(
+            ":scope > span"
+          );
+
+
+        if(badge){
+
+          badge.textContent =
+            state.badge;
+
+        }
+
+
+        const message =
+          card.querySelector(
+            "small"
+          );
+
+
+        if(message){
+
+          message.textContent =
+            (
+              area.status_message &&
+              area.status_message.trim()
+            )
+            ||
+            state.text;
+
+        }
+
+
+        const icon =
+          card.querySelector(
+            ".network-mini-icon"
+          );
+
+
+        if(icon){
+
+          icon.innerHTML =
+            `
+              <i
+                data-lucide="${state.icon}"
+              ></i>
+            `;
+
+        }
+
+      }
+    );
+
+
+  icons();
+
+}
+
+
+
+/* =========================================================
+   IMPORTANT:
+   RUN PATCH AFTER DASHBOARD ITSELF FINISHES RENDERING
+   ========================================================= */
+
+if(
+  typeof renderDashboardPremium ===
+  "function" &&
+  !window.__nshDashboardWrapped13E3
+){
+
+  window.__nshDashboardWrapped13E3 =
+    true;
+
+
+  const
+    nshOriginalDashboard13E3 =
+      renderDashboardPremium;
+
+
+  renderDashboardPremium =
+  async function(c){
+
+    await nshOriginalDashboard13E3(c);
+
+    await nshApplyDashboardAreas13E3();
+
+  };
+
+}
+
+
+
+/* =========================================================
+   COLORS
+   ========================================================= */
+
+function injectDashboardAreas13E3Styles(){
+
+  if(
+    document.getElementById(
+      "nshDashboardAreas13E3Styles"
+    )
+  ){
+    return;
+  }
+
+
+  const st =
+    document.createElement(
+      "style"
+    );
+
+
+  st.id =
+    "nshDashboardAreas13E3Styles";
+
+
+  st.textContent = `
+
+
+  /* ==============================
+     STABLE
+     ============================== */
+
+  .network-mini-card.nsh13e3-stable{
+
+    border-color:
+      rgba(44,235,128,.30)
+      !important;
+
+    background:
+      radial-gradient(
+        circle at 88% 8%,
+        rgba(42,235,126,.10),
+        transparent 43%
+      ),
+      linear-gradient(
+        145deg,
+        #071e29,
+        #03141c
+      )
+      !important;
+
+  }
+
+
+  .network-mini-card.nsh13e3-stable
+  .network-mini-icon{
+
+    color:#45ef84 !important;
+
+    border-color:
+      rgba(69,239,132,.34)
+      !important;
+
+  }
+
+
+  .network-mini-card.nsh13e3-stable
+  > span{
+
+    color:#45ef84 !important;
+
+    border-color:
+      rgba(69,239,132,.34)
+      !important;
+
+    background:
+      rgba(69,239,132,.08)
+      !important;
+
+  }
+
+
+
+  /* ==============================
+     MONITORING - YELLOW
+     ============================== */
+
+  .network-mini-card.nsh13e3-monitor{
+
+    border-color:
+      rgba(255,214,38,.45)
+      !important;
+
+    background:
+      radial-gradient(
+        circle at 88% 8%,
+        rgba(255,214,38,.15),
+        transparent 43%
+      ),
+      linear-gradient(
+        145deg,
+        #201b07,
+        #0c1009
+      )
+      !important;
+
+  }
+
+
+  .network-mini-card.nsh13e3-monitor
+  .network-mini-icon{
+
+    color:#ffdc32 !important;
+
+    border-color:
+      rgba(255,220,50,.44)
+      !important;
+
+    background:
+      rgba(35,29,4,.85)
+      !important;
+
+  }
+
+
+  .network-mini-card.nsh13e3-monitor
+  > span{
+
+    color:#ffe04c !important;
+
+    border-color:
+      rgba(255,220,50,.45)
+      !important;
+
+    background:
+      rgba(255,220,50,.10)
+      !important;
+
+  }
+
+
+  .network-mini-card.nsh13e3-monitor::after{
+
+    background:
+      linear-gradient(
+        90deg,
+        transparent,
+        #ffd72d,
+        transparent
+      )
+      !important;
+
+  }
+
+
+
+  /* ==============================
+     HIGH LOAD - ORANGE
+     ============================== */
+
+  .network-mini-card.nsh13e3-high-load{
+
+    border-color:
+      rgba(255,140,29,.48)
+      !important;
+
+    background:
+      radial-gradient(
+        circle at 88% 8%,
+        rgba(255,133,23,.17),
+        transparent 43%
+      ),
+      linear-gradient(
+        145deg,
+        #251407,
+        #100c08
+      )
+      !important;
+
+  }
+
+
+  .network-mini-card.nsh13e3-high-load
+  .network-mini-icon{
+
+    color:#ff932e !important;
+
+    border-color:
+      rgba(255,147,46,.48)
+      !important;
+
+    background:
+      rgba(38,18,4,.88)
+      !important;
+
+  }
+
+
+  .network-mini-card.nsh13e3-high-load
+  > span{
+
+    color:#ff9d36 !important;
+
+    border-color:
+      rgba(255,147,46,.48)
+      !important;
+
+    background:
+      rgba(255,137,28,.11)
+      !important;
+
+  }
+
+
+  .network-mini-card.nsh13e3-high-load::after{
+
+    background:
+      linear-gradient(
+        90deg,
+        transparent,
+        #ff8f28,
+        transparent
+      )
+      !important;
+
+  }
+
+
+
+  /* ==============================
+     OUTAGE - RED
+     ============================== */
+
+  .network-mini-card.nsh13e3-outage{
+
+    border-color:
+      rgba(255,67,86,.50)
+      !important;
+
+    background:
+      radial-gradient(
+        circle at 88% 8%,
+        rgba(255,62,81,.17),
+        transparent 43%
+      ),
+      linear-gradient(
+        145deg,
+        #261014,
+        #10090c
+      )
+      !important;
+
+  }
+
+
+  .network-mini-card.nsh13e3-outage
+  .network-mini-icon{
+
+    color:#ff5362 !important;
+
+    border-color:
+      rgba(255,82,98,.48)
+      !important;
+
+    background:
+      rgba(37,7,11,.88)
+      !important;
+
+  }
+
+
+  .network-mini-card.nsh13e3-outage
+  > span{
+
+    color:#ff626f !important;
+
+    border-color:
+      rgba(255,82,98,.48)
+      !important;
+
+    background:
+      rgba(255,74,91,.11)
+      !important;
+
+  }
+
+
+  .network-mini-card.nsh13e3-outage::after{
+
+    background:
+      linear-gradient(
+        90deg,
+        transparent,
+        #ff4658,
+        transparent
+      )
+      !important;
+
+  }
+
+
+  `;
+
+
+  document.head
+    .appendChild(st);
+
+}
+
+
+
+/* =========================================================
+   START
+   ========================================================= */
+
+injectDashboardAreas13E3Styles();
+
+
+/* If dashboard is already open right now */
+
+setTimeout(
+  nshApplyDashboardAreas13E3,
+  300
+);
+
+
+/* =========================================================
+   END PART 13E-A.3
+   ========================================================= */
+
 injectPhoneAuthStyles();
 
 preparePhoneLoginUI();
