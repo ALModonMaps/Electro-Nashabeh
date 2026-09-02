@@ -16733,19 +16733,57 @@ function nshExtractReadingCandidates(
     .replace(/[Oo]/g,"0")
     .replace(/[Il|]/g,"1");
 
+
   let raw=
     text.match(
       /\d{4,8}/g
     )||[];
 
+
   let results=[];
+
 
   for(
     let value of raw
   ){
 
+    /*
+      NASHABEH METER RULE
+
+      Example:
+      OCR sees: 007062
+
+      Last digit = RED decimal wheel
+      Ignore it.
+
+      007062 -> 00706 -> 706
+    */
+
+    if(
+      value.length<4
+    ){
+      continue;
+    }
+
+
+    let blackDigits=
+      value.slice(
+        0,
+        -1
+      );
+
+
+    let redDigit=
+      value.slice(
+        -1
+      );
+
+
     let n=
-      Number(value);
+      Number(
+        blackDigits
+      );
+
 
     if(
       Number.isFinite(n)&&
@@ -16753,13 +16791,25 @@ function nshExtractReadingCandidates(
     ){
 
       results.push({
-        raw:value,
-        reading:n
+
+        raw:
+          value,
+
+        black:
+          blackDigits,
+
+        red:
+          redDigit,
+
+        reading:
+          n
+
       });
 
     }
 
   }
+
 
   return results;
 
@@ -17263,16 +17313,70 @@ async function processNashabehMeterPhoto(
       .maybeSingle();
 
 
-    if(existing.data?.id){
+   if(
+  existing.data?.id
+){
 
-      throw new Error(
-        existing.data.status===
-        "completed"
-        ?"تم إرسال قراءة هذا الشهر وإصدار الفاتورة مسبقاً."
-        :"تم إرسال صورة عداد لهذا الشهر مسبقاً وهي قيد المعالجة أو المراجعة."
-      );
+  /*
+    إذا الفاتورة صدرت:
+    ممنوع إعادة القراءة لنفس الشهر
+  */
 
-    }
+  if(
+    existing.data.status===
+    "completed"||
+    existing.data.invoice_id
+  ){
+
+    throw new Error(
+      "تم إرسال قراءة هذا الشهر وإصدار الفاتورة مسبقاً."
+    );
+
+  }
+
+
+  /*
+    إذا المحاولة السابقة فشلت أو بحاجة مراجعة:
+    منسمح بإعادة التصوير
+  */
+
+  nshMeterStatus(
+    `
+      <div class="nsh-meter-spinner"></div>
+
+      <b>
+        جاري تجهيز إعادة تصوير العداد...
+      </b>
+
+      <small>
+        سيتم استبدال المحاولة السابقة
+      </small>
+    `,
+    "working"
+  );
+
+
+  let reset=
+    await sb.functions.invoke(
+      "reset-meter-photo",
+      {
+        body:{
+          submission_id:
+            existing.data.id
+        }
+      }
+    );
+
+
+  if(reset.error){
+
+    throw new Error(
+      "تعذر إعادة تجهيز قراءة هذا الشهر."
+    );
+
+  }
+
+}
 
 
     let previousReading=
