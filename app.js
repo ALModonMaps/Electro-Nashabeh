@@ -35459,6 +35459,236 @@ nshFastUIObserver13F1.observe(
    END PART 13F.1
    ========================================================= */
 
+/* =========================================================
+   PART 13F.2
+   STABILITY HOTFIX
+   STOP OBSERVER LOOP + FIX METER GUIDE
+   ========================================================= */
+
+
+/* =========================================================
+   1) STOP PART 13F OBSERVER LOOP
+   ========================================================= */
+
+try{
+
+  if(
+    typeof nshOCRWatch13F !==
+    "undefined"
+  ){
+
+    nshOCRWatch13F.disconnect();
+
+    console.log(
+      "NASHABEH 13F observer disconnected"
+    );
+
+  }
+
+}catch(e){
+
+  console.warn(
+    "13F observer disconnect skipped",
+    e
+  );
+
+}
+
+
+/* =========================================================
+   2) STOP PART 13F.1 OBSERVER LOOP
+   ========================================================= */
+
+try{
+
+  if(
+    typeof nshFastUIObserver13F1 !==
+    "undefined"
+  ){
+
+    nshFastUIObserver13F1.disconnect();
+
+    console.log(
+      "NASHABEH 13F.1 observer disconnected"
+    );
+
+  }
+
+}catch(e){
+
+  console.warn(
+    "13F.1 observer disconnect skipped",
+    e
+  );
+
+}
+
+
+/* =========================================================
+   3) SAFE UI UPDATE
+   NO MUTATION OBSERVER
+   ========================================================= */
+
+function nshSafeOCRUI13F2(){
+
+  const indicator =
+    document.getElementById(
+      "nshOCR13FIndicator"
+    );
+
+  if(
+    indicator &&
+    indicator.dataset.nshFixed !== "1"
+  ){
+
+    indicator.dataset.nshFixed =
+      "1";
+
+    indicator.innerHTML = `
+
+      <span
+        class="nsh-ocr13f-dot"
+      ></span>
+
+      <small>
+        SMART OCR · FAST ENGINE
+      </small>
+
+    `;
+
+  }
+
+}
+
+
+/* =========================================================
+   4) FIX METER GUIDE
+   000350 -> 000000
+   ========================================================= */
+
+function nshFixMeterGuide13F2(){
+
+  const guide =
+    document.querySelector(
+      ".nsh-guide-box span"
+    );
+
+  if(!guide){
+    return;
+  }
+
+  /*
+    Guide only.
+    Do NOT show customer's old reading here.
+  */
+
+  guide.textContent =
+    "0 0 0 0 0 0";
+
+}
+
+
+/* =========================================================
+   5) RUN UI FIX ONLY WHEN NEEDED
+   ========================================================= */
+
+function nshApplyMeterReadingFixes13F2(){
+
+  nshSafeOCRUI13F2();
+
+  nshFixMeterGuide13F2();
+
+}
+
+
+/* =========================================================
+   6) PATCH CUSTOMER RENDER
+   Run once AFTER screen is drawn.
+   No observer.
+   ========================================================= */
+
+if(
+  typeof renderCustomer ===
+  "function"
+){
+
+  const __nshRenderCustomer13F2 =
+    renderCustomer;
+
+  renderCustomer =
+  function(...args){
+
+    const result =
+      __nshRenderCustomer13F2
+      .apply(
+        this,
+        args
+      );
+
+    /*
+      Allow DOM to finish drawing first.
+    */
+
+    setTimeout(
+      nshApplyMeterReadingFixes13F2,
+      0
+    );
+
+    return result;
+
+  };
+
+}
+
+
+/* =========================================================
+   7) PATCH ASSIST UI
+   ========================================================= */
+
+if(
+  typeof nshUpgradeMeterAssistUI ===
+  "function"
+){
+
+  const __nshUpgradeMeterAssistUI13F2 =
+    nshUpgradeMeterAssistUI;
+
+  nshUpgradeMeterAssistUI =
+  function(...args){
+
+    const result =
+      __nshUpgradeMeterAssistUI13F2
+      .apply(
+        this,
+        args
+      );
+
+    setTimeout(
+      nshApplyMeterReadingFixes13F2,
+      0
+    );
+
+    return result;
+
+  };
+
+}
+
+
+/* =========================================================
+   8) INITIAL FIX
+   ========================================================= */
+
+setTimeout(
+  nshApplyMeterReadingFixes13F2,
+  100
+);
+
+
+/* =========================================================
+   END PART 13F.2
+   ========================================================= */
+
 injectPhoneAuthStyles();
 
 preparePhoneLoginUI();
