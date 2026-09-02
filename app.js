@@ -20792,6 +20792,1003 @@ injectNashabehSmartAssistStyles();
    END PART 13B.3
    ========================================================= */
 
+/* =========================================================
+   PART 13C
+   OCR AUDIT + ADMIN METER READING CONTROL CENTER
+   ========================================================= */
+
+
+/* ---------------------------------------------------------
+   SAVE OCR ORIGINAL RESULT
+   --------------------------------------------------------- */
+
+const __nshConfirmMeterReading13C =
+  nshConfirmMeterReading;
+
+
+nshConfirmMeterReading =
+async function(){
+
+  let input =
+    A("nshManualReading");
+
+  if(!input){
+    return;
+  }
+
+
+  let finalReading =
+    Number(
+      input.value
+    );
+
+
+  let suggested =
+    nshSmartAssistState
+    ?.suggested;
+
+
+  let source =
+    "manual";
+
+
+  if(
+    suggested !== null &&
+    suggested !== undefined
+  ){
+
+    source =
+      Number(suggested) ===
+      Number(finalReading)
+      ? "ocr"
+      : "manual_corrected";
+
+  }
+
+
+  /*
+    Store audit info temporarily so
+    finalize call can use it.
+  */
+
+  window.__nshOCRAudit = {
+
+    final_reading:
+      finalReading,
+
+    ocr_raw_reading:
+      suggested !== null &&
+      suggested !== undefined
+      ? Number(suggested)
+      : null,
+
+    ocr_raw_text:
+      nshSmartAssistState
+      ?.raw ||
+      null,
+
+    reading_source:
+      source
+
+  };
+
+
+  return __nshConfirmMeterReading13C();
+
+};
+
+
+/* ---------------------------------------------------------
+   INTERCEPT FINALIZE FUNCTION CALL
+   AND ADD OCR AUDIT DATA
+   --------------------------------------------------------- */
+
+const __nshOldInvoke13C =
+  sb.functions.invoke.bind(
+    sb.functions
+  );
+
+
+sb.functions.invoke =
+async function(
+  functionName,
+  options={}
+){
+
+  if(
+    functionName ===
+    "finalize-meter-photo" &&
+    window.__nshOCRAudit
+  ){
+
+    options =
+      options || {};
+
+
+    options.body = {
+
+      ...(options.body||{}),
+
+      ocr_raw_text:
+        window
+        .__nshOCRAudit
+        .ocr_raw_text,
+
+      ocr_raw_reading:
+        window
+        .__nshOCRAudit
+        .ocr_raw_reading,
+
+      reading_source:
+        window
+        .__nshOCRAudit
+        .reading_source
+
+    };
+
+
+    console.log(
+      "NASHABEH OCR AUDIT:",
+      window.__nshOCRAudit
+    );
+
+  }
+
+
+  return __nshOldInvoke13C(
+    functionName,
+    options
+  );
+
+};
+
+
+/* ---------------------------------------------------------
+   ADMIN METER PHOTO CONTROL CENTER
+   --------------------------------------------------------- */
+
+async function nshRenderMeterPhotoControlCenter(){
+
+  let submissions =
+    await sb
+    .from(
+      "meter_photo_submissions"
+    )
+    .select("*")
+    .order(
+      "created_at",
+      {
+        ascending:false
+      }
+    )
+    .limit(100);
+
+
+  if(submissions.error){
+
+    console.error(
+      submissions.error
+    );
+
+    return `
+      <article class="panel admin-card">
+        <h3>
+          Meter Reading Control Center
+        </h3>
+
+        <p>
+          تعذر تحميل قراءات العدادات.
+        </p>
+      </article>
+    `;
+
+  }
+
+
+  let rows =
+    submissions.data || [];
+
+
+  if(!rows.length){
+
+    return `
+      <article class="panel admin-card nsh-meter-admin-center">
+
+        <div class="nsh-meter-admin-head">
+
+          <div>
+
+            <span>
+              SMART METER CONTROL
+            </span>
+
+            <h3>
+              Meter Reading Control Center
+            </h3>
+
+            <p>
+              لا توجد صور عدادات حتى الآن.
+            </p>
+
+          </div>
+
+        </div>
+
+      </article>
+    `;
+
+  }
+
+
+  let customerIds =
+    [
+      ...new Set(
+        rows
+        .map(x=>x.customer_id)
+        .filter(Boolean)
+      )
+    ];
+
+
+  let meterIds =
+    [
+      ...new Set(
+        rows
+        .map(x=>x.meter_id)
+        .filter(Boolean)
+      )
+    ];
+
+
+  let [
+    profilesResult,
+    metersResult
+  ] =
+  await Promise.all([
+
+    sb
+    .from("profiles")
+    .select(
+      "id,full_name,phone"
+    )
+    .in(
+      "id",
+      customerIds
+    ),
+
+    sb
+    .from("meters")
+    .select(
+      "id,meter_number"
+    )
+    .in(
+      "id",
+      meterIds
+    )
+
+  ]);
+
+
+  let profilesMap =
+    {};
+
+
+  for(
+    let p of
+    profilesResult.data||[]
+  ){
+
+    profilesMap[p.id] = p;
+
+  }
+
+
+  let metersMap =
+    {};
+
+
+  for(
+    let m of
+    metersResult.data||[]
+  ){
+
+    metersMap[m.id] = m;
+
+  }
+
+
+  let html = `
+    <article class="panel admin-card nsh-meter-admin-center">
+
+      <div class="nsh-meter-admin-head">
+
+        <div>
+
+          <span>
+            SMART METER CONTROL
+          </span>
+
+          <h3>
+            Meter Reading Control Center
+          </h3>
+
+          <p>
+            صور العدادات، نتيجة OCR،
+            القراءة النهائية والفاتورة.
+          </p>
+
+        </div>
+
+        <div class="nsh-meter-admin-count">
+
+          <strong>
+            ${rows.length}
+          </strong>
+
+          <small>
+            Submission
+          </small>
+
+        </div>
+
+      </div>
+
+      <div class="nsh-meter-admin-grid">
+  `;
+
+
+  for(
+    let x of rows
+  ){
+
+    let profile =
+      profilesMap[
+        x.customer_id
+      ] || {};
+
+
+    let meter =
+      metersMap[
+        x.meter_id
+      ] || {};
+
+
+    let image = "";
+
+
+    if(
+      x.image_path
+    ){
+
+      let signed =
+        await sb.storage
+        .from(
+          "meter-images"
+        )
+        .createSignedUrl(
+          x.image_path,
+          600
+        );
+
+
+      if(
+        signed
+        .data
+        ?.signedUrl
+      ){
+
+        image =
+          signed
+          .data
+          .signedUrl;
+
+      }
+
+    }
+
+
+    let sourceLabel =
+      x.reading_source ===
+      "manual_corrected"
+      ? "تم التصحيح يدوياً"
+      :
+      x.reading_source ===
+      "manual"
+      ? "إدخال يدوي"
+      :
+      "OCR";
+
+
+    let statusLabel =
+      x.status ===
+      "completed"
+      ? "Completed"
+      :
+      x.status ===
+      "review_required"
+      ? "Review Required"
+      :
+      x.status;
+
+
+    html += `
+
+      <div class="nsh-meter-admin-card">
+
+        <div class="nsh-meter-admin-image">
+
+          ${
+            image
+            ?
+            `
+              <img
+                src="${image}"
+                alt="Meter"
+                onclick="window.open('${image}','_blank')"
+              >
+            `
+            :
+            `
+              <div class="nsh-no-meter-image">
+
+                <i data-lucide="image-off"></i>
+
+              </div>
+            `
+          }
+
+          <span class="
+            nsh-meter-admin-status
+            ${x.status}
+          ">
+
+            ${statusLabel}
+
+          </span>
+
+        </div>
+
+
+        <div class="nsh-meter-admin-body">
+
+          <div class="nsh-meter-admin-customer">
+
+            <div>
+
+              <strong>
+                ${profile.full_name||"مشترك"}
+              </strong>
+
+              <small>
+                ${profile.phone||""}
+              </small>
+
+            </div>
+
+            <span>
+              Meter
+              ${meter.meter_number||"-"}
+            </span>
+
+          </div>
+
+
+          <div class="nsh-ocr-comparison">
+
+            <div>
+
+              <small>
+                OCR
+              </small>
+
+              <strong class="ocr-value">
+
+                ${
+                  x.ocr_raw_reading
+                  ?? "-"
+                }
+
+              </strong>
+
+            </div>
+
+
+            <i data-lucide="arrow-left"></i>
+
+
+            <div>
+
+              <small>
+                Final
+              </small>
+
+              <strong class="final-value">
+
+                ${
+                  x.final_reading
+                  ??
+                  x.detected_reading
+                  ??
+                  "-"
+                }
+
+              </strong>
+
+            </div>
+
+          </div>
+
+
+          <div class="nsh-meter-admin-info">
+
+            <div>
+
+              <span>
+                القراءة السابقة
+              </span>
+
+              <b>
+                ${x.previous_reading??"-"}
+              </b>
+
+            </div>
+
+
+            <div>
+
+              <span>
+                الاستهلاك
+              </span>
+
+              <b>
+                ${x.consumption_kwh??"-"}
+                kWh
+              </b>
+
+            </div>
+
+
+            <div>
+
+              <span>
+                السعر
+              </span>
+
+              <b>
+                ${
+                  x.kwh_price!==null
+                  ?
+                  "$"+
+                  Number(
+                    x.kwh_price
+                  ).toFixed(2)
+                  :
+                  "-"
+                }
+              </b>
+
+            </div>
+
+
+            <div>
+
+              <span>
+                الفاتورة
+              </span>
+
+              <b class="amount">
+
+                ${
+                  x.calculated_amount!==null
+                  ?
+                  "$"+
+                  Number(
+                    x.calculated_amount
+                  ).toFixed(2)
+                  :
+                  "-"
+                }
+
+              </b>
+
+            </div>
+
+          </div>
+
+
+          <div class="nsh-meter-admin-footer">
+
+            <span>
+
+              ${x.billing_month}
+
+            </span>
+
+            <span class="source">
+
+              ${sourceLabel}
+
+            </span>
+
+          </div>
+
+
+          ${
+            x.error_message
+            ?
+            `
+              <div class="nsh-meter-admin-error">
+
+                ${x.error_message}
+
+              </div>
+            `
+            :
+            ""
+          }
+
+        </div>
+
+      </div>
+
+    `;
+
+  }
+
+
+  html += `
+      </div>
+    </article>
+  `;
+
+
+  return html;
+
+}
+
+
+/* ---------------------------------------------------------
+   ADD CONTROL CENTER TO ADMIN METERS PAGE
+   --------------------------------------------------------- */
+
+const __nshOldMeters13C =
+  meters;
+
+
+meters =
+async function(c){
+
+  await __nshOldMeters13C(c);
+
+
+  let center =
+    await nshRenderMeterPhotoControlCenter();
+
+
+  c.insertAdjacentHTML(
+    "beforeend",
+    center
+  );
+
+
+  icons();
+
+};
+
+
+/* ---------------------------------------------------------
+   PART 13C STYLE
+   --------------------------------------------------------- */
+
+function injectNashabehMeterAdminStyles(){
+
+  if(
+    document.getElementById(
+      "nshMeterAdminStyles"
+    )
+  ){
+    return;
+  }
+
+
+  let st =
+    document.createElement(
+      "style"
+    );
+
+
+  st.id =
+    "nshMeterAdminStyles";
+
+
+  st.textContent = `
+
+  .nsh-meter-admin-center{
+    margin-top:20px;
+  }
+
+  .nsh-meter-admin-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:20px;
+    margin-bottom:18px;
+  }
+
+  .nsh-meter-admin-head span{
+    color:#13dcff;
+    font-size:10px;
+    font-weight:900;
+    letter-spacing:.12em;
+  }
+
+  .nsh-meter-admin-head h3{
+    margin:5px 0;
+    font-size:22px;
+  }
+
+  .nsh-meter-admin-head p{
+    margin:0;
+    opacity:.65;
+  }
+
+  .nsh-meter-admin-count{
+    min-width:90px;
+    text-align:center;
+    padding:12px;
+    border-radius:14px;
+    border:
+      1px solid
+      rgba(18,216,255,.25);
+    background:
+      rgba(18,216,255,.05);
+  }
+
+  .nsh-meter-admin-count strong{
+    display:block;
+    color:#9dff72;
+    font-size:23px;
+  }
+
+  .nsh-meter-admin-count small{
+    opacity:.55;
+  }
+
+  .nsh-meter-admin-grid{
+    display:grid;
+    grid-template-columns:
+      repeat(
+        auto-fit,
+        minmax(300px,1fr)
+      );
+    gap:15px;
+  }
+
+  .nsh-meter-admin-card{
+    overflow:hidden;
+    border-radius:17px;
+    border:
+      1px solid
+      rgba(18,216,255,.16);
+    background:
+      rgba(2,16,25,.78);
+  }
+
+  .nsh-meter-admin-image{
+    height:230px;
+    position:relative;
+    background:#000;
+    overflow:hidden;
+  }
+
+  .nsh-meter-admin-image img{
+    width:100%;
+    height:100%;
+    object-fit:contain;
+    cursor:zoom-in;
+  }
+
+  .nsh-no-meter-image{
+    height:100%;
+    display:grid;
+    place-items:center;
+    opacity:.3;
+  }
+
+  .nsh-meter-admin-status{
+    position:absolute;
+    top:10px;
+    left:10px;
+    padding:6px 9px;
+    border-radius:20px;
+    font-size:9px;
+    font-weight:900;
+    background:#172531;
+  }
+
+  .nsh-meter-admin-status.completed{
+    color:#8cff67;
+    border:
+      1px solid
+      rgba(99,255,85,.35);
+    background:
+      rgba(69,255,65,.12);
+  }
+
+  .nsh-meter-admin-status.review_required{
+    color:#ffd33b;
+    border:
+      1px solid
+      rgba(255,199,44,.35);
+    background:
+      rgba(255,199,44,.12);
+  }
+
+  .nsh-meter-admin-body{
+    padding:14px;
+  }
+
+  .nsh-meter-admin-customer{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    padding-bottom:11px;
+    border-bottom:
+      1px solid
+      rgba(255,255,255,.06);
+  }
+
+  .nsh-meter-admin-customer strong,
+  .nsh-meter-admin-customer small{
+    display:block;
+  }
+
+  .nsh-meter-admin-customer small{
+    opacity:.55;
+    margin-top:2px;
+  }
+
+  .nsh-meter-admin-customer>span{
+    font-size:10px;
+    color:#12dfff;
+  }
+
+  .nsh-ocr-comparison{
+    display:grid;
+    grid-template-columns:
+      1fr auto 1fr;
+    align-items:center;
+    gap:9px;
+    padding:13px 0;
+  }
+
+  .nsh-ocr-comparison>div{
+    text-align:center;
+    padding:10px;
+    border-radius:10px;
+    background:
+      rgba(255,255,255,.035);
+  }
+
+  .nsh-ocr-comparison small{
+    display:block;
+    opacity:.55;
+  }
+
+  .nsh-ocr-comparison strong{
+    display:block;
+    margin-top:3px;
+    font-family:
+      "Courier New",
+      monospace;
+    font-size:20px;
+  }
+
+  .ocr-value{
+    color:#ff7b6e;
+  }
+
+  .final-value{
+    color:#9dff72;
+  }
+
+  .nsh-ocr-comparison svg{
+    width:17px;
+    color:#12dfff;
+  }
+
+  .nsh-meter-admin-info{
+    display:grid;
+    grid-template-columns:
+      repeat(2,1fr);
+    gap:7px;
+  }
+
+  .nsh-meter-admin-info>div{
+    padding:8px;
+    border-radius:9px;
+    background:
+      rgba(0,0,0,.22);
+  }
+
+  .nsh-meter-admin-info span,
+  .nsh-meter-admin-info b{
+    display:block;
+  }
+
+  .nsh-meter-admin-info span{
+    opacity:.55;
+    font-size:9px;
+  }
+
+  .nsh-meter-admin-info b{
+    margin-top:3px;
+    font-size:12px;
+  }
+
+  .nsh-meter-admin-info .amount{
+    color:#ffc72c;
+  }
+
+  .nsh-meter-admin-footer{
+    display:flex;
+    justify-content:space-between;
+    margin-top:11px;
+    padding-top:9px;
+    border-top:
+      1px solid
+      rgba(255,255,255,.055);
+    font-size:9px;
+    opacity:.7;
+  }
+
+  .nsh-meter-admin-footer .source{
+    color:#13dfff;
+    opacity:1;
+  }
+
+  .nsh-meter-admin-error{
+    margin-top:9px;
+    padding:8px;
+    border-radius:8px;
+    font-size:9px;
+    color:#ffd03a;
+    background:
+      rgba(255,199,44,.08);
+    border:
+      1px solid
+      rgba(255,199,44,.17);
+  }
+
+  @media(max-width:650px){
+
+    .nsh-meter-admin-head{
+      align-items:stretch;
+      flex-direction:column;
+    }
+
+    .nsh-meter-admin-grid{
+      grid-template-columns:1fr;
+    }
+
+  }
+
+  `;
+
+
+  document.head
+  .appendChild(st);
+
+}
+
+
+injectNashabehMeterAdminStyles();
+
+/* =========================================================
+   END PART 13C
+   ========================================================= */
+
 injectPhoneAuthStyles();
 
 preparePhoneLoginUI();
