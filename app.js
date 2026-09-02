@@ -23139,6 +23139,3391 @@ injectNshScale13D();
    END PART 13D
    ========================================================= */
 
+/* =========================================================
+   PART 13E-A
+   500+ SCALE CORE
+   DASHBOARD + CUSTOMERS + METERS
+   ========================================================= */
+
+
+/* =========================================================
+   GLOBAL SCALE STATE
+   ========================================================= */
+
+const NSH_CUSTOMER_PAGE_SIZE_13E = 24;
+const NSH_METER_PAGE_SIZE_13E = 20;
+
+let nshCustomerState13E = {
+  page: 1,
+  search: "",
+  status: "all",
+  total: 0,
+  pages: 1
+};
+
+let nshMeterState13E = {
+  page: 1,
+  search: "",
+  status: "all",
+  total: 0,
+  pages: 1
+};
+
+
+/* =========================================================
+   SMALL HELPERS
+   ========================================================= */
+
+function nsh13EEscape(v){
+
+  return String(v ?? "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+
+}
+
+
+function nsh13ENumber(v){
+
+  return new Intl.NumberFormat(
+    "en-US"
+  ).format(
+    Number(v || 0)
+  );
+
+}
+
+
+function nsh13EPageInfo(
+  page,
+  size,
+  rows,
+  total
+){
+
+  let start =
+    total
+      ? ((page - 1) * size) + 1
+      : 0;
+
+  let end =
+    Math.min(
+      ((page - 1) * size) +
+      rows,
+      total
+    );
+
+  return `${start} – ${end} من ${total}`;
+
+}
+
+
+/* =========================================================
+   PART 13E-A DASHBOARD
+   SERVER-SIDE AGGREGATES
+   ========================================================= */
+
+renderDashboardPremium =
+async function(c){
+
+  let [
+    summaryResult,
+    areasResult
+  ] =
+  await Promise.all([
+
+    sb.rpc(
+      "admin_dashboard_summary"
+    ),
+
+    sb
+      .from("areas")
+      .select(
+        "id,name,network_status,status_message"
+      )
+      .order(
+        "created_at",
+        {
+          ascending:false
+        }
+      )
+      .limit(8)
+
+  ]);
+
+
+  if(summaryResult.error){
+
+    console.error(
+      "13E Dashboard:",
+      summaryResult.error
+    );
+
+  }
+
+
+  let s =
+    summaryResult.data?.[0] || {
+
+      customers: 0,
+      active_customers: 0,
+      inactive_customers: 0,
+      areas: 0,
+      meters: 0,
+      open_faults: 0,
+      unpaid_amount: 0
+
+    };
+
+
+  let areas =
+    areasResult.data || [];
+
+
+  let onlineAreas =
+    areas.filter(
+      a=>
+        ![
+          "outage",
+          "offline"
+        ].includes(
+          String(
+            a.network_status || ""
+          ).toLowerCase()
+        )
+    ).length;
+
+
+  c.innerHTML =
+
+    header(
+      "لوحة التحكم",
+      "Nashabeh Energy Control Center — بيانات مباشرة ومحضّرة لأكثر من 500 مشترك."
+    )
+
+    +
+
+    `
+
+    <section class="control-hero nsh-scale-dashboard-hero">
+
+      <div class="control-hero-copy">
+
+        <span class="control-eyebrow">
+          NASHABEH ENERGY CONTROL CENTER
+        </span>
+
+        <h2>
+          مركز مراقبة شبكة الإشتراكات
+        </h2>
+
+        <p>
+          نظرة مباشرة على المشتركين والعدادات
+          والأعطال والمستحقات بدون تحميل قاعدة
+          البيانات كاملة داخل المتصفح.
+        </p>
+
+        <div class="nsh-dashboard-live-row">
+
+          <span>
+            <i data-lucide="database"></i>
+            SERVER-SIDE DATA
+          </span>
+
+          <span>
+            <i data-lucide="zap"></i>
+            SYSTEM ONLINE
+          </span>
+
+          <span>
+            <i data-lucide="layers-3"></i>
+            500+ READY
+          </span>
+
+        </div>
+
+      </div>
+
+
+      <div class="control-grid-visual">
+
+        <div class="nsh-grid-fallback">
+
+          <i data-lucide="activity"></i>
+
+          <b>
+            GRID CORE
+          </b>
+
+          <small>
+            LIVE
+          </small>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+
+    <section class="control-stats">
+
+      ${
+        adminKpi(
+          "users-round",
+          "المشتركون",
+          nsh13ENumber(
+            s.customers
+          ),
+          "cyan",
+          "CUSTOMERS"
+        )
+      }
+
+      ${
+        adminKpi(
+          "circle-check-big",
+          "اشتراكات فعّالة",
+          nsh13ENumber(
+            s.active_customers
+          ),
+          "green",
+          "ACTIVE"
+        )
+      }
+
+      ${
+        adminKpi(
+          "gauge",
+          "العدادات",
+          nsh13ENumber(
+            s.meters
+          ),
+          "",
+          "SMART METERS"
+        )
+      }
+
+      ${
+        adminKpi(
+          "triangle-alert",
+          "أعطال مفتوحة",
+          nsh13ENumber(
+            s.open_faults
+          ),
+          "red",
+          "OPEN INCIDENTS"
+        )
+      }
+
+      ${
+        adminKpi(
+          "network",
+          "العلب والمناطق",
+          nsh13ENumber(
+            s.areas
+          ),
+          "gold",
+          "DISTRIBUTION"
+        )
+      }
+
+      ${
+        adminKpi(
+          "circle-dollar-sign",
+          "إجمالي المستحق",
+          "$" +
+          Number(
+            s.unpaid_amount || 0
+          ).toFixed(2),
+          "gold",
+          "OUTSTANDING"
+        )
+      }
+
+    </section>
+
+
+
+    <section class="nsh-dashboard-health">
+
+      <div class="nsh-dashboard-health-head">
+
+        <div>
+
+          <span>
+            DISTRIBUTION NETWORK
+          </span>
+
+          <h3>
+            حالة شبكة المناطق
+          </h3>
+
+        </div>
+
+        <div class="nsh-dashboard-health-kpi">
+
+          <strong>
+            ${onlineAreas}
+          </strong>
+
+          <small>
+            /
+            ${areas.length}
+            ONLINE
+          </small>
+
+        </div>
+
+      </div>
+
+
+      <div class="network-mini-grid">
+
+        ${
+          areas.length
+
+          ?
+
+          areas.map(
+            a=>{
+
+              let st =
+                String(
+                  a.network_status ||
+                  "online"
+                ).toLowerCase();
+
+              let bad =
+                st === "outage" ||
+                st === "offline";
+
+              return `
+
+                <article
+                  class="
+                    network-mini-card
+                    ${
+                      bad
+                        ? "offline"
+                        : ""
+                    }
+                  "
+                >
+
+                  <div class="network-mini-icon">
+
+                    <i
+                      data-lucide="${
+                        bad
+                          ? "power-off"
+                          : "zap"
+                      }"
+                    ></i>
+
+                  </div>
+
+                  <div>
+
+                    <b>
+                      ${nsh13EEscape(a.name)}
+                    </b>
+
+                    <small>
+                      ${
+                        nsh13EEscape(
+                          a.status_message ||
+                          (
+                            bad
+                              ? "انقطاع عام"
+                              : "الشبكة مستقرة"
+                          )
+                        )
+                      }
+                    </small>
+
+                  </div>
+
+                  <span>
+                    ${
+                      bad
+                        ? "OUTAGE"
+                        : "ONLINE"
+                    }
+                  </span>
+
+                </article>
+
+              `;
+
+            }
+          ).join("")
+
+          :
+
+          `
+
+            <div class="empty-control-state">
+
+              <i data-lucide="network"></i>
+
+              لا توجد مناطق مسجلة.
+
+            </div>
+
+          `
+        }
+
+      </div>
+
+    </section>
+
+    `;
+
+
+  icons();
+
+};
+
+
+
+/* =========================================================
+   CUSTOMER PAGE - SERVER PAGINATION
+   ========================================================= */
+
+subscribers =
+async function(c){
+
+  let offset =
+    (
+      nshCustomerState13E.page - 1
+    ) *
+    NSH_CUSTOMER_PAGE_SIZE_13E;
+
+
+  let [
+    areasResult,
+    customersResult
+  ] =
+  await Promise.all([
+
+    sb
+      .from("areas")
+      .select(
+        "id,name"
+      )
+      .order("name"),
+
+    sb.rpc(
+      "admin_customer_page",
+      {
+
+        p_search:
+          nshCustomerState13E.search,
+
+        p_status:
+          nshCustomerState13E.status,
+
+        p_limit:
+          NSH_CUSTOMER_PAGE_SIZE_13E,
+
+        p_offset:
+          offset
+
+      }
+    )
+
+  ]);
+
+
+  if(customersResult.error){
+
+    console.error(
+      "13E Customers:",
+      customersResult.error
+    );
+
+  }
+
+
+  let areas =
+    areasResult.data || [];
+
+  let ps =
+    customersResult.data || [];
+
+
+  let total =
+    Number(
+      ps[0]?.total_count || 0
+    );
+
+  let active =
+    Number(
+      ps[0]?.active_count || 0
+    );
+
+  let inactive =
+    Number(
+      ps[0]?.inactive_count || 0
+    );
+
+
+  nshCustomerState13E.total =
+    total;
+
+  nshCustomerState13E.pages =
+    Math.max(
+      1,
+      Math.ceil(
+        total /
+        NSH_CUSTOMER_PAGE_SIZE_13E
+      )
+    );
+
+
+  if(
+    nshCustomerState13E.page >
+    nshCustomerState13E.pages
+  ){
+
+    nshCustomerState13E.page =
+      nshCustomerState13E.pages;
+
+    return subscribers(c);
+
+  }
+
+
+  c.innerHTML =
+
+    header(
+      "المشتركون",
+      "Customer Management Center — إدارة محسّنة للأعداد الكبيرة."
+    )
+
+    +
+
+    `
+
+    <section class="customer-admin-summary">
+
+      <article class="customer-admin-stat">
+
+        <div class="customer-admin-stat-icon">
+
+          <i data-lucide="users-round"></i>
+
+        </div>
+
+        <div>
+
+          <small>
+            نتائج البحث
+          </small>
+
+          <b>
+            ${total}
+          </b>
+
+          <em>
+            CUSTOMERS
+          </em>
+
+        </div>
+
+      </article>
+
+
+      <article class="customer-admin-stat active">
+
+        <div class="customer-admin-stat-icon">
+
+          <i data-lucide="circle-check-big"></i>
+
+        </div>
+
+        <div>
+
+          <small>
+            فعّالة
+          </small>
+
+          <b>
+            ${active}
+          </b>
+
+          <em>
+            ACTIVE
+          </em>
+
+        </div>
+
+      </article>
+
+
+      <article class="customer-admin-stat inactive">
+
+        <div class="customer-admin-stat-icon">
+
+          <i data-lucide="circle-x"></i>
+
+        </div>
+
+        <div>
+
+          <small>
+            غير فعّالة
+          </small>
+
+          <b>
+            ${inactive}
+          </b>
+
+          <em>
+            INACTIVE
+          </em>
+
+        </div>
+
+      </article>
+
+    </section>
+
+
+
+    <!-- ==================================================
+         NEW CUSTOMER TERMINAL
+         ================================================== -->
+
+    <section class="customer-create-terminal">
+
+      <div class="customer-create-head">
+
+        <div class="customer-create-title">
+
+          <div class="customer-create-icon">
+
+            <i data-lucide="user-plus"></i>
+
+          </div>
+
+          <div>
+
+            <h3>
+              إضافة مشترك جديد
+            </h3>
+
+            <p>
+              إنشاء الحساب وربطه مباشرة
+              بالمنطقة والعداد والقراءة الافتتاحية.
+            </p>
+
+          </div>
+
+        </div>
+
+        <span class="customer-create-tag">
+          NEW CUSTOMER TERMINAL
+        </span>
+
+      </div>
+
+
+      <div class="customer-create-grid">
+
+        <div class="customer-create-field span2">
+
+          <label>
+            الاسم الكامل
+          </label>
+
+          <input
+            id="newName"
+            autocomplete="off"
+            placeholder="اسم المشترك"
+          >
+
+        </div>
+
+
+        <div class="customer-create-field">
+
+          <label>
+            رقم الهاتف
+          </label>
+
+          <input
+            id="newPhone"
+            type="tel"
+            inputmode="tel"
+            autocomplete="off"
+            placeholder="مثال: 70330820"
+          >
+
+        </div>
+
+
+        <div class="customer-create-field">
+
+          <label>
+            كلمة المرور
+          </label>
+
+          <input
+            id="newPassword"
+            type="password"
+            autocomplete="new-password"
+            placeholder="8 أحرف على الأقل"
+          >
+
+        </div>
+
+
+        <div class="customer-create-field">
+
+          <label>
+            المنطقة / العلبة
+          </label>
+
+          <select id="newArea">
+
+            ${
+              areas.map(
+                a=>`
+
+                  <option
+                    value="${a.id}"
+                  >
+                    ${nsh13EEscape(a.name)}
+                  </option>
+
+                `
+              ).join("")
+            }
+
+          </select>
+
+        </div>
+
+
+        <div class="customer-create-field">
+
+          <label>
+            رقم العداد
+          </label>
+
+          <input
+            id="newMeter"
+            autocomplete="off"
+            placeholder="مثال: 756"
+          >
+
+        </div>
+
+
+        <div class="customer-create-field">
+
+          <label>
+            القراءة الافتتاحية
+          </label>
+
+          <input
+            id="newInitialReading"
+            type="text"
+            inputmode="numeric"
+            autocomplete="off"
+            placeholder="مثال: 850"
+          >
+
+        </div>
+
+      </div>
+
+
+      <button
+        class="create-customer-btn"
+        onclick="createCustomer()"
+      >
+
+        <i data-lucide="user-plus"></i>
+
+        إنشاء حساب المشترك وتفعيل العداد
+
+      </button>
+
+    </section>
+
+
+
+    <!-- ==================================================
+         CUSTOMER REGISTRY
+         ================================================== -->
+
+    <section class="customers-center nsh-customers-13e">
+
+      <div class="customers-center-head nsh-13e-center-head">
+
+        <div>
+
+          <h3>
+            قاعدة المشتركين
+          </h3>
+
+          <p>
+            Server-side Customer Registry ·
+            24 مشترك فقط بكل صفحة
+          </p>
+
+        </div>
+
+        <span class="ledger-count">
+          ${total} CUSTOMERS
+        </span>
+
+      </div>
+
+
+
+      <div class="nsh-13e-toolbar">
+
+        <div class="nsh-13e-search">
+
+          <i data-lucide="search"></i>
+
+          <input
+            id="nshCustomerSearch13E"
+            value="${
+              nsh13EEscape(
+                nshCustomerState13E.search
+              )
+            }"
+            placeholder="بحث بالاسم، الهاتف، المنطقة أو رقم العداد..."
+            onkeydown="
+              if(event.key==='Enter'){
+                nshCustomerApply13E();
+              }
+            "
+          >
+
+        </div>
+
+
+        <select
+          id="nshCustomerStatus13E"
+          onchange="nshCustomerApply13E()"
+        >
+
+          <option
+            value="all"
+            ${
+              nshCustomerState13E.status ===
+              "all"
+                ? "selected"
+                : ""
+            }
+          >
+            كل المشتركين
+          </option>
+
+          <option
+            value="active"
+            ${
+              nshCustomerState13E.status ===
+              "active"
+                ? "selected"
+                : ""
+            }
+          >
+            فعّال
+          </option>
+
+          <option
+            value="inactive"
+            ${
+              nshCustomerState13E.status ===
+              "inactive"
+                ? "selected"
+                : ""
+            }
+          >
+            غير فعّال
+          </option>
+
+        </select>
+
+
+        <button
+          class="nsh-13e-search-button"
+          onclick="nshCustomerApply13E()"
+        >
+
+          <i data-lucide="search"></i>
+
+          بحث
+
+        </button>
+
+      </div>
+
+
+
+      <div class="nsh-13e-result-strip">
+
+        <span>
+          ${
+            nsh13EPageInfo(
+              nshCustomerState13E.page,
+              NSH_CUSTOMER_PAGE_SIZE_13E,
+              ps.length,
+              total
+            )
+          }
+        </span>
+
+        <span>
+          PAGE
+          ${nshCustomerState13E.page}
+          /
+          ${nshCustomerState13E.pages}
+        </span>
+
+      </div>
+
+
+
+      ${
+        ps.length
+
+        ?
+
+        `
+
+        <div class="customers-grid">
+
+          ${
+            ps.map(
+              p=>{
+
+                let isActive =
+                  !!p.active;
+
+                return `
+
+                  <article
+                    class="
+                      customer-unit
+                      ${
+                        isActive
+                          ? ""
+                          : "inactive"
+                      }
+                    "
+                  >
+
+                    <div class="customer-unit-head">
+
+                      <div class="customer-avatar">
+
+                        <div class="customer-avatar-icon">
+
+                          <i data-lucide="user-round"></i>
+
+                        </div>
+
+                        <div>
+
+                          <b>
+                            ${
+                              nsh13EEscape(
+                                p.full_name
+                              )
+                            }
+                          </b>
+
+                          <small>
+                            CUSTOMER ACCOUNT
+                          </small>
+
+                        </div>
+
+                      </div>
+
+
+                      <span class="customer-state">
+
+                        ${
+                          isActive
+                            ? "ACTIVE"
+                            : "INACTIVE"
+                        }
+
+                      </span>
+
+                    </div>
+
+
+
+                    <div class="customer-data-grid">
+
+                      <div class="customer-data-box">
+
+                        <small>
+                          الهاتف
+                        </small>
+
+                        <b>
+                          ${
+                            nsh13EEscape(
+                              p.phone || "-"
+                            )
+                          }
+                        </b>
+
+                      </div>
+
+
+                      <div class="customer-data-box">
+
+                        <small>
+                          المنطقة
+                        </small>
+
+                        <b>
+                          ${
+                            nsh13EEscape(
+                              p.area_name || "-"
+                            )
+                          }
+                        </b>
+
+                      </div>
+
+
+                      <div class="customer-data-box">
+
+                        <small>
+                          رقم العداد
+                        </small>
+
+                        <b>
+                          ${
+                            nsh13EEscape(
+                              p.meter_number || "-"
+                            )
+                          }
+                        </b>
+
+                      </div>
+
+
+                      <div class="customer-data-box">
+
+                        <small>
+                          الحالة
+                        </small>
+
+                        <b>
+                          ${
+                            isActive
+                              ? "اشتراك فعّال"
+                              : "موقوف"
+                          }
+                        </b>
+
+                      </div>
+
+                    </div>
+
+
+
+                    <button
+                      type="button"
+                      class="phone-auth-btn"
+                      onclick="
+                        syncCustomerPhoneAuth(
+                          '${p.id}',
+                          this
+                        )
+                      "
+                    >
+
+                      <i data-lucide="smartphone"></i>
+
+                      تفعيل الدخول برقم الهاتف
+
+                    </button>
+
+
+
+                    <button
+                      class="customer-toggle"
+                      onclick="
+                        toggleCustomer(
+                          '${p.id}',
+                          ${!isActive}
+                        )
+                      "
+                    >
+
+                      <i
+                        data-lucide="${
+                          isActive
+                            ? "circle-x"
+                            : "circle-check-big"
+                        }"
+                      ></i>
+
+                      ${
+                        isActive
+                          ? "تعطيل الاشتراك"
+                          : "تفعيل الاشتراك"
+                      }
+
+                    </button>
+
+                  </article>
+
+                `;
+
+              }
+            ).join("")
+          }
+
+        </div>
+
+        `
+
+        :
+
+        `
+
+        <div class="nsh-13e-empty">
+
+          <i data-lucide="search-x"></i>
+
+          <strong>
+            ما لقينا مشتركين
+          </strong>
+
+          <span>
+            جرّب تغيّر كلمة البحث أو الفلتر.
+          </span>
+
+        </div>
+
+        `
+      }
+
+
+
+      <div class="nsh-13e-pagination">
+
+        <button
+          onclick="
+            nshCustomerPage13E(
+              ${
+                nshCustomerState13E.page - 1
+              }
+            )
+          "
+          ${
+            nshCustomerState13E.page <= 1
+              ? "disabled"
+              : ""
+          }
+        >
+
+          <i data-lucide="chevron-right"></i>
+
+          السابق
+
+        </button>
+
+
+        <div class="nsh-13e-page-chip">
+
+          <small>
+            PAGE
+          </small>
+
+          <b>
+            ${nshCustomerState13E.page}
+          </b>
+
+          <span>
+            /
+            ${nshCustomerState13E.pages}
+          </span>
+
+        </div>
+
+
+        <button
+          onclick="
+            nshCustomerPage13E(
+              ${
+                nshCustomerState13E.page + 1
+              }
+            )
+          "
+          ${
+            nshCustomerState13E.page >=
+            nshCustomerState13E.pages
+              ? "disabled"
+              : ""
+          }
+        >
+
+          التالي
+
+          <i data-lucide="chevron-left"></i>
+
+        </button>
+
+      </div>
+
+    </section>
+
+    `;
+
+
+  icons();
+
+};
+
+
+
+/* =========================================================
+   CUSTOMER SEARCH
+   ========================================================= */
+
+window.nshCustomerApply13E =
+async function(){
+
+  nshCustomerState13E.search =
+    A(
+      "nshCustomerSearch13E"
+    )?.value?.trim() || "";
+
+  nshCustomerState13E.status =
+    A(
+      "nshCustomerStatus13E"
+    )?.value || "all";
+
+  nshCustomerState13E.page = 1;
+
+  await renderAdmin(
+    "subscribers"
+  );
+
+};
+
+
+
+window.nshCustomerPage13E =
+async function(page){
+
+  if(
+    page < 1 ||
+    page >
+      nshCustomerState13E.pages ||
+    page ===
+      nshCustomerState13E.page
+  ){
+    return;
+  }
+
+  nshCustomerState13E.page =
+    page;
+
+  await renderAdmin(
+    "subscribers"
+  );
+
+  document
+    .querySelector(
+      ".customers-center"
+    )
+    ?.scrollIntoView({
+      behavior:"smooth",
+      block:"start"
+    });
+
+};
+
+
+
+/* =========================================================
+   METERS PAGE - SERVER PAGINATION
+   ========================================================= */
+
+meters =
+async function(c){
+
+  let offset =
+    (
+      nshMeterState13E.page - 1
+    ) *
+    NSH_METER_PAGE_SIZE_13E;
+
+
+  let metersResult =
+    await sb.rpc(
+      "admin_meter_page",
+      {
+
+        p_search:
+          nshMeterState13E.search,
+
+        p_status:
+          nshMeterState13E.status,
+
+        p_limit:
+          NSH_METER_PAGE_SIZE_13E,
+
+        p_offset:
+          offset
+
+      }
+    );
+
+
+  if(metersResult.error){
+
+    console.error(
+      "13E Meters:",
+      metersResult.error
+    );
+
+  }
+
+
+  let ms =
+    metersResult.data || [];
+
+
+  let total =
+    Number(
+      ms[0]?.total_count || 0
+    );
+
+  let active =
+    Number(
+      ms[0]?.active_count || 0
+    );
+
+  let inactive =
+    Number(
+      ms[0]?.inactive_count || 0
+    );
+
+  let totalKwh =
+    Number(
+      ms[0]?.total_latest_kwh || 0
+    );
+
+
+  nshMeterState13E.total =
+    total;
+
+  nshMeterState13E.pages =
+    Math.max(
+      1,
+      Math.ceil(
+        total /
+        NSH_METER_PAGE_SIZE_13E
+      )
+    );
+
+
+  if(
+    nshMeterState13E.page >
+    nshMeterState13E.pages
+  ){
+
+    nshMeterState13E.page =
+      nshMeterState13E.pages;
+
+    return meters(c);
+
+  }
+
+
+  c.innerHTML =
+
+    header(
+      "العدادات",
+      "Smart Meter Center — إدارة سريعة ومحضّرة لمئات العدادات."
+    )
+
+    +
+
+    `
+
+    <section class="meters-summary">
+
+      <article class="meter-summary-card">
+
+        <i data-lucide="gauge"></i>
+
+        <div>
+
+          <small>
+            إجمالي العدادات
+          </small>
+
+          <b>
+            ${total}
+          </b>
+
+        </div>
+
+      </article>
+
+
+      <article class="meter-summary-card">
+
+        <i data-lucide="activity"></i>
+
+        <div>
+
+          <small>
+            قراءات آخرية
+          </small>
+
+          <b>
+            ${
+              nsh13ENumber(
+                totalKwh
+              )
+            }
+            kWh
+          </b>
+
+        </div>
+
+      </article>
+
+
+      <article class="meter-summary-card">
+
+        <i data-lucide="circle-check-big"></i>
+
+        <div>
+
+          <small>
+            عدادات فعّالة
+          </small>
+
+          <b>
+            ${active}
+          </b>
+
+        </div>
+
+      </article>
+
+    </section>
+
+
+
+    <section class="nsh-meter-registry-13e">
+
+      <div class="nsh-13e-center-head">
+
+        <div>
+
+          <span class="nsh-13e-eyebrow">
+            SMART METER REGISTRY · 500+ READY
+          </span>
+
+          <h3>
+            مركز إدارة العدادات
+          </h3>
+
+          <p>
+            تحميل 20 عداد فقط بكل صفحة
+            مع آخر قراءة لكل عداد.
+          </p>
+
+        </div>
+
+        <span class="ledger-count">
+          ${total} METERS
+        </span>
+
+      </div>
+
+
+
+      <div class="nsh-13e-toolbar">
+
+        <div class="nsh-13e-search">
+
+          <i data-lucide="search"></i>
+
+          <input
+            id="nshMeterSearch13E"
+            value="${
+              nsh13EEscape(
+                nshMeterState13E.search
+              )
+            }"
+            placeholder="بحث باسم المشترك، الهاتف أو رقم العداد..."
+            onkeydown="
+              if(event.key==='Enter'){
+                nshMeterApply13E();
+              }
+            "
+          >
+
+        </div>
+
+
+        <select
+          id="nshMeterStatus13E"
+          onchange="nshMeterApply13E()"
+        >
+
+          <option
+            value="all"
+            ${
+              nshMeterState13E.status ===
+              "all"
+                ? "selected"
+                : ""
+            }
+          >
+            كل العدادات
+          </option>
+
+          <option
+            value="active"
+            ${
+              nshMeterState13E.status ===
+              "active"
+                ? "selected"
+                : ""
+            }
+          >
+            فعّال
+          </option>
+
+          <option
+            value="inactive"
+            ${
+              nshMeterState13E.status ===
+              "inactive"
+                ? "selected"
+                : ""
+            }
+          >
+            غير فعّال
+          </option>
+
+        </select>
+
+
+        <button
+          class="nsh-13e-search-button"
+          onclick="nshMeterApply13E()"
+        >
+
+          <i data-lucide="search"></i>
+
+          بحث
+
+        </button>
+
+      </div>
+
+
+
+      <div class="nsh-13e-result-strip">
+
+        <span>
+
+          ${
+            nsh13EPageInfo(
+              nshMeterState13E.page,
+              NSH_METER_PAGE_SIZE_13E,
+              ms.length,
+              total
+            )
+          }
+
+        </span>
+
+        <span>
+          ${active} ACTIVE ·
+          ${inactive} INACTIVE
+        </span>
+
+      </div>
+
+
+
+      ${
+        ms.length
+
+        ?
+
+        `
+
+        <div class="nsh-meter-grid-13e">
+
+          ${
+            ms.map(
+              m=>{
+
+                let reading =
+                  m.latest_reading != null
+                    ? Number(
+                        m.latest_reading
+                      )
+                    : null;
+
+                let displayReading =
+                  reading != null
+                    ? String(
+                        reading
+                      ).padStart(
+                        7,
+                        "0"
+                      )
+                    : "-------";
+
+                return `
+
+                  <article
+                    class="
+                      nsh-meter-unit-13e
+                      ${
+                        m.active
+                          ? ""
+                          : "inactive"
+                      }
+                    "
+                  >
+
+                    <div class="nsh-meter-unit-head">
+
+                      <div>
+
+                        <span>
+                          ${
+                            m.active
+                              ? "ONLINE"
+                              : "OFFLINE"
+                          }
+                        </span>
+
+                        <h4>
+                          ${
+                            nsh13EEscape(
+                              m.customer_name ||
+                              "مشترك"
+                            )
+                          }
+                        </h4>
+
+                        <small>
+                          ${
+                            nsh13EEscape(
+                              m.customer_phone ||
+                              ""
+                            )
+                          }
+                        </small>
+
+                      </div>
+
+                      <div class="nsh-meter-unit-icon">
+
+                        <i data-lucide="gauge"></i>
+
+                      </div>
+
+                    </div>
+
+
+                    <div class="nsh-meter-led-13e">
+
+                      <strong>
+                        ${displayReading}
+                      </strong>
+
+                      <small>
+                        kWh
+                      </small>
+
+                    </div>
+
+
+                    <div class="nsh-meter-wave-13e">
+
+                      <svg
+                        viewBox="0 0 180 30"
+                        preserveAspectRatio="none"
+                      >
+
+                        <polyline
+                          points="
+                            0,15
+                            12,15
+                            20,4
+                            30,26
+                            40,8
+                            50,21
+                            61,11
+                            70,15
+                            82,15
+                            92,5
+                            102,25
+                            112,9
+                            123,20
+                            135,12
+                            145,15
+                            180,15
+                          "
+                        ></polyline>
+
+                      </svg>
+
+                      <span>
+                        POWER SIGNAL · LIVE
+                      </span>
+
+                    </div>
+
+
+                    <div class="nsh-meter-data-13e">
+
+                      <div>
+
+                        <small>
+                          رقم العداد
+                        </small>
+
+                        <input
+                          id="mn_${m.id}"
+                          value="${
+                            nsh13EEscape(
+                              m.meter_number ||
+                              ""
+                            )
+                          }"
+                        >
+
+                      </div>
+
+
+                      <div>
+
+                        <small>
+                          تاريخ آخر قراءة
+                        </small>
+
+                        <b>
+                          ${
+                            nsh13EEscape(
+                              m.latest_reading_date ||
+                              "-"
+                            )
+                          }
+                        </b>
+
+                      </div>
+
+                    </div>
+
+
+                    <div class="meter-admin-actions">
+
+                      <button
+                        class="primary-meter"
+                        onclick="
+                          saveMeter(
+                            '${m.id}'
+                          )
+                        "
+                      >
+
+                        <i data-lucide="save"></i>
+
+                        حفظ الرقم
+
+                      </button>
+
+
+                      <button
+                        onclick="
+                          addReading(
+                            '${m.id}'
+                          )
+                        "
+                      >
+
+                        <i data-lucide="circle-plus"></i>
+
+                        قراءة جديدة
+
+                      </button>
+
+                    </div>
+
+                  </article>
+
+                `;
+
+              }
+            ).join("")
+          }
+
+        </div>
+
+        `
+
+        :
+
+        `
+
+        <div class="nsh-13e-empty">
+
+          <i data-lucide="gauge"></i>
+
+          <strong>
+            لا توجد عدادات
+          </strong>
+
+          <span>
+            جرّب تغيير البحث أو الفلتر.
+          </span>
+
+        </div>
+
+        `
+      }
+
+
+
+      <div class="nsh-13e-pagination">
+
+        <button
+          onclick="
+            nshMeterPage13E(
+              ${
+                nshMeterState13E.page - 1
+              }
+            )
+          "
+          ${
+            nshMeterState13E.page <= 1
+              ? "disabled"
+              : ""
+          }
+        >
+
+          <i data-lucide="chevron-right"></i>
+
+          السابق
+
+        </button>
+
+
+        <div class="nsh-13e-page-chip">
+
+          <small>
+            PAGE
+          </small>
+
+          <b>
+            ${nshMeterState13E.page}
+          </b>
+
+          <span>
+            /
+            ${nshMeterState13E.pages}
+          </span>
+
+        </div>
+
+
+        <button
+          onclick="
+            nshMeterPage13E(
+              ${
+                nshMeterState13E.page + 1
+              }
+            )
+          "
+          ${
+            nshMeterState13E.page >=
+            nshMeterState13E.pages
+              ? "disabled"
+              : ""
+          }
+        >
+
+          التالي
+
+          <i data-lucide="chevron-left"></i>
+
+        </button>
+
+      </div>
+
+    </section>
+
+
+    <div
+      id="nshMeterPhotoHost13E"
+    ></div>
+
+    `;
+
+
+
+  /* =====================================================
+     METER PHOTO CONTROL CENTER
+     USE PART 13D
+     ===================================================== */
+
+  let photoHost =
+    A(
+      "nshMeterPhotoHost13E"
+    );
+
+
+  if(photoHost){
+
+    photoHost.innerHTML =
+      await nshRenderMeterPhotoControlCenter();
+
+  }
+
+
+  icons();
+
+};
+
+
+
+/* =========================================================
+   METER SEARCH
+   ========================================================= */
+
+window.nshMeterApply13E =
+async function(){
+
+  nshMeterState13E.search =
+    A(
+      "nshMeterSearch13E"
+    )?.value?.trim() || "";
+
+  nshMeterState13E.status =
+    A(
+      "nshMeterStatus13E"
+    )?.value || "all";
+
+  nshMeterState13E.page = 1;
+
+  await renderAdmin(
+    "meters"
+  );
+
+};
+
+
+
+window.nshMeterPage13E =
+async function(page){
+
+  if(
+    page < 1 ||
+    page >
+      nshMeterState13E.pages ||
+    page ===
+      nshMeterState13E.page
+  ){
+    return;
+  }
+
+
+  nshMeterState13E.page =
+    page;
+
+
+  await renderAdmin(
+    "meters"
+  );
+
+
+  document
+    .querySelector(
+      ".nsh-meter-registry-13e"
+    )
+    ?.scrollIntoView({
+      behavior:"smooth",
+      block:"start"
+    });
+
+};
+
+
+
+/* =========================================================
+   PART 13D CONTROL CENTER VISUAL FIX
+   ========================================================= */
+
+function nsh13EFixMeterControl(){
+
+  let center =
+    document.querySelector(
+      ".nsh-meter-admin-center"
+    );
+
+  if(!center){
+    return;
+  }
+
+
+  let head =
+    center.querySelector(
+      ".nsh-meter-admin-head"
+    );
+
+  if(head){
+
+    head.classList.add(
+      "nsh-meter-head-13e"
+    );
+
+  }
+
+
+  let count =
+    center.querySelector(
+      ".nsh-meter-admin-count"
+    );
+
+  if(count){
+
+    count.classList.add(
+      "nsh-meter-count-13e"
+    );
+
+  }
+
+}
+
+
+
+/* =========================================================
+   OBSERVE CONTROL CENTER
+   ========================================================= */
+
+const nsh13EObserver =
+new MutationObserver(
+  ()=>{
+
+    nsh13EFixMeterControl();
+
+  }
+);
+
+
+nsh13EObserver.observe(
+  document.body,
+  {
+    childList:true,
+    subtree:true
+  }
+);
+
+
+
+/* =========================================================
+   PART 13E-A STYLES
+   ========================================================= */
+
+function injectAdminScale13EStyles(){
+
+  if(
+    A(
+      "nshAdminScale13EStyles"
+    )
+  ){
+    return;
+  }
+
+
+  let st =
+    document.createElement(
+      "style"
+    );
+
+
+  st.id =
+    "nshAdminScale13EStyles";
+
+
+  st.textContent = `
+
+
+  /* =====================================================
+     SHARED TOOLBAR
+     ===================================================== */
+
+  .nsh-13e-toolbar{
+
+    display:grid;
+
+    grid-template-columns:
+      minmax(280px,1fr)
+      190px
+      105px;
+
+    gap:10px;
+
+    padding:13px 14px;
+
+    border-top:
+      1px solid
+      rgba(61,204,241,.10);
+
+    border-bottom:
+      1px solid
+      rgba(61,204,241,.10);
+
+    background:
+      rgba(2,16,23,.46);
+
+  }
+
+
+  .nsh-13e-search{
+
+    position:relative;
+
+  }
+
+
+  .nsh-13e-search svg{
+
+    position:absolute;
+
+    right:13px;
+
+    top:50%;
+
+    width:16px;
+    height:16px;
+
+    transform:
+      translateY(-50%);
+
+    color:#52dfff;
+
+    opacity:.68;
+
+    pointer-events:none;
+
+  }
+
+
+  .nsh-13e-search input,
+  .nsh-13e-toolbar select{
+
+    width:100%;
+    height:42px;
+
+    box-sizing:border-box;
+
+    border-radius:10px;
+
+    border:
+      1px solid #1e4656;
+
+    outline:none;
+
+    background:#041923;
+
+    color:#e8f9ff;
+
+    font-size:9px;
+
+  }
+
+
+  .nsh-13e-search input{
+
+    padding:
+      0 40px 0 12px;
+
+  }
+
+
+  .nsh-13e-toolbar select{
+
+    padding:0 10px;
+
+  }
+
+
+  .nsh-13e-search input:focus,
+  .nsh-13e-toolbar select:focus{
+
+    border-color:#43eaff;
+
+    box-shadow:
+      0 0 0 2px
+      rgba(67,234,255,.07);
+
+  }
+
+
+  .nsh-13e-search-button{
+
+    height:42px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+
+    border-radius:10px;
+
+    border:
+      1px solid
+      rgba(255,205,44,.42);
+
+    background:
+      linear-gradient(
+        145deg,
+        #8d6200,
+        #5e4100
+      );
+
+    color:#fff2a5;
+
+    font-weight:900;
+    font-size:8px;
+
+    cursor:pointer;
+
+  }
+
+
+  .nsh-13e-search-button svg{
+
+    width:14px;
+    height:14px;
+
+  }
+
+
+  .nsh-13e-result-strip{
+
+    display:flex;
+
+    align-items:center;
+    justify-content:space-between;
+
+    gap:12px;
+
+    padding:
+      9px 15px;
+
+    color:#759aa8;
+
+    font-size:7px;
+
+  }
+
+
+
+  /* =====================================================
+     PAGINATION
+     ===================================================== */
+
+  .nsh-13e-pagination{
+
+    display:flex;
+
+    justify-content:center;
+    align-items:center;
+
+    gap:12px;
+
+    padding:
+      16px 14px;
+
+    border-top:
+      1px solid
+      rgba(61,204,241,.10);
+
+  }
+
+
+  .nsh-13e-pagination button{
+
+    min-width:105px;
+    height:37px;
+
+    display:flex;
+
+    align-items:center;
+    justify-content:center;
+
+    gap:5px;
+
+    border-radius:9px;
+
+    border:
+      1px solid #245064;
+
+    background:#061b25;
+
+    color:#b9dce8;
+
+    font-size:8px;
+    font-weight:900;
+
+    cursor:pointer;
+
+  }
+
+
+  .nsh-13e-pagination button:hover:not(:disabled){
+
+    border-color:#42e7ff;
+
+    color:#42e7ff;
+
+  }
+
+
+  .nsh-13e-pagination button:disabled{
+
+    opacity:.28;
+
+    cursor:not-allowed;
+
+  }
+
+
+  .nsh-13e-pagination svg{
+
+    width:13px;
+    height:13px;
+
+  }
+
+
+  .nsh-13e-page-chip{
+
+    height:37px;
+
+    min-width:82px;
+
+    display:flex;
+
+    align-items:center;
+    justify-content:center;
+
+    gap:5px;
+
+    padding:0 10px;
+
+    border-radius:10px;
+
+    border:
+      1px solid
+      rgba(67,234,255,.18);
+
+    background:
+      rgba(2,16,23,.60);
+
+  }
+
+
+  .nsh-13e-page-chip small{
+
+    color:#648b9a;
+
+    font-size:6px;
+
+  }
+
+
+  .nsh-13e-page-chip b{
+
+    color:#48e8ff;
+
+    font-size:14px;
+
+  }
+
+
+  .nsh-13e-page-chip span{
+
+    color:#8baab5;
+
+    font-size:8px;
+
+  }
+
+
+
+  /* =====================================================
+     EMPTY
+     ===================================================== */
+
+  .nsh-13e-empty{
+
+    min-height:180px;
+
+    display:flex;
+
+    align-items:center;
+    justify-content:center;
+
+    flex-direction:column;
+
+    gap:7px;
+
+    color:#6f919e;
+
+  }
+
+
+  .nsh-13e-empty svg{
+
+    width:30px;
+    height:30px;
+
+    color:#3dddf9;
+
+    opacity:.6;
+
+  }
+
+
+  .nsh-13e-empty strong{
+
+    color:#dceff5;
+
+    font-size:11px;
+
+  }
+
+
+  .nsh-13e-empty span{
+
+    font-size:7px;
+
+  }
+
+
+
+  /* =====================================================
+     METERS REGISTRY
+     ===================================================== */
+
+  .nsh-meter-registry-13e{
+
+    overflow:hidden;
+
+    border-radius:19px;
+
+    border:
+      1px solid #173d4b;
+
+    background:
+      linear-gradient(
+        145deg,
+        #061c27,
+        #03141c
+      );
+
+  }
+
+
+  .nsh-13e-center-head{
+
+    display:flex;
+
+    align-items:center;
+    justify-content:space-between;
+
+    gap:15px;
+
+    padding:15px;
+
+  }
+
+
+  .nsh-13e-center-head h3{
+
+    margin:2px 0 0;
+
+    color:#effaff;
+
+    font-size:13px;
+
+  }
+
+
+  .nsh-13e-center-head p{
+
+    margin:4px 0 0;
+
+    color:#698d9a;
+
+    font-size:7px;
+
+  }
+
+
+  .nsh-13e-eyebrow{
+
+    color:#3edff9;
+
+    font-size:6px;
+
+    font-weight:900;
+
+    letter-spacing:.8px;
+
+  }
+
+
+  .nsh-meter-grid-13e{
+
+    display:grid;
+
+    grid-template-columns:
+      repeat(
+        3,
+        minmax(260px,1fr)
+      );
+
+    gap:12px;
+
+    padding:14px;
+
+  }
+
+
+  .nsh-meter-unit-13e{
+
+    --meter13e:#43eaff;
+
+    position:relative;
+
+    overflow:hidden;
+
+    padding:13px;
+
+    border-radius:16px;
+
+    border:
+      1px solid
+      color-mix(
+        in srgb,
+        var(--meter13e) 28%,
+        #183c49
+      );
+
+    background:
+      radial-gradient(
+        circle at 90% 0%,
+        color-mix(
+          in srgb,
+          var(--meter13e) 8%,
+          transparent
+        ),
+        transparent 38%
+      ),
+      linear-gradient(
+        145deg,
+        #071e29,
+        #03141c
+      );
+
+  }
+
+
+  .nsh-meter-unit-13e.inactive{
+
+    --meter13e:#ff5d69;
+
+    opacity:.72;
+
+  }
+
+
+  .nsh-meter-unit-head{
+
+    display:flex;
+
+    align-items:flex-start;
+    justify-content:space-between;
+
+    gap:8px;
+
+    margin-bottom:11px;
+
+  }
+
+
+  .nsh-meter-unit-head span{
+
+    display:inline-block;
+
+    padding:
+      3px 6px;
+
+    border-radius:999px;
+
+    border:
+      1px solid
+      color-mix(
+        in srgb,
+        var(--meter13e) 45%,
+        transparent
+      );
+
+    color:var(--meter13e);
+
+    font-size:5px;
+    font-weight:900;
+
+  }
+
+
+  .nsh-meter-unit-head h4{
+
+    margin:
+      6px 0 0;
+
+    color:#f1fbff;
+
+    font-size:11px;
+
+  }
+
+
+  .nsh-meter-unit-head small{
+
+    color:#607f8b;
+
+    font-size:6px;
+
+  }
+
+
+  .nsh-meter-unit-icon{
+
+    width:38px;
+    height:38px;
+
+    display:grid;
+    place-items:center;
+
+    border-radius:11px;
+
+    color:var(--meter13e);
+
+    border:
+      1px solid
+      color-mix(
+        in srgb,
+        var(--meter13e) 35%,
+        transparent
+      );
+
+    background:#03151d;
+
+  }
+
+
+  .nsh-meter-unit-icon svg{
+
+    width:19px;
+    height:19px;
+
+  }
+
+
+  .nsh-meter-led-13e{
+
+    position:relative;
+
+    height:64px;
+
+    display:flex;
+
+    align-items:center;
+    justify-content:center;
+
+    margin-bottom:9px;
+
+    border-radius:10px;
+
+    border:
+      1px solid
+      color-mix(
+        in srgb,
+        var(--meter13e) 24%,
+        #102d36
+      );
+
+    background:
+      linear-gradient(
+        180deg,
+        #010806,
+        #03120b
+      );
+
+    box-shadow:
+      inset 0 0 25px
+      rgba(0,0,0,.95);
+
+  }
+
+
+  .nsh-meter-led-13e strong{
+
+    color:#8dff58;
+
+    font-family:
+      Consolas,
+      monospace;
+
+    font-size:22px;
+
+    letter-spacing:4px;
+
+    text-shadow:
+      0 0 6px #52ff3c;
+
+  }
+
+
+  .nsh-meter-led-13e small{
+
+    position:absolute;
+
+    right:8px;
+    bottom:5px;
+
+    color:#b9e7c2;
+
+    font-size:5px;
+
+  }
+
+
+  .nsh-meter-wave-13e{
+
+    position:relative;
+
+    height:32px;
+
+    margin-bottom:10px;
+
+    overflow:hidden;
+
+    border-radius:8px;
+
+    border:
+      1px solid #163744;
+
+    background:#03131b;
+
+  }
+
+
+  .nsh-meter-wave-13e svg{
+
+    position:absolute;
+
+    left:7px;
+    top:4px;
+
+    width:125px;
+    height:24px;
+
+  }
+
+
+  .nsh-meter-wave-13e polyline{
+
+    fill:none;
+
+    stroke:var(--meter13e);
+
+    stroke-width:2;
+
+    stroke-dasharray:8 6;
+
+    filter:
+      drop-shadow(
+        0 0 4px
+        var(--meter13e)
+      );
+
+    animation:
+      areaElectricFlow
+      .55s linear infinite;
+
+  }
+
+
+  .nsh-meter-wave-13e span{
+
+    position:absolute;
+
+    right:8px;
+    top:11px;
+
+    color:var(--meter13e);
+
+    font-size:5px;
+
+    font-weight:900;
+
+  }
+
+
+  .nsh-meter-data-13e{
+
+    display:grid;
+
+    grid-template-columns:
+      1fr 1fr;
+
+    gap:7px;
+
+  }
+
+
+  .nsh-meter-data-13e > div{
+
+    min-width:0;
+
+    padding:7px;
+
+    border-radius:8px;
+
+    border:
+      1px solid #173b48;
+
+    background:
+      rgba(2,14,20,.52);
+
+  }
+
+
+  .nsh-meter-data-13e small{
+
+    display:block;
+
+    margin-bottom:4px;
+
+    color:#688a97;
+
+    font-size:6px;
+
+  }
+
+
+  .nsh-meter-data-13e input{
+
+    width:100%;
+
+    box-sizing:border-box;
+
+    border:none;
+
+    outline:none;
+
+    background:transparent;
+
+    color:#eaf8fc;
+
+    font-size:10px;
+
+  }
+
+
+  .nsh-meter-data-13e b{
+
+    display:block;
+
+    color:#eaf8fc;
+
+    font-size:8px;
+
+  }
+
+
+
+  /* =====================================================
+     DASHBOARD 13E
+     ===================================================== */
+
+  .nsh-scale-dashboard-hero{
+
+    margin-bottom:15px;
+
+  }
+
+
+  .nsh-dashboard-live-row{
+
+    display:flex;
+
+    flex-wrap:wrap;
+
+    gap:7px;
+
+    margin-top:13px;
+
+  }
+
+
+  .nsh-dashboard-live-row span{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:5px;
+
+    padding:
+      5px 8px;
+
+    border-radius:999px;
+
+    border:
+      1px solid
+      rgba(58,232,255,.18);
+
+    background:
+      rgba(58,232,255,.04);
+
+    color:#58e6ff;
+
+    font-size:6px;
+    font-weight:900;
+
+  }
+
+
+  .nsh-dashboard-live-row svg{
+
+    width:11px;
+    height:11px;
+
+  }
+
+
+  .nsh-grid-fallback{
+
+    position:absolute;
+
+    inset:0;
+
+    display:flex;
+
+    flex-direction:column;
+
+    align-items:center;
+    justify-content:center;
+
+    gap:5px;
+
+    color:#4be5ff;
+
+  }
+
+
+  .nsh-grid-fallback svg{
+
+    width:38px;
+    height:38px;
+
+  }
+
+
+  .nsh-grid-fallback b{
+
+    font-size:10px;
+
+  }
+
+
+  .nsh-grid-fallback small{
+
+    color:#39ef78;
+
+    font-size:6px;
+
+  }
+
+
+  .nsh-dashboard-health{
+
+    margin-top:15px;
+
+    padding:14px;
+
+    border-radius:18px;
+
+    border:
+      1px solid #173d4b;
+
+    background:
+      linear-gradient(
+        145deg,
+        #061c27,
+        #03141c
+      );
+
+  }
+
+
+  .nsh-dashboard-health-head{
+
+    display:flex;
+
+    align-items:center;
+    justify-content:space-between;
+
+    gap:12px;
+
+    margin-bottom:12px;
+
+  }
+
+
+  .nsh-dashboard-health-head span{
+
+    color:#3ce5ff;
+
+    font-size:6px;
+    font-weight:900;
+
+  }
+
+
+  .nsh-dashboard-health-head h3{
+
+    margin:3px 0 0;
+
+    color:#edfaff;
+
+    font-size:12px;
+
+  }
+
+
+  .nsh-dashboard-health-kpi{
+
+    display:flex;
+
+    align-items:baseline;
+
+    gap:5px;
+
+    padding:
+      7px 10px;
+
+    border-radius:10px;
+
+    border:
+      1px solid
+      rgba(57,239,120,.20);
+
+    background:
+      rgba(57,239,120,.04);
+
+  }
+
+
+  .nsh-dashboard-health-kpi strong{
+
+    color:#42ef7d;
+
+    font-size:17px;
+
+  }
+
+
+  .nsh-dashboard-health-kpi small{
+
+    color:#69a981;
+
+    font-size:6px;
+
+  }
+
+
+
+  /* =====================================================
+     13D METER PHOTO CENTER FIX
+     ===================================================== */
+
+  .nsh-meter-admin-center{
+
+    overflow:hidden;
+
+  }
+
+
+  .nsh-meter-admin-head.nsh-meter-head-13e{
+
+    display:flex !important;
+
+    align-items:center !important;
+
+    justify-content:
+      space-between !important;
+
+    gap:18px !important;
+
+    padding:
+      17px 18px !important;
+
+    margin:0 !important;
+
+    border-bottom:
+      1px solid
+      rgba(59,221,255,.10);
+
+  }
+
+
+  .nsh-meter-admin-head.nsh-meter-head-13e
+  > div:first-child{
+
+    flex:1;
+
+  }
+
+
+  .nsh-meter-count-13e{
+
+    min-width:105px;
+
+    min-height:65px;
+
+    display:flex !important;
+
+    flex-direction:column;
+
+    align-items:center;
+    justify-content:center;
+
+    flex:0 0 auto;
+
+    padding:
+      8px 12px !important;
+
+    border-radius:13px;
+
+    border:
+      1px solid
+      rgba(67,234,255,.22);
+
+    background:
+      linear-gradient(
+        145deg,
+        rgba(67,234,255,.07),
+        rgba(2,18,25,.85)
+      );
+
+  }
+
+
+  .nsh-meter-count-13e strong{
+
+    color:#9aff64 !important;
+
+    font-size:22px !important;
+
+  }
+
+
+  .nsh-meter-count-13e small{
+
+    color:#7c9eaa !important;
+
+    font-size:7px !important;
+
+  }
+
+
+  .nsh-meter-admin-center
+  .nsh-scale-toolbar{
+
+    margin:
+      0 !important;
+
+    padding:
+      13px 18px !important;
+
+    border-top:
+      1px solid
+      rgba(255,255,255,.025);
+
+    border-bottom:
+      1px solid
+      rgba(67,234,255,.08);
+
+  }
+
+
+  .nsh-meter-admin-center
+  .nsh-scale-summary{
+
+    margin:0 !important;
+
+    padding:
+      9px 18px !important;
+
+  }
+
+
+
+  /* =====================================================
+     DESKTOP RESPONSIVE
+     ===================================================== */
+
+  @media(max-width:1250px){
+
+    .nsh-meter-grid-13e{
+
+      grid-template-columns:
+        repeat(
+          2,
+          minmax(260px,1fr)
+        );
+
+    }
+
+  }
+
+
+
+  /* =====================================================
+     MOBILE ADMIN
+     ===================================================== */
+
+  @media(max-width:800px){
+
+    .nsh-13e-toolbar{
+
+      grid-template-columns:1fr;
+
+    }
+
+
+    .nsh-13e-search-button{
+
+      width:100%;
+
+    }
+
+
+    .nsh-13e-center-head{
+
+      align-items:flex-start;
+
+      flex-direction:column;
+
+    }
+
+
+    .nsh-meter-grid-13e{
+
+      grid-template-columns:1fr;
+
+    }
+
+
+    .nsh-meter-data-13e{
+
+      grid-template-columns:1fr 1fr;
+
+    }
+
+
+    .nsh-13e-pagination{
+
+      gap:6px;
+
+    }
+
+
+    .nsh-13e-pagination button{
+
+      min-width:85px;
+
+    }
+
+
+    .nsh-meter-admin-head.nsh-meter-head-13e{
+
+      align-items:flex-start
+      !important;
+
+    }
+
+
+    .nsh-meter-count-13e{
+
+      min-width:76px;
+
+    }
+
+  }
+
+
+  `;
+
+
+  document.head
+    .appendChild(st);
+
+}
+
+
+injectAdminScale13EStyles();
+
+
+/* =========================================================
+   INITIAL VISUAL CHECK
+   ========================================================= */
+
+setTimeout(
+  nsh13EFixMeterControl,
+  500
+);
+
+
+/* =========================================================
+   END PART 13E-A
+   ========================================================= */
+
 injectPhoneAuthStyles();
 
 preparePhoneLoginUI();
