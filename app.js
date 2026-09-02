@@ -28309,6 +28309,4075 @@ setTimeout(
    END PART 13E-A.3
    ========================================================= */
 
+/* =========================================================
+   PART 13E-B
+   500+ SCALE
+   BILLING + PAYMENTS + INCIDENTS + ALERTS
+   PREMIUM DESIGN PRESERVED
+   ========================================================= */
+
+
+/* =========================================================
+   STATE
+   ========================================================= */
+
+const NSH_FINANCE_PAGE_SIZE_13EB = 25;
+const NSH_FAULT_PAGE_SIZE_13EB = 24;
+const NSH_ALERT_PAGE_SIZE_13EB = 25;
+
+let nshInvoice13EB = {
+  page:1,
+  search:"",
+  status:"all",
+  month:"",
+  pages:1,
+  total:0
+};
+
+let nshPayment13EB = {
+  page:1,
+  search:"",
+  method:"all",
+  pages:1,
+  total:0
+};
+
+let nshFault13EB = {
+  page:1,
+  search:"",
+  status:"active",
+  pages:1,
+  total:0
+};
+
+let nshAlert13EB = {
+  page:1,
+  search:"",
+  archive:"active",
+  pages:1,
+  total:0
+};
+
+
+/* =========================================================
+   HELPERS
+   ========================================================= */
+
+function nsh13EBEsc(v){
+
+  return String(v ?? "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+
+}
+
+
+function nsh13EBPages(
+  total,
+  size
+){
+
+  return Math.max(
+    1,
+    Math.ceil(
+      Number(total||0) /
+      size
+    )
+  );
+
+}
+
+
+function nsh13EBRange(
+  page,
+  size,
+  length,
+  total
+){
+
+  let from =
+    total
+      ? ((page-1)*size)+1
+      : 0;
+
+  let to =
+    Math.min(
+      ((page-1)*size)+length,
+      total
+    );
+
+  return `${from} – ${to} من ${total}`;
+
+}
+
+
+/* =========================================================
+   SHARED PREMIUM SCALE TOOLBAR
+   ========================================================= */
+
+function nshScaleToolbar13EB({
+  searchId,
+  searchValue,
+  searchPlaceholder,
+  selectId,
+  selectHtml,
+  applyFn,
+  extra=""
+}){
+
+  return `
+
+    <div class="nsh-finance-scale-toolbar">
+
+      <div class="nsh-finance-scale-search">
+
+        <i data-lucide="search"></i>
+
+        <input
+          id="${searchId}"
+          value="${nsh13EBEsc(searchValue)}"
+          placeholder="${searchPlaceholder}"
+          onkeydown="
+            if(event.key==='Enter'){
+              ${applyFn}();
+            }
+          "
+        >
+
+      </div>
+
+      ${
+        selectId
+        ?`
+          <select
+            id="${selectId}"
+            onchange="${applyFn}()"
+          >
+            ${selectHtml}
+          </select>
+        `
+        :""
+      }
+
+      ${extra}
+
+      <button
+        class="nsh-scale-go"
+        onclick="${applyFn}()"
+      >
+
+        <i data-lucide="search"></i>
+
+        بحث
+
+      </button>
+
+    </div>
+
+  `;
+
+}
+
+
+function nshPaginator13EB(
+  current,
+  pages,
+  fn
+){
+
+  return `
+
+    <div class="nsh-13eb-pagination">
+
+      <button
+        ${
+          current<=1
+            ?"disabled"
+            :""
+        }
+        onclick="
+          ${fn}(
+            ${current-1}
+          )
+        "
+      >
+
+        <i data-lucide="chevron-right"></i>
+
+        السابق
+
+      </button>
+
+
+      <div class="nsh-13eb-page">
+
+        <small>
+          PAGE
+        </small>
+
+        <b>
+          ${current}
+        </b>
+
+        <span>
+          /
+          ${pages}
+        </span>
+
+      </div>
+
+
+      <button
+        ${
+          current>=pages
+            ?"disabled"
+            :""
+        }
+        onclick="
+          ${fn}(
+            ${current+1}
+          )
+        "
+      >
+
+        التالي
+
+        <i data-lucide="chevron-left"></i>
+
+      </button>
+
+    </div>
+
+  `;
+
+}
+
+
+/* =========================================================
+   INVOICE METER OPTIONS
+   ONLY 50 RESULTS
+   ========================================================= */
+
+async function nshLoadInvoiceMeters13EB(
+  search=""
+){
+
+  let r =
+    await sb.rpc(
+      "admin_invoice_meter_options",
+      {
+        p_search:
+          search || "",
+
+        p_limit:
+          50
+      }
+    );
+
+
+  if(r.error){
+
+    console.error(
+      "Invoice meters 13EB:",
+      r.error
+    );
+
+    return [];
+
+  }
+
+
+  return r.data||[];
+
+}
+
+
+function nshInvoiceMeterOptions13EB(
+  rows
+){
+
+  return rows.map(
+    m=>`
+
+      <option
+        value="${m.id}"
+        data-customer="${m.customer_id}"
+        data-last="${
+          Number(
+            m.last_reading||0
+          )
+        }"
+      >
+
+        ${
+          nsh13EBEsc(
+            m.customer_name||"-"
+          )
+        }
+
+        ·
+
+        ${
+          nsh13EBEsc(
+            m.meter_number||"-"
+          )
+        }
+
+      </option>
+
+    `
+  ).join("");
+
+}
+
+
+window.nshSearchInvoiceMeter13EB =
+async function(){
+
+  let q =
+    A(
+      "ivMeterSearch13EB"
+    )?.value?.trim() || "";
+
+
+  let rows =
+    await nshLoadInvoiceMeters13EB(
+      q
+    );
+
+
+  let select =
+    A("ivMeter");
+
+
+  if(!select){
+    return;
+  }
+
+
+  select.innerHTML =
+    nshInvoiceMeterOptions13EB(
+      rows
+    );
+
+
+  setInvoiceMeterDefaults();
+
+  icons();
+
+};
+
+
+
+/* =========================================================
+   BILLING CONTROL CENTER
+   ========================================================= */
+
+invoices =
+async function(c){
+
+  let offset =
+    (
+      nshInvoice13EB.page-1
+    )*
+    NSH_FINANCE_PAGE_SIZE_13EB;
+
+
+  let month =
+    nshInvoice13EB.month
+      ? nshInvoice13EB.month+"-01"
+      : null;
+
+
+  let [
+    pageResult,
+    settingsResult,
+    meterRows
+  ] =
+  await Promise.all([
+
+    sb.rpc(
+      "admin_invoice_page",
+      {
+
+        p_search:
+          nshInvoice13EB.search,
+
+        p_status:
+          nshInvoice13EB.status,
+
+        p_month:
+          month,
+
+        p_limit:
+          NSH_FINANCE_PAGE_SIZE_13EB,
+
+        p_offset:
+          offset
+
+      }
+    ),
+
+    sb
+      .from("app_settings")
+      .select(
+        "kwh_price,currency"
+      )
+      .eq(
+        "id",
+        1
+      )
+      .single(),
+
+    nshLoadInvoiceMeters13EB("")
+
+  ]);
+
+
+  if(pageResult.error){
+
+    console.error(
+      "Invoices 13EB:",
+      pageResult.error
+    );
+
+  }
+
+
+  let iv =
+    pageResult.data||[];
+
+
+  let meta =
+    iv[0]||{};
+
+
+  let total =
+    Number(
+      meta.total_count||0
+    );
+
+
+  nshInvoice13EB.total =
+    total;
+
+  nshInvoice13EB.pages =
+    nsh13EBPages(
+      total,
+      NSH_FINANCE_PAGE_SIZE_13EB
+    );
+
+
+  if(
+    nshInvoice13EB.page >
+    nshInvoice13EB.pages
+  ){
+
+    nshInvoice13EB.page =
+      nshInvoice13EB.pages;
+
+    return invoices(c);
+
+  }
+
+
+  let s =
+    settingsResult.data||
+    {
+      kwh_price:.65,
+      currency:"USD"
+    };
+
+
+  /* Keep printInvoice() compatible */
+
+  window._invoices =
+    iv.map(
+      i=>({
+
+        ...i,
+
+        profiles:{
+          full_name:
+            i.customer_name,
+
+          phone:
+            i.customer_phone,
+
+          areas:{
+            name:
+              i.area_name
+          }
+        },
+
+        meters:{
+          meter_number:
+            i.meter_number
+        }
+
+      })
+    );
+
+
+  let meterOptions =
+    nshInvoiceMeterOptions13EB(
+      meterRows
+    );
+
+
+  let totalValue =
+    Number(
+      meta.total_value||0
+    );
+
+  let paidValue =
+    Number(
+      meta.paid_value||0
+    );
+
+  let outstanding =
+    Number(
+      meta.outstanding_value||0
+    );
+
+
+  c.innerHTML =
+
+    header(
+      "الفواتير",
+      "Billing Control Center — إصدار الفواتير ومتابعة الاستهلاك والتحصيل."
+    )
+
+    +
+
+    `
+
+      <!-- ===============================================
+           PREMIUM FINANCE KPIs
+           =============================================== -->
+
+      <section class="finance-summary">
+
+        <article class="finance-stat total">
+
+          <div class="finance-stat-icon">
+            <i data-lucide="files"></i>
+          </div>
+
+          <div>
+
+            <small>
+              إجمالي الفواتير
+            </small>
+
+            <b>
+              ${money(totalValue)}
+            </b>
+
+            <em>
+              ${total} INVOICES
+            </em>
+
+          </div>
+
+        </article>
+
+
+        <article class="finance-stat paid">
+
+          <div class="finance-stat-icon">
+            <i data-lucide="badge-check"></i>
+          </div>
+
+          <div>
+
+            <small>
+              فواتير مدفوعة
+            </small>
+
+            <b>
+              ${money(paidValue)}
+            </b>
+
+            <em>
+              ${
+                Number(
+                  meta.paid_count||0
+                )
+              }
+              PAID
+            </em>
+
+          </div>
+
+        </article>
+
+
+        <article class="finance-stat partial">
+
+          <div class="finance-stat-icon">
+            <i data-lucide="circle-dollar-sign"></i>
+          </div>
+
+          <div>
+
+            <small>
+              مدفوعة جزئيًا
+            </small>
+
+            <b>
+              ${
+                Number(
+                  meta.partial_count||0
+                )
+              }
+            </b>
+
+            <em>
+              PARTIAL
+            </em>
+
+          </div>
+
+        </article>
+
+
+        <article class="finance-stat unpaid">
+
+          <div class="finance-stat-icon">
+            <i data-lucide="triangle-alert"></i>
+          </div>
+
+          <div>
+
+            <small>
+              الرصيد المستحق
+            </small>
+
+            <b>
+              ${money(outstanding)}
+            </b>
+
+            <em>
+              ${
+                Number(
+                  meta.unpaid_count||0
+                )
+              }
+              UNPAID
+            </em>
+
+          </div>
+
+        </article>
+
+      </section>
+
+
+
+      <!-- ===============================================
+           PREMIUM BILLING TERMINAL
+           =============================================== -->
+
+      <section class="billing-terminal">
+
+        <div class="billing-terminal-head">
+
+          <div class="billing-terminal-title">
+
+            <div class="billing-terminal-icon">
+
+              <i data-lucide="calculator"></i>
+
+            </div>
+
+            <div>
+
+              <h3>
+                إصدار فاتورة جديدة
+              </h3>
+
+              <p>
+                أدخل القراءة الحالية فقط —
+                النظام يحسب الاستهلاك والقيمة تلقائيًا.
+              </p>
+
+            </div>
+
+          </div>
+
+
+          <span class="billing-price-tag">
+
+            CURRENT RATE ·
+
+            ${money(s.kwh_price)}
+
+            / kWh
+
+          </span>
+
+        </div>
+
+
+        <!-- Meter search prevents loading 500 options -->
+
+        <div class="nsh-terminal-search">
+
+          <i data-lucide="search"></i>
+
+          <input
+            id="ivMeterSearch13EB"
+            placeholder="ابحث باسم المشترك أو رقم الهاتف أو رقم العداد..."
+            onkeydown="
+              if(event.key==='Enter'){
+                nshSearchInvoiceMeter13EB();
+              }
+            "
+          >
+
+          <button
+            onclick="nshSearchInvoiceMeter13EB()"
+          >
+            بحث عن عداد
+          </button>
+
+        </div>
+
+
+        <div class="billing-form-grid">
+
+          <div class="billing-field span2">
+
+            <label>
+              المشترك والعداد
+            </label>
+
+            <select
+              id="ivMeter"
+              onchange="
+                setInvoiceMeterDefaults()
+              "
+            >
+
+              ${meterOptions}
+
+            </select>
+
+          </div>
+
+
+          <div class="billing-field">
+
+            <label>
+              شهر الفاتورة
+            </label>
+
+            <input
+              id="ivMonth"
+              type="month"
+            >
+
+          </div>
+
+
+          <div class="billing-field">
+
+            <label>
+              الاستحقاق
+            </label>
+
+            <input
+              id="ivDue"
+              type="date"
+            >
+
+          </div>
+
+
+          <div class="billing-field">
+
+            <label>
+              القراءة السابقة
+            </label>
+
+            <input
+              id="ivPrev"
+              type="text"
+              readonly
+            >
+
+          </div>
+
+
+          <div class="billing-field">
+
+            <label>
+              القراءة الحالية
+            </label>
+
+            <input
+              id="ivCur"
+              type="text"
+              inputmode="numeric"
+              autocomplete="off"
+              placeholder="أدخل القراءة الحالية"
+              oninput="
+                updateInvoicePreview()
+              "
+            >
+
+          </div>
+
+
+          <div class="billing-field">
+
+            <label>
+              سعر 1 kWh
+            </label>
+
+            <input
+              id="ivPrice"
+              type="text"
+              value="${
+                Number(
+                  s.kwh_price
+                ).toFixed(2)
+              }"
+              readonly
+            >
+
+          </div>
+
+
+          <div class="billing-field">
+
+            <label>
+              الاستهلاك kWh
+            </label>
+
+            <input
+              id="ivConsumption"
+              type="text"
+              readonly
+            >
+
+          </div>
+
+        </div>
+
+
+        <div class="billing-preview">
+
+          <div class="billing-preview-box">
+
+            <small>
+              PREVIOUS READING
+            </small>
+
+            <strong
+              id="billingPrevVisual"
+            >
+              —
+            </strong>
+
+          </div>
+
+
+          <div class="billing-preview-box">
+
+            <small>
+              CONSUMPTION
+            </small>
+
+            <strong
+              id="billingConsumptionVisual"
+            >
+              0 kWh
+            </strong>
+
+          </div>
+
+
+          <div class="billing-preview-box amount">
+
+            <small>
+              INVOICE TOTAL
+            </small>
+
+            <strong
+              id="billingAmountVisual"
+            >
+              $0.00
+            </strong>
+
+          </div>
+
+        </div>
+
+
+        <input
+          id="ivAmount"
+          type="hidden"
+          readonly
+        >
+
+
+        <button
+          class="billing-save"
+          onclick="createInvoice()"
+        >
+
+          <i data-lucide="file-plus-2"></i>
+
+          إصدار وحفظ الفاتورة
+
+        </button>
+
+      </section>
+
+
+
+      <!-- ===============================================
+           BILLING LEDGER
+           =============================================== -->
+
+      <section class="billing-ledger">
+
+        <div class="billing-ledger-head">
+
+          <div>
+
+            <h3>
+              سجل الفواتير
+            </h3>
+
+            <small>
+              Billing Ledger · Server-side · 25 records
+            </small>
+
+          </div>
+
+
+          <span class="ledger-count">
+            ${total} RECORDS
+          </span>
+
+        </div>
+
+
+        ${
+          nshScaleToolbar13EB({
+
+            searchId:
+              "nshInvoiceSearch13EB",
+
+            searchValue:
+              nshInvoice13EB.search,
+
+            searchPlaceholder:
+              "بحث باسم المشترك، الهاتف، المنطقة أو رقم العداد...",
+
+            selectId:
+              "nshInvoiceStatus13EB",
+
+            selectHtml:`
+
+              <option
+                value="all"
+                ${
+                  nshInvoice13EB.status==="all"
+                    ?"selected"
+                    :""
+                }
+              >
+                كل الحالات
+              </option>
+
+              <option
+                value="unpaid"
+                ${
+                  nshInvoice13EB.status==="unpaid"
+                    ?"selected"
+                    :""
+                }
+              >
+                غير مدفوع
+              </option>
+
+              <option
+                value="partial"
+                ${
+                  nshInvoice13EB.status==="partial"
+                    ?"selected"
+                    :""
+                }
+              >
+                جزئي
+              </option>
+
+              <option
+                value="paid"
+                ${
+                  nshInvoice13EB.status==="paid"
+                    ?"selected"
+                    :""
+                }
+              >
+                مدفوع
+              </option>
+
+            `,
+
+            applyFn:
+              "nshInvoiceApply13EB",
+
+            extra:`
+
+              <input
+                class="nsh-scale-month"
+                id="nshInvoiceMonth13EB"
+                type="month"
+                value="${
+                  nsh13EBEsc(
+                    nshInvoice13EB.month
+                  )
+                }"
+                onchange="
+                  nshInvoiceApply13EB()
+                "
+              >
+
+            `
+
+          })
+        }
+
+
+        <div class="nsh-scale-result">
+
+          <span>
+
+            ${
+              nsh13EBRange(
+                nshInvoice13EB.page,
+                NSH_FINANCE_PAGE_SIZE_13EB,
+                iv.length,
+                total
+              )
+            }
+
+          </span>
+
+          <span>
+            SERVER-SIDE PAGINATION
+          </span>
+
+        </div>
+
+
+        <div class="invoice-ledger-list">
+
+          ${
+            iv.map(
+              i=>{
+
+                let consumption =
+                  i.consumption_kwh??0;
+
+                let status =
+                  i.status||"unpaid";
+
+
+                return `
+
+                  <article
+                    class="
+                      invoice-ledger-row
+                      ${status}
+                    "
+                  >
+
+                    <div class="invoice-client">
+
+                      <div class="invoice-client-icon">
+
+                        <i data-lucide="user-round"></i>
+
+                      </div>
+
+                      <div>
+
+                        <b>
+                          ${
+                            nsh13EBEsc(
+                              i.customer_name||"-"
+                            )
+                          }
+                        </b>
+
+                        <small>
+
+                          METER ·
+
+                          ${
+                            nsh13EBEsc(
+                              i.meter_number||"-"
+                            )
+                          }
+
+                        </small>
+
+                      </div>
+
+                    </div>
+
+
+                    <div class="ledger-cell">
+
+                      <small>
+                        الشهر
+                      </small>
+
+                      <b>
+                        ${i.billing_month||"-"}
+                      </b>
+
+                    </div>
+
+
+                    <div class="ledger-cell hide-md">
+
+                      <small>
+                        القراءة
+                      </small>
+
+                      <b>
+
+                        ${i.previous_reading}
+
+                        →
+
+                        ${i.current_reading}
+
+                      </b>
+
+                    </div>
+
+
+                    <div class="ledger-cell hide-md">
+
+                      <small>
+                        الاستهلاك
+                      </small>
+
+                      <b>
+                        ${consumption} kWh
+                      </b>
+
+                    </div>
+
+
+                    <div class="ledger-cell">
+
+                      <small>
+                        السعر
+                      </small>
+
+                      <b>
+
+                        $${
+                          Number(
+                            i.price_per_kwh||
+                            i.kwh_price||
+                            0
+                          ).toFixed(2)
+                        }
+
+                      </b>
+
+                    </div>
+
+
+                    <div class="ledger-cell ledger-amount">
+
+                      <small>
+                        القيمة
+                      </small>
+
+                      <b>
+                        ${money(i.amount)}
+                      </b>
+
+                    </div>
+
+
+                    <div>
+
+                      <span class="invoice-state">
+
+                        ${
+                          invoiceStatusEnglish(
+                            status
+                          )
+                        }
+
+                      </span>
+
+
+                      <div class="ledger-actions">
+
+                        <button
+                          class="ledger-action"
+                          title="طباعة"
+                          onclick="
+                            printInvoice(
+                              '${i.id}'
+                            )
+                          "
+                        >
+
+                          <i data-lucide="printer"></i>
+
+                        </button>
+
+
+                        ${
+                          status!=="paid"
+
+                          ?`
+
+                            <button
+                              class="ledger-action pay"
+                              title="تسديد"
+                              onclick="
+                                renderAdmin(
+                                  'payments'
+                                )
+                              "
+                            >
+
+                              <i data-lucide="circle-dollar-sign"></i>
+
+                            </button>
+
+                          `
+
+                          :""
+                        }
+
+                      </div>
+
+                    </div>
+
+                  </article>
+
+                `;
+
+              }
+            ).join("")
+
+            ||
+
+            `
+
+              <div class="finance-empty">
+
+                <i data-lucide="file-x-2"></i>
+
+                <div>
+                  لا توجد فواتير مطابقة
+                </div>
+
+              </div>
+
+            `
+          }
+
+        </div>
+
+
+        ${
+          nshPaginator13EB(
+            nshInvoice13EB.page,
+            nshInvoice13EB.pages,
+            "nshInvoicePage13EB"
+          )
+        }
+
+      </section>
+
+    `;
+
+
+  setInvoiceMeterDefaults();
+
+  syncBillingVisuals();
+
+  icons();
+
+};
+
+
+
+window.nshInvoiceApply13EB =
+async function(){
+
+  nshInvoice13EB.search =
+    A(
+      "nshInvoiceSearch13EB"
+    )?.value?.trim() || "";
+
+  nshInvoice13EB.status =
+    A(
+      "nshInvoiceStatus13EB"
+    )?.value || "all";
+
+  nshInvoice13EB.month =
+    A(
+      "nshInvoiceMonth13EB"
+    )?.value || "";
+
+  nshInvoice13EB.page = 1;
+
+  await renderAdmin(
+    "invoices"
+  );
+
+};
+
+
+window.nshInvoicePage13EB =
+async function(page){
+
+  if(
+    page<1 ||
+    page>
+      nshInvoice13EB.pages
+  ){
+    return;
+  }
+
+  nshInvoice13EB.page =
+    page;
+
+  await renderAdmin(
+    "invoices"
+  );
+
+  document
+    .querySelector(
+      ".billing-ledger"
+    )
+    ?.scrollIntoView({
+      behavior:"smooth",
+      block:"start"
+    });
+
+};
+
+
+
+/* =========================================================
+   PAYMENT INVOICE OPTIONS
+   ========================================================= */
+
+async function nshLoadPayInvoices13EB(
+  search=""
+){
+
+  let r =
+    await sb.rpc(
+      "admin_outstanding_invoice_options",
+      {
+
+        p_search:
+          search,
+
+        p_limit:
+          50
+
+      }
+    );
+
+
+  if(r.error){
+
+    console.error(
+      "Payment options 13EB:",
+      r.error
+    );
+
+    return [];
+
+  }
+
+
+  return r.data||[];
+
+}
+
+
+function nshPayOptionsHtml13EB(
+  rows
+){
+
+  return rows.map(
+    i=>`
+
+      <option
+        value="${i.id}"
+        data-customer="${i.customer_id}"
+        data-total="${i.amount}"
+        data-paid="${i.paid_amount}"
+        data-remaining="${i.remaining}"
+      >
+
+        ${
+          nsh13EBEsc(
+            i.customer_name||"-"
+          )
+        }
+
+        ·
+
+        ${
+          nsh13EBEsc(
+            i.meter_number||"-"
+          )
+        }
+
+        ·
+
+        ${i.billing_month}
+
+        · متبقي
+
+        ${money(i.remaining)}
+
+      </option>
+
+    `
+  ).join("");
+
+}
+
+
+window.nshSearchPayInvoice13EB =
+async function(){
+
+  let q =
+    A(
+      "payInvoiceSearch13EB"
+    )?.value?.trim() || "";
+
+
+  let rows =
+    await nshLoadPayInvoices13EB(
+      q
+    );
+
+
+  let s =
+    A("payInvoice");
+
+
+  if(!s){
+    return;
+  }
+
+
+  s.innerHTML =
+    nshPayOptionsHtml13EB(
+      rows
+    );
+
+
+  setPaymentDefaults();
+
+  syncPaymentScreen();
+
+};
+
+
+
+/* =========================================================
+   PAYMENT & RECEIPT CENTER
+   ========================================================= */
+
+payments =
+async function(c){
+
+  let offset =
+    (
+      nshPayment13EB.page-1
+    )*
+    NSH_FINANCE_PAGE_SIZE_13EB;
+
+
+  let [
+    pageResult,
+    invoiceOptions
+  ] =
+  await Promise.all([
+
+    sb.rpc(
+      "admin_payment_page",
+      {
+
+        p_search:
+          nshPayment13EB.search,
+
+        p_method:
+          nshPayment13EB.method,
+
+        p_limit:
+          NSH_FINANCE_PAGE_SIZE_13EB,
+
+        p_offset:
+          offset
+
+      }
+    ),
+
+    nshLoadPayInvoices13EB("")
+
+  ]);
+
+
+  let pays =
+    pageResult.data||[];
+
+
+  let meta =
+    pays[0]||{};
+
+
+  let total =
+    Number(
+      meta.total_count||0
+    );
+
+
+  nshPayment13EB.total =
+    total;
+
+  nshPayment13EB.pages =
+    nsh13EBPages(
+      total,
+      NSH_FINANCE_PAGE_SIZE_13EB
+    );
+
+
+  window._payments =
+    pays.map(
+      x=>({
+
+        ...x,
+
+        profiles:{
+          full_name:
+            x.customer_name
+        },
+
+        invoices:{
+          billing_month:
+            x.billing_month,
+
+          amount:
+            x.invoice_amount,
+
+          status:
+            x.invoice_status
+        }
+
+      })
+    );
+
+
+  c.innerHTML =
+
+    header(
+      "الدفعات",
+      "Payment & Receipt Center — تسجيل التحصيل وإصدار الإيصالات."
+    )
+
+    +
+
+    `
+
+      <section class="finance-summary">
+
+
+        <article class="finance-stat total">
+
+          <div class="finance-stat-icon">
+
+            <i data-lucide="receipt-text"></i>
+
+          </div>
+
+          <div>
+
+            <small>
+              عدد الدفعات
+            </small>
+
+            <b>
+              ${total}
+            </b>
+
+            <em>
+              RECEIPTS
+            </em>
+
+          </div>
+
+        </article>
+
+
+        <article class="finance-stat paid">
+
+          <div class="finance-stat-icon">
+
+            <i data-lucide="circle-dollar-sign"></i>
+
+          </div>
+
+          <div>
+
+            <small>
+              إجمالي المقبوض
+            </small>
+
+            <b>
+
+              ${
+                money(
+                  meta.total_collected||0
+                )
+              }
+
+            </b>
+
+            <em>
+              COLLECTED
+            </em>
+
+          </div>
+
+        </article>
+
+
+        <article class="finance-stat partial">
+
+          <div class="finance-stat-icon">
+
+            <i data-lucide="banknote"></i>
+
+          </div>
+
+          <div>
+
+            <small>
+              نقدًا
+            </small>
+
+            <b>
+
+              ${
+                money(
+                  meta.cash_total||0
+                )
+              }
+
+            </b>
+
+            <em>
+              CASH
+            </em>
+
+          </div>
+
+        </article>
+
+
+        <article class="finance-stat unpaid">
+
+          <div class="finance-stat-icon">
+
+            <i data-lucide="landmark"></i>
+
+          </div>
+
+          <div>
+
+            <small>
+              تحويل مصرفي
+            </small>
+
+            <b>
+
+              ${
+                money(
+                  meta.bank_total||0
+                )
+              }
+
+            </b>
+
+            <em>
+              BANK
+            </em>
+
+          </div>
+
+        </article>
+
+      </section>
+
+
+
+      <!-- ===============================================
+           PREMIUM PAYMENT TERMINAL
+           =============================================== -->
+
+      <section class="payment-terminal">
+
+        <article class="payment-console">
+
+          <div class="payment-console-head">
+
+            <div class="payment-console-head-icon">
+
+              <i data-lucide="credit-card"></i>
+
+            </div>
+
+            <div>
+
+              <h3>
+                تسجيل دفعة
+              </h3>
+
+              <p>
+                دفعة كاملة أو جزئية
+                مع إصدار رقم إيصال تلقائي.
+              </p>
+
+            </div>
+
+          </div>
+
+
+          <div class="nsh-terminal-search">
+
+            <i data-lucide="search"></i>
+
+            <input
+              id="payInvoiceSearch13EB"
+              placeholder="ابحث عن فاتورة بالاسم أو رقم العداد..."
+              onkeydown="
+                if(event.key==='Enter'){
+                  nshSearchPayInvoice13EB();
+                }
+              "
+            >
+
+            <button
+              onclick="
+                nshSearchPayInvoice13EB()
+              "
+            >
+              بحث عن فاتورة
+            </button>
+
+          </div>
+
+
+          <div class="payment-form-grid">
+
+            <label class="full">
+
+              الفاتورة
+
+              <select
+                id="payInvoice"
+                onchange="
+                  setPaymentDefaults()
+                "
+              >
+
+                ${
+                  nshPayOptionsHtml13EB(
+                    invoiceOptions
+                  )
+                }
+
+              </select>
+
+            </label>
+
+
+            <label>
+
+              المبلغ المدفوع
+
+              <input
+                id="payAmount"
+                type="text"
+                inputmode="decimal"
+                oninput="
+                  syncPaymentScreen()
+                "
+              >
+
+            </label>
+
+
+            <label>
+
+              طريقة الدفع
+
+              <select id="payMethod">
+
+                <option value="cash">
+                  نقدًا Cash
+                </option>
+
+                <option value="bank_transfer">
+                  تحويل مصرفي
+                </option>
+
+                <option value="other">
+                  أخرى
+                </option>
+
+              </select>
+
+            </label>
+
+
+            <label>
+
+              مرجع / رقم عملية
+
+              <input
+                id="payReference"
+                autocomplete="off"
+              >
+
+            </label>
+
+
+            <label>
+
+              ملاحظة
+
+              <input
+                id="payNote"
+                autocomplete="off"
+              >
+
+            </label>
+
+
+            <div class="full">
+
+              <button
+                class="payment-submit"
+                onclick="
+                  recordPayment()
+                "
+              >
+
+                <i data-lucide="circle-dollar-sign"></i>
+
+                تسجيل الدفعة وإصدار الإيصال
+
+              </button>
+
+            </div>
+
+          </div>
+
+        </article>
+
+
+        <aside class="payment-screen">
+
+          <div class="payment-screen-icon">
+
+            <i data-lucide="wallet-cards"></i>
+
+          </div>
+
+          <small>
+            PAYMENT AMOUNT
+          </small>
+
+          <strong
+            id="paymentScreenAmount"
+          >
+            $0.00
+          </strong>
+
+          <span>
+            TERMINAL READY
+          </span>
+
+        </aside>
+
+      </section>
+
+
+
+      <!-- ===============================================
+           RECEIPT HISTORY
+           =============================================== -->
+
+      <section class="receipt-center">
+
+        <div class="receipt-center-head">
+
+          <div>
+
+            <h3>
+              سجل الإيصالات
+            </h3>
+
+            <p>
+              Receipt History · Server-side · 25 records
+            </p>
+
+          </div>
+
+          <span class="ledger-count">
+            ${total} RECEIPTS
+          </span>
+
+        </div>
+
+
+        ${
+          nshScaleToolbar13EB({
+
+            searchId:
+              "nshPaymentSearch13EB",
+
+            searchValue:
+              nshPayment13EB.search,
+
+            searchPlaceholder:
+              "بحث بالمشترك أو رقم الإيصال أو المرجع...",
+
+            selectId:
+              "nshPaymentMethod13EB",
+
+            selectHtml:`
+
+              <option
+                value="all"
+                ${
+                  nshPayment13EB.method==="all"
+                    ?"selected"
+                    :""
+                }
+              >
+                كل طرق الدفع
+              </option>
+
+              <option
+                value="cash"
+                ${
+                  nshPayment13EB.method==="cash"
+                    ?"selected"
+                    :""
+                }
+              >
+                نقدًا
+              </option>
+
+              <option
+                value="bank_transfer"
+                ${
+                  nshPayment13EB.method==="bank_transfer"
+                    ?"selected"
+                    :""
+                }
+              >
+                تحويل مصرفي
+              </option>
+
+              <option
+                value="other"
+                ${
+                  nshPayment13EB.method==="other"
+                    ?"selected"
+                    :""
+                }
+              >
+                أخرى
+              </option>
+
+            `,
+
+            applyFn:
+              "nshPaymentApply13EB"
+
+          })
+        }
+
+
+        <div class="nsh-scale-result">
+
+          <span>
+
+            ${
+              nsh13EBRange(
+                nshPayment13EB.page,
+                NSH_FINANCE_PAGE_SIZE_13EB,
+                pays.length,
+                total
+              )
+            }
+
+          </span>
+
+          <span>
+            SERVER-SIDE PAGINATION
+          </span>
+
+        </div>
+
+
+        <div class="receipt-list">
+
+          ${
+            pays.map(
+              x=>`
+
+                <article class="receipt-row">
+
+                  <div class="receipt-client">
+
+                    <div class="receipt-icon">
+
+                      <i data-lucide="user-round-check"></i>
+
+                    </div>
+
+                    <div>
+
+                      <b>
+                        ${
+                          nsh13EBEsc(
+                            x.customer_name||"-"
+                          )
+                        }
+                      </b>
+
+                      <small>
+                        ${
+                          x.billing_month||"-"
+                        }
+                      </small>
+
+                    </div>
+
+                  </div>
+
+
+                  <div class="receipt-data receipt-money">
+
+                    <small>
+                      المبلغ
+                    </small>
+
+                    <b>
+                      ${money(x.amount)}
+                    </b>
+
+                  </div>
+
+
+                  <div class="receipt-data">
+
+                    <small>
+                      الطريقة
+                    </small>
+
+                    <b>
+
+                      ${
+                        paymentMethodArabic(
+                          x.payment_method
+                        )
+                      }
+
+                    </b>
+
+                  </div>
+
+
+                  <div class="receipt-data receipt-number">
+
+                    <small>
+                      رقم الإيصال
+                    </small>
+
+                    <b>
+                      ${
+                        nsh13EBEsc(
+                          x.receipt_no||"-"
+                        )
+                      }
+                    </b>
+
+                  </div>
+
+
+                  <div class="receipt-data hide-md">
+
+                    <small>
+                      التاريخ
+                    </small>
+
+                    <b>
+
+                      ${
+                        new Date(
+                          x.paid_at
+                        )
+                        .toLocaleString(
+                          "ar-LB"
+                        )
+                      }
+
+                    </b>
+
+                  </div>
+
+
+                  <button
+                    class="receipt-print"
+                    title="طباعة الإيصال"
+                    onclick="
+                      printReceipt(
+                        '${x.id}'
+                      )
+                    "
+                  >
+
+                    <i data-lucide="printer"></i>
+
+                  </button>
+
+                </article>
+
+              `
+            ).join("")
+
+            ||
+
+            `
+
+              <div class="finance-empty">
+
+                <i data-lucide="receipt"></i>
+
+                <div>
+                  لا توجد دفعات مطابقة
+                </div>
+
+              </div>
+
+            `
+          }
+
+        </div>
+
+
+        ${
+          nshPaginator13EB(
+            nshPayment13EB.page,
+            nshPayment13EB.pages,
+            "nshPaymentPage13EB"
+          )
+        }
+
+      </section>
+
+    `;
+
+
+  setPaymentDefaults();
+
+  syncPaymentScreen();
+
+  icons();
+
+};
+
+
+
+window.nshPaymentApply13EB =
+async function(){
+
+  nshPayment13EB.search =
+    A(
+      "nshPaymentSearch13EB"
+    )?.value?.trim() || "";
+
+  nshPayment13EB.method =
+    A(
+      "nshPaymentMethod13EB"
+    )?.value || "all";
+
+  nshPayment13EB.page = 1;
+
+  await renderAdmin(
+    "payments"
+  );
+
+};
+
+
+window.nshPaymentPage13EB =
+async function(page){
+
+  if(
+    page<1 ||
+    page>
+      nshPayment13EB.pages
+  ){
+    return;
+  }
+
+  nshPayment13EB.page =
+    page;
+
+  await renderAdmin(
+    "payments"
+  );
+
+  document
+    .querySelector(
+      ".receipt-center"
+    )
+    ?.scrollIntoView({
+      behavior:"smooth",
+      block:"start"
+    });
+
+};
+
+
+
+/* =========================================================
+   INCIDENT CONTROL CENTER
+   ========================================================= */
+
+faults =
+async function(c){
+
+  let offset =
+    (
+      nshFault13EB.page-1
+    )*
+    NSH_FAULT_PAGE_SIZE_13EB;
+
+
+  let r =
+    await sb.rpc(
+      "admin_fault_page",
+      {
+
+        p_search:
+          nshFault13EB.search,
+
+        p_status:
+          nshFault13EB.status,
+
+        p_limit:
+          NSH_FAULT_PAGE_SIZE_13EB,
+
+        p_offset:
+          offset
+
+      }
+    );
+
+
+  let fs =
+    r.data||[];
+
+
+  let meta =
+    fs[0]||{};
+
+
+  let total =
+    Number(
+      meta.total_count||0
+    );
+
+
+  nshFault13EB.total =
+    total;
+
+  nshFault13EB.pages =
+    nsh13EBPages(
+      total,
+      NSH_FAULT_PAGE_SIZE_13EB
+    );
+
+
+  /* Keep existing fault dialog working */
+
+  window._faults =
+    fs.map(
+      f=>({
+
+        ...f,
+
+        profiles:{
+          full_name:
+            f.customer_name
+        },
+
+        areas:{
+          name:
+            f.area_name
+        },
+
+        meters:{
+          meter_number:
+            f.meter_number
+        }
+
+      })
+    );
+
+
+  c.innerHTML =
+
+    header(
+      "الأعطال",
+      "Incident Control Center — متابعة البلاغات وحالة أعمال الصيانة."
+    )
+
+    +
+
+    `
+
+      <section class="incident-summary">
+
+        <article class="incident-stat total">
+
+          <div class="incident-stat-icon">
+
+            <i data-lucide="radio-tower"></i>
+
+          </div>
+
+          <div>
+
+            <small>
+              نتائج الفلتر
+            </small>
+
+            <b>
+              ${total}
+            </b>
+
+          </div>
+
+        </article>
+
+
+        <article class="incident-stat open">
+
+          <div class="incident-stat-icon">
+
+            <i data-lucide="triangle-alert"></i>
+
+          </div>
+
+          <div>
+
+            <small>
+              بلاغات مفتوحة
+            </small>
+
+            <b>
+              ${
+                Number(
+                  meta.open_count||0
+                )
+              }
+            </b>
+
+          </div>
+
+        </article>
+
+
+        <article class="incident-stat repairing">
+
+          <div class="incident-stat-icon">
+
+            <i data-lucide="wrench"></i>
+
+          </div>
+
+          <div>
+
+            <small>
+              قيد المعالجة
+            </small>
+
+            <b>
+              ${
+                Number(
+                  meta.processing_count||0
+                )
+              }
+            </b>
+
+          </div>
+
+        </article>
+
+
+        <article class="incident-stat resolved">
+
+          <div class="incident-stat-icon">
+
+            <i data-lucide="circle-check-big"></i>
+
+          </div>
+
+          <div>
+
+            <small>
+              تم حلها
+            </small>
+
+            <b>
+              ${
+                Number(
+                  meta.resolved_count||0
+                )
+              }
+            </b>
+
+          </div>
+
+        </article>
+
+      </section>
+
+
+
+      <section class="nsh-incident-scale-panel">
+
+        ${
+          nshScaleToolbar13EB({
+
+            searchId:
+              "nshFaultSearch13EB",
+
+            searchValue:
+              nshFault13EB.search,
+
+            searchPlaceholder:
+              "بحث برقم البلاغ، المشترك، المنطقة، العداد أو نوع العطل...",
+
+            selectId:
+              "nshFaultStatus13EB",
+
+            selectHtml:`
+
+              <option
+                value="active"
+                ${
+                  nshFault13EB.status==="active"
+                    ?"selected"
+                    :""
+                }
+              >
+                الأعطال النشطة
+              </option>
+
+              <option
+                value="open"
+                ${
+                  nshFault13EB.status==="open"
+                    ?"selected"
+                    :""
+                }
+              >
+                مفتوح
+              </option>
+
+              <option
+                value="processing"
+                ${
+                  nshFault13EB.status==="processing"
+                    ?"selected"
+                    :""
+                }
+              >
+                قيد المعالجة
+              </option>
+
+              <option
+                value="resolved"
+                ${
+                  nshFault13EB.status==="resolved"
+                    ?"selected"
+                    :""
+                }
+              >
+                تم الحل / الأرشيف
+              </option>
+
+              <option
+                value="all"
+                ${
+                  nshFault13EB.status==="all"
+                    ?"selected"
+                    :""
+                }
+              >
+                كل البلاغات
+              </option>
+
+            `,
+
+            applyFn:
+              "nshFaultApply13EB"
+
+          })
+        }
+
+
+        <div class="nsh-scale-result">
+
+          <span>
+
+            ${
+              nsh13EBRange(
+                nshFault13EB.page,
+                NSH_FAULT_PAGE_SIZE_13EB,
+                fs.length,
+                total
+              )
+            }
+
+          </span>
+
+          <span>
+            REVIEW ACTIVE INCIDENTS FIRST
+          </span>
+
+        </div>
+
+      </section>
+
+
+
+      <section class="incident-grid">
+
+        ${
+          fs.map(
+            f=>`
+
+              <article
+                class="
+                  incident-card
+                  ${f.status||"open"}
+                "
+              >
+
+                <div class="incident-card-head">
+
+                  <div class="incident-number">
+
+                    <span class="incident-led"></span>
+
+                    <div>
+
+                      <small>
+                        INCIDENT REPORT
+                      </small>
+
+                      <b>
+                        #${f.id}
+                      </b>
+
+                    </div>
+
+                  </div>
+
+
+                  <span class="incident-status">
+
+                    ${
+                      incidentStatusName(
+                        f.status
+                      )
+                    }
+
+                  </span>
+
+                </div>
+
+
+                <div class="incident-title">
+
+                  <div class="incident-title-icon">
+
+                    <i data-lucide="zap-off"></i>
+
+                  </div>
+
+                  <div>
+
+                    <h4>
+                      ${
+                        nsh13EBEsc(
+                          f.fault_type||
+                          "عطل كهربائي"
+                        )
+                      }
+                    </h4>
+
+                    <p>
+                      ${
+                        incidentStatusArabic(
+                          f.status
+                        )
+                      }
+                    </p>
+
+                  </div>
+
+                </div>
+
+
+                <div class="incident-data">
+
+                  <div>
+
+                    <small>
+                      المشترك
+                    </small>
+
+                    <b>
+                      ${
+                        nsh13EBEsc(
+                          f.customer_name||"-"
+                        )
+                      }
+                    </b>
+
+                  </div>
+
+
+                  <div>
+
+                    <small>
+                      المنطقة
+                    </small>
+
+                    <b>
+                      ${
+                        nsh13EBEsc(
+                          f.area_name||"-"
+                        )
+                      }
+                    </b>
+
+                  </div>
+
+
+                  <div>
+
+                    <small>
+                      رقم العداد
+                    </small>
+
+                    <b>
+                      ${
+                        nsh13EBEsc(
+                          f.meter_number||"-"
+                        )
+                      }
+                    </b>
+
+                  </div>
+
+                </div>
+
+
+                <button
+                  class="incident-open"
+                  onclick="
+                    openFaultAdmin(
+                      ${f.id}
+                    )
+                  "
+                >
+
+                  <i data-lucide="scan-search"></i>
+
+                  فتح مركز البلاغ
+
+                </button>
+
+              </article>
+
+            `
+          ).join("")
+
+          ||
+
+          `
+
+            <div class="empty-control-state">
+
+              <i data-lucide="shield-check"></i>
+
+              <div>
+                لا توجد بلاغات مطابقة
+              </div>
+
+            </div>
+
+          `
+        }
+
+      </section>
+
+
+      ${
+        nshPaginator13EB(
+          nshFault13EB.page,
+          nshFault13EB.pages,
+          "nshFaultPage13EB"
+        )
+      }
+
+    `;
+
+
+  icons();
+
+};
+
+
+
+window.nshFaultApply13EB =
+async function(){
+
+  nshFault13EB.search =
+    A(
+      "nshFaultSearch13EB"
+    )?.value?.trim() || "";
+
+  nshFault13EB.status =
+    A(
+      "nshFaultStatus13EB"
+    )?.value || "active";
+
+  nshFault13EB.page = 1;
+
+  await renderAdmin(
+    "faults"
+  );
+
+};
+
+
+window.nshFaultPage13EB =
+async function(page){
+
+  if(
+    page<1 ||
+    page>
+      nshFault13EB.pages
+  ){
+    return;
+  }
+
+  nshFault13EB.page =
+    page;
+
+  await renderAdmin(
+    "faults"
+  );
+
+};
+
+
+
+/* =========================================================
+   NETWORK ALERT CENTER
+   ========================================================= */
+
+notifications =
+async function(c){
+
+  let offset =
+    (
+      nshAlert13EB.page-1
+    )*
+    NSH_ALERT_PAGE_SIZE_13EB;
+
+
+  let [
+    areasResult,
+    pageResult
+  ] =
+  await Promise.all([
+
+    sb
+      .from("areas")
+      .select(
+        "id,name"
+      )
+      .order("name"),
+
+    sb.rpc(
+      "admin_notification_page",
+      {
+
+        p_search:
+          nshAlert13EB.search,
+
+        p_archive:
+          nshAlert13EB.archive,
+
+        p_limit:
+          NSH_ALERT_PAGE_SIZE_13EB,
+
+        p_offset:
+          offset
+
+      }
+    )
+
+  ]);
+
+
+  let ar =
+    areasResult.data||[];
+
+  let ns =
+    pageResult.data||[];
+
+  let meta =
+    ns[0]||{};
+
+
+  window._areas =
+    ar;
+
+
+  let total =
+    Number(
+      meta.total_count||0
+    );
+
+
+  nshAlert13EB.total =
+    total;
+
+  nshAlert13EB.pages =
+    nsh13EBPages(
+      total,
+      NSH_ALERT_PAGE_SIZE_13EB
+    );
+
+
+  c.innerHTML =
+
+    header(
+      "التنبيهات",
+      "Network Alert Center — إدارة رسائل الشبكة والمشتركين."
+    )
+
+    +
+
+    `
+
+      <section class="alert-center-top">
+
+        <div class="alert-center-title">
+
+          <div class="alert-radio">
+
+            <i data-lucide="radio"></i>
+
+          </div>
+
+          <div>
+
+            <h3>
+              مركز بث التنبيهات
+            </h3>
+
+            <p>
+              إرسال تحديثات الشبكة والتنبيهات
+              العامة أو المخصصة لمنطقة محددة.
+            </p>
+
+          </div>
+
+        </div>
+
+
+        <button
+          class="new-alert-btn"
+          onclick="
+            openNotificationDialog()
+          "
+        >
+
+          <i data-lucide="send"></i>
+
+          NEW ALERT · إرسال تنبيه
+
+        </button>
+
+      </section>
+
+
+
+      <section class="alert-summary">
+
+        <article class="alert-summary-card">
+
+          <i data-lucide="bell-ring"></i>
+
+          <div>
+
+            <small>
+              نتائج الفلتر
+            </small>
+
+            <b>
+              ${total}
+            </b>
+
+          </div>
+
+        </article>
+
+
+        <article class="alert-summary-card">
+
+          <i data-lucide="radio-tower"></i>
+
+          <div>
+
+            <small>
+              بث لكل الشبكة
+            </small>
+
+            <b>
+              ${
+                Number(
+                  meta.network_count||0
+                )
+              }
+            </b>
+
+          </div>
+
+        </article>
+
+
+        <article class="alert-summary-card">
+
+          <i data-lucide="map-pin"></i>
+
+          <div>
+
+            <small>
+              تنبيهات المناطق
+            </small>
+
+            <b>
+              ${
+                Number(
+                  meta.area_count||0
+                )
+              }
+            </b>
+
+          </div>
+
+        </article>
+
+      </section>
+
+
+
+      <section class="nsh-alert-scale-panel">
+
+        ${
+          nshScaleToolbar13EB({
+
+            searchId:
+              "nshAlertSearch13EB",
+
+            searchValue:
+              nshAlert13EB.search,
+
+            searchPlaceholder:
+              "بحث بعنوان التنبيه أو الرسالة أو المنطقة...",
+
+            selectId:
+              "nshAlertArchive13EB",
+
+            selectHtml:`
+
+              <option
+                value="active"
+                ${
+                  nshAlert13EB.archive==="active"
+                    ?"selected"
+                    :""
+                }
+              >
+                التنبيهات النشطة
+              </option>
+
+              <option
+                value="archived"
+                ${
+                  nshAlert13EB.archive==="archived"
+                    ?"selected"
+                    :""
+                }
+              >
+                الأرشيف
+              </option>
+
+              <option
+                value="all"
+                ${
+                  nshAlert13EB.archive==="all"
+                    ?"selected"
+                    :""
+                }
+              >
+                الكل
+              </option>
+
+            `,
+
+            applyFn:
+              "nshAlertApply13EB"
+
+          })
+        }
+
+
+        <div class="nsh-scale-result">
+
+          <span>
+
+            ${
+              nsh13EBRange(
+                nshAlert13EB.page,
+                NSH_ALERT_PAGE_SIZE_13EB,
+                ns.length,
+                total
+              )
+            }
+
+          </span>
+
+          <span>
+            ACTIVE / ARCHIVE
+          </span>
+
+        </div>
+
+      </section>
+
+
+
+      <section class="alert-feed">
+
+        ${
+          ns.map(
+            n=>{
+
+              let when =
+                n.created_at
+                ?
+                new Date(
+                  n.created_at
+                )
+                .toLocaleString(
+                  "ar-LB"
+                )
+                :
+                "-";
+
+
+              let archived =
+                !!n.archived_at;
+
+
+              return `
+
+                <article
+                  class="
+                    network-alert
+                    ${
+                      archived
+                        ?"nsh-alert-archived"
+                        :""
+                    }
+                  "
+                >
+
+                  <div class="network-alert-icon">
+
+                    <i
+                      data-lucide="${
+                        archived
+                          ?"archive"
+                          :"bell-ring"
+                      }"
+                    ></i>
+
+                  </div>
+
+
+                  <div>
+
+                    <h4>
+                      ${
+                        nsh13EBEsc(
+                          n.title||
+                          "تنبيه الشبكة"
+                        )
+                      }
+                    </h4>
+
+                    <p>
+                      ${
+                        nsh13EBEsc(
+                          n.message||""
+                        )
+                      }
+                    </p>
+
+                  </div>
+
+
+                  <div class="alert-target">
+
+                    <span>
+
+                      <i
+                        data-lucide="${
+                          n.area_id
+                            ?"map-pin"
+                            :"radio-tower"
+                        }"
+                      ></i>
+
+                      ${
+                        nsh13EBEsc(
+                          n.area_name||
+                          "ALL NETWORK"
+                        )
+                      }
+
+                    </span>
+
+                    <small>
+                      ${when}
+                    </small>
+
+
+                    <button
+                      class="
+                        nsh-alert-archive-btn
+                        ${
+                          archived
+                            ?"restore"
+                            :""
+                        }
+                      "
+                      onclick="
+                        nshToggleAlertArchive13EB(
+                          '${n.id}',
+                          ${archived}
+                        )
+                      "
+                    >
+
+                      <i
+                        data-lucide="${
+                          archived
+                            ?"archive-restore"
+                            :"archive"
+                        }"
+                      ></i>
+
+                      ${
+                        archived
+                          ?"استرجاع"
+                          :"أرشفة"
+                      }
+
+                    </button>
+
+                  </div>
+
+                </article>
+
+              `;
+
+            }
+          ).join("")
+
+          ||
+
+          `
+
+            <div class="empty-control-state">
+
+              <i data-lucide="bell-off"></i>
+
+              <div>
+                لا توجد تنبيهات مطابقة
+              </div>
+
+            </div>
+
+          `
+        }
+
+      </section>
+
+
+      ${
+        nshPaginator13EB(
+          nshAlert13EB.page,
+          nshAlert13EB.pages,
+          "nshAlertPage13EB"
+        )
+      }
+
+    `;
+
+
+  icons();
+
+};
+
+
+
+window.nshAlertApply13EB =
+async function(){
+
+  nshAlert13EB.search =
+    A(
+      "nshAlertSearch13EB"
+    )?.value?.trim() || "";
+
+  nshAlert13EB.archive =
+    A(
+      "nshAlertArchive13EB"
+    )?.value || "active";
+
+  nshAlert13EB.page = 1;
+
+  await renderAdmin(
+    "notifications"
+  );
+
+};
+
+
+window.nshAlertPage13EB =
+async function(page){
+
+  if(
+    page<1 ||
+    page>
+      nshAlert13EB.pages
+  ){
+    return;
+  }
+
+  nshAlert13EB.page =
+    page;
+
+  await renderAdmin(
+    "notifications"
+  );
+
+};
+
+
+window.nshToggleAlertArchive13EB =
+async function(
+  id,
+  archived
+){
+
+  let patch =
+    archived
+
+    ?{
+      archived_at:null,
+      archived_by:null
+    }
+
+    :{
+      archived_at:
+        new Date()
+        .toISOString(),
+
+      archived_by:
+        session?.user?.id||
+        null
+    };
+
+
+  let r =
+    await sb
+      .from("notifications")
+      .update(patch)
+      .eq(
+        "id",
+        id
+      );
+
+
+  if(r.error){
+
+    return alert(
+      r.error.message
+    );
+
+  }
+
+
+  await renderAdmin(
+    "notifications"
+  );
+
+};
+
+
+
+/* =========================================================
+   CUSTOMER LIFECYCLE FIX
+   ACTIVE NOTIFICATIONS ONLY
+   RESOLVED FAULTS OUT OF ACTIVE CUSTOMER FEED
+   ========================================================= */
+
+const nshLoadCustomerBase13EB =
+  loadCustomer;
+
+
+loadCustomer =
+async function(){
+
+  await nshLoadCustomerBase13EB();
+
+
+  if(!customer){
+    return;
+  }
+
+
+  /*
+    Archived notifications are no longer visible
+    to customers.
+  */
+
+  customer.notifications =
+    (
+      customer.notifications||
+      []
+    )
+    .filter(
+      n=>!n.archived_at
+    );
+
+
+  /*
+    Main customer fault list shows active faults only.
+    Resolved history remains in database/admin archive.
+  */
+
+  customer.faults =
+    (
+      customer.faults||
+      []
+    )
+    .filter(
+      f=>
+        f.status!=="resolved"
+    );
+
+
+  /*
+    Original loadCustomer already rendered.
+    Render once more with lifecycle-filtered data.
+  */
+
+  renderCustomer();
+
+};
+
+
+
+/* =========================================================
+   13E-B STYLES
+   ADD SCALE CONTROLS WITHOUT TOUCHING PREMIUM DESIGN
+   ========================================================= */
+
+function injectScale13EBStyles(){
+
+  if(
+    A(
+      "nshScale13EBStyles"
+    )
+  ){
+    return;
+  }
+
+
+  let st =
+    document.createElement(
+      "style"
+    );
+
+
+  st.id =
+    "nshScale13EBStyles";
+
+
+  st.textContent = `
+
+
+  /* ===============================================
+     TOOLBAR
+     =============================================== */
+
+  .nsh-finance-scale-toolbar{
+
+    display:grid;
+
+    grid-template-columns:
+      minmax(260px,1fr)
+      190px
+      auto
+      90px;
+
+    gap:9px;
+
+    align-items:center;
+
+    padding:
+      12px 14px;
+
+    border-top:
+      1px solid
+      rgba(67,234,255,.09);
+
+    border-bottom:
+      1px solid
+      rgba(67,234,255,.09);
+
+    background:
+      rgba(2,14,20,.34);
+
+  }
+
+
+  .nsh-finance-scale-search{
+
+    position:relative;
+
+  }
+
+
+  .nsh-finance-scale-search svg{
+
+    position:absolute;
+
+    right:12px;
+    top:50%;
+
+    width:15px;
+    height:15px;
+
+    transform:
+      translateY(-50%);
+
+    color:#42e7ff;
+
+    opacity:.65;
+
+  }
+
+
+  .nsh-finance-scale-search input,
+  .nsh-finance-scale-toolbar select,
+  .nsh-scale-month{
+
+    width:100%;
+    height:40px;
+
+    box-sizing:border-box;
+
+    border-radius:9px;
+
+    border:
+      1px solid #204756;
+
+    background:#051923;
+
+    color:#dff4fa;
+
+    outline:none;
+
+    padding:
+      0 10px;
+
+    font-size:8px;
+
+  }
+
+
+  .nsh-finance-scale-search input{
+
+    padding-right:37px;
+
+  }
+
+
+  .nsh-finance-scale-search input:focus,
+  .nsh-finance-scale-toolbar select:focus,
+  .nsh-scale-month:focus{
+
+    border-color:#43eaff;
+
+    box-shadow:
+      0 0 0 2px
+      rgba(67,234,255,.06);
+
+  }
+
+
+  .nsh-scale-go{
+
+    height:40px;
+
+    display:flex;
+
+    align-items:center;
+    justify-content:center;
+
+    gap:5px;
+
+    padding:
+      0 13px;
+
+    border-radius:9px;
+
+    border:
+      1px solid
+      rgba(255,202,48,.35);
+
+    background:
+      linear-gradient(
+        145deg,
+        #7e5700,
+        #493300
+      );
+
+    color:#ffe26c;
+
+    font-size:8px;
+    font-weight:900;
+
+    cursor:pointer;
+
+  }
+
+
+  .nsh-scale-go svg{
+
+    width:13px;
+    height:13px;
+
+  }
+
+
+
+  /* ===============================================
+     RANGE BAR
+     =============================================== */
+
+  .nsh-scale-result{
+
+    display:flex;
+
+    align-items:center;
+    justify-content:space-between;
+
+    gap:10px;
+
+    padding:
+      8px 15px;
+
+    color:#668b98;
+
+    font-size:6px;
+
+  }
+
+
+
+  /* ===============================================
+     PAGINATION
+     =============================================== */
+
+  .nsh-13eb-pagination{
+
+    display:flex;
+
+    align-items:center;
+    justify-content:center;
+
+    gap:10px;
+
+    margin-top:12px;
+
+    padding:
+      14px;
+
+    border-top:
+      1px solid
+      rgba(67,234,255,.08);
+
+  }
+
+
+  .nsh-13eb-pagination button{
+
+    min-width:100px;
+
+    height:36px;
+
+    display:flex;
+
+    align-items:center;
+    justify-content:center;
+
+    gap:5px;
+
+    border-radius:9px;
+
+    border:
+      1px solid #214b5b;
+
+    background:#051a24;
+
+    color:#b7d8e4;
+
+    font-size:8px;
+    font-weight:900;
+
+    cursor:pointer;
+
+  }
+
+
+  .nsh-13eb-pagination button:disabled{
+
+    opacity:.25;
+
+    cursor:not-allowed;
+
+  }
+
+
+  .nsh-13eb-pagination button:hover:not(:disabled){
+
+    color:#43eaff;
+
+    border-color:#43eaff;
+
+  }
+
+
+  .nsh-13eb-pagination svg{
+
+    width:13px;
+    height:13px;
+
+  }
+
+
+  .nsh-13eb-page{
+
+    height:36px;
+
+    min-width:78px;
+
+    display:flex;
+
+    align-items:center;
+    justify-content:center;
+
+    gap:5px;
+
+    border-radius:9px;
+
+    border:
+      1px solid
+      rgba(67,234,255,.17);
+
+    background:
+      rgba(2,16,23,.6);
+
+  }
+
+
+  .nsh-13eb-page small{
+
+    color:#628794;
+
+    font-size:5px;
+
+  }
+
+
+  .nsh-13eb-page b{
+
+    color:#43eaff;
+
+    font-size:14px;
+
+  }
+
+
+  .nsh-13eb-page span{
+
+    color:#86a6b1;
+
+    font-size:7px;
+
+  }
+
+
+
+  /* ===============================================
+     SEARCH INSIDE BILLING / PAYMENT TERMINALS
+     =============================================== */
+
+  .nsh-terminal-search{
+
+    display:grid;
+
+    grid-template-columns:
+      18px
+      minmax(0,1fr)
+      auto;
+
+    gap:7px;
+
+    align-items:center;
+
+    margin-bottom:11px;
+
+    padding:
+      7px 9px;
+
+    border-radius:10px;
+
+    border:
+      1px solid
+      rgba(67,234,255,.14);
+
+    background:
+      rgba(2,15,21,.48);
+
+  }
+
+
+  .nsh-terminal-search > svg{
+
+    width:15px;
+    height:15px;
+
+    color:#43eaff;
+
+  }
+
+
+  .nsh-terminal-search input{
+
+    width:100%;
+
+    box-sizing:border-box;
+
+    border:0;
+
+    outline:0;
+
+    background:transparent;
+
+    color:#eaf9fd;
+
+    font-size:8px;
+
+  }
+
+
+  .nsh-terminal-search button{
+
+    min-height:31px;
+
+    padding:
+      0 12px;
+
+    border-radius:8px;
+
+    border:
+      1px solid
+      rgba(67,234,255,.24);
+
+    background:
+      rgba(67,234,255,.055);
+
+    color:#45e8ff;
+
+    font-size:7px;
+    font-weight:900;
+
+    cursor:pointer;
+
+  }
+
+
+
+  /* ===============================================
+     INCIDENT SCALE PANEL
+     =============================================== */
+
+  .nsh-incident-scale-panel,
+  .nsh-alert-scale-panel{
+
+    overflow:hidden;
+
+    margin-bottom:12px;
+
+    border-radius:14px;
+
+    border:
+      1px solid
+      #173c49;
+
+    background:
+      linear-gradient(
+        145deg,
+        #061b25,
+        #03131b
+      );
+
+  }
+
+
+
+  /* ===============================================
+     ARCHIVED ALERT
+     =============================================== */
+
+  .network-alert.nsh-alert-archived{
+
+    opacity:.55;
+
+    filter:
+      saturate(.55);
+
+  }
+
+
+  .nsh-alert-archive-btn{
+
+    width:100%;
+
+    min-height:27px;
+
+    display:flex;
+
+    align-items:center;
+    justify-content:center;
+
+    gap:4px;
+
+    margin-top:6px;
+
+    border-radius:7px;
+
+    border:
+      1px solid
+      rgba(255,202,48,.28);
+
+    background:
+      rgba(255,202,48,.05);
+
+    color:#ffd243;
+
+    font-size:6px;
+    font-weight:900;
+
+    cursor:pointer;
+
+  }
+
+
+  .nsh-alert-archive-btn.restore{
+
+    color:#43ed81;
+
+    border-color:
+      rgba(67,237,129,.28);
+
+    background:
+      rgba(67,237,129,.05);
+
+  }
+
+
+  .nsh-alert-archive-btn svg{
+
+    width:11px;
+    height:11px;
+
+  }
+
+
+
+  /* ===============================================
+     MOBILE
+     =============================================== */
+
+  @media(max-width:900px){
+
+    .nsh-finance-scale-toolbar{
+
+      grid-template-columns:
+        1fr
+        1fr;
+
+    }
+
+
+    .nsh-finance-scale-search{
+
+      grid-column:
+        1 / -1;
+
+    }
+
+  }
+
+
+  @media(max-width:620px){
+
+    .nsh-finance-scale-toolbar{
+
+      grid-template-columns:
+        1fr;
+
+    }
+
+
+    .nsh-finance-scale-search{
+
+      grid-column:auto;
+
+    }
+
+
+    .nsh-scale-go{
+
+      width:100%;
+
+    }
+
+
+    .nsh-terminal-search{
+
+      grid-template-columns:
+        18px
+        1fr;
+
+    }
+
+
+    .nsh-terminal-search button{
+
+      grid-column:
+        1 / -1;
+
+    }
+
+
+    .nsh-13eb-pagination{
+
+      gap:5px;
+
+    }
+
+
+    .nsh-13eb-pagination button{
+
+      min-width:82px;
+
+    }
+
+  }
+
+
+  `;
+
+
+  document.head
+    .appendChild(st);
+
+}
+
+
+injectScale13EBStyles();
+
+
+/* =========================================================
+   END PART 13E-B
+   ========================================================= */
+
 injectPhoneAuthStyles();
 
 preparePhoneLoginUI();
