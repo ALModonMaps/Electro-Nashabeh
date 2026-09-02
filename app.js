@@ -27113,6 +27113,592 @@ setTimeout(
    END PART 13E-A.1
    ========================================================= */
 
+/* =========================================================
+   PART 13E-A.2
+   DASHBOARD AREA STATUS COLORS FIX
+   ONLINE / MONITOR / HIGH LOAD / OUTAGE
+   ========================================================= */
+
+
+function nshNormalizeAreaStatus13E2(value){
+
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replaceAll("_"," ")
+    .replace(/\s+/g," ");
+
+}
+
+
+function nshAreaStatusInfo13E2(value){
+
+  const status =
+    nshNormalizeAreaStatus13E2(value);
+
+
+  /* OUTAGE */
+
+  if(
+    status === "outage" ||
+    status === "offline" ||
+    status === "انقطاع عام"
+  ){
+
+    return {
+      type:"outage",
+      label:"OUTAGE",
+      text:"انقطاع عام",
+      icon:"power-off"
+    };
+
+  }
+
+
+  /* HIGH LOAD */
+
+  if(
+    status === "high load" ||
+    status === "highload" ||
+    status === "ضغط مرتفع"
+  ){
+
+    return {
+      type:"high-load",
+      label:"HIGH LOAD",
+      text:"ضغط مرتفع",
+      icon:"triangle-alert"
+    };
+
+  }
+
+
+  /* MONITOR */
+
+  if(
+    status === "monitor" ||
+    status === "monitoring" ||
+    status === "متابعة"
+  ){
+
+    return {
+      type:"monitor",
+      label:"MONITOR",
+      text:"متابعة",
+      icon:"eye"
+    };
+
+  }
+
+
+  /* NORMAL */
+
+  return {
+    type:"online",
+    label:"ONLINE",
+    text:"الشبكة مستقرة",
+    icon:"zap"
+  };
+
+}
+
+
+
+/* =========================================================
+   APPLY REAL AREA STATUS TO DASHBOARD CARDS
+   ========================================================= */
+
+async function nshFixDashboardAreaStatuses13E2(){
+
+  const grid =
+    document.querySelector(
+      ".network-mini-grid"
+    );
+
+
+  if(!grid){
+    return;
+  }
+
+
+  const result =
+    await sb
+      .from("areas")
+      .select(
+        "name,network_status,status_message"
+      );
+
+
+  if(result.error){
+
+    console.error(
+      "13E-A.2 Area Status:",
+      result.error
+    );
+
+    return;
+
+  }
+
+
+  const areas =
+    result.data || [];
+
+
+  const map =
+    new Map(
+      areas.map(
+        area=>[
+          String(area.name || "").trim(),
+          area
+        ]
+      )
+    );
+
+
+  grid
+    .querySelectorAll(
+      ".network-mini-card"
+    )
+    .forEach(
+      card=>{
+
+        const nameEl =
+          card.querySelector("b");
+
+        const messageEl =
+          card.querySelector("small");
+
+        const badgeEl =
+          card.querySelector(
+            ":scope > span"
+          );
+
+        const iconBox =
+          card.querySelector(
+            ".network-mini-icon"
+          );
+
+
+        if(!nameEl){
+          return;
+        }
+
+
+        const area =
+          map.get(
+            nameEl.textContent.trim()
+          );
+
+
+        if(!area){
+          return;
+        }
+
+
+        const info =
+          nshAreaStatusInfo13E2(
+            area.network_status
+          );
+
+
+        /* REMOVE OLD STATUS CLASSES */
+
+        card.classList.remove(
+          "offline",
+          "nsh-area-online-13e2",
+          "nsh-area-monitor-13e2",
+          "nsh-area-high-load-13e2",
+          "nsh-area-outage-13e2"
+        );
+
+
+        /* ADD CURRENT STATUS */
+
+        card.classList.add(
+          `nsh-area-${info.type}-13e2`
+        );
+
+
+        /* BADGE */
+
+        if(badgeEl){
+
+          badgeEl.textContent =
+            info.label;
+
+        }
+
+
+        /* MESSAGE */
+
+        if(messageEl){
+
+          messageEl.textContent =
+            area.status_message?.trim()
+              ||
+            info.text;
+
+        }
+
+
+        /* ICON */
+
+        if(iconBox){
+
+          iconBox.innerHTML =
+            `
+              <i
+                data-lucide="${info.icon}"
+              ></i>
+            `;
+
+        }
+
+      }
+    );
+
+
+  icons();
+
+}
+
+
+
+/* =========================================================
+   STYLES
+   ========================================================= */
+
+function injectDashboardAreaStatus13E2Styles(){
+
+  if(
+    document.getElementById(
+      "nshDashboardAreaStatus13E2Styles"
+    )
+  ){
+    return;
+  }
+
+
+  const style =
+    document.createElement(
+      "style"
+    );
+
+
+  style.id =
+    "nshDashboardAreaStatus13E2Styles";
+
+
+  style.textContent = `
+
+
+  /* =====================================================
+     ONLINE - GREEN / CYAN
+     ===================================================== */
+
+  .network-mini-card.nsh-area-online-13e2{
+
+    border-color:
+      rgba(45,235,125,.24)
+      !important;
+
+    background:
+      radial-gradient(
+        circle at 88% 8%,
+        rgba(43,235,126,.09),
+        transparent 42%
+      ),
+      linear-gradient(
+        145deg,
+        #071e29,
+        #03141c
+      )
+      !important;
+
+  }
+
+
+  .network-mini-card.nsh-area-online-13e2
+  .network-mini-icon{
+
+    color:#45ee84 !important;
+
+    border-color:
+      rgba(69,238,132,.28)
+      !important;
+
+  }
+
+
+  .network-mini-card.nsh-area-online-13e2
+  > span{
+
+    color:#4def89 !important;
+
+    border-color:
+      rgba(61,238,130,.30)
+      !important;
+
+    background:
+      rgba(61,238,130,.07)
+      !important;
+
+  }
+
+
+
+  /* =====================================================
+     MONITOR - YELLOW
+     ===================================================== */
+
+  .network-mini-card.nsh-area-monitor-13e2{
+
+    border-color:
+      rgba(255,216,46,.38)
+      !important;
+
+    background:
+      radial-gradient(
+        circle at 88% 8%,
+        rgba(255,213,42,.13),
+        transparent 43%
+      ),
+      linear-gradient(
+        145deg,
+        #211d08,
+        #0b120d
+      )
+      !important;
+
+  }
+
+
+  .network-mini-card.nsh-area-monitor-13e2::after{
+
+    background:
+      linear-gradient(
+        90deg,
+        transparent,
+        rgba(255,215,45,.70),
+        transparent
+      )
+      !important;
+
+  }
+
+
+  .network-mini-card.nsh-area-monitor-13e2
+  .network-mini-icon{
+
+    color:#ffd92e !important;
+
+    border-color:
+      rgba(255,217,46,.40)
+      !important;
+
+    background:
+      rgba(31,27,5,.82)
+      !important;
+
+  }
+
+
+  .network-mini-card.nsh-area-monitor-13e2
+  > span{
+
+    color:#ffe041 !important;
+
+    border-color:
+      rgba(255,219,48,.40)
+      !important;
+
+    background:
+      rgba(255,219,48,.09)
+      !important;
+
+  }
+
+
+
+  /* =====================================================
+     HIGH LOAD - ORANGE
+     ===================================================== */
+
+  .network-mini-card.nsh-area-high-load-13e2{
+
+    border-color:
+      rgba(255,146,35,.42)
+      !important;
+
+    background:
+      radial-gradient(
+        circle at 88% 8%,
+        rgba(255,139,31,.15),
+        transparent 43%
+      ),
+      linear-gradient(
+        145deg,
+        #251508,
+        #100d09
+      )
+      !important;
+
+  }
+
+
+  .network-mini-card.nsh-area-high-load-13e2::after{
+
+    background:
+      linear-gradient(
+        90deg,
+        transparent,
+        rgba(255,146,35,.78),
+        transparent
+      )
+      !important;
+
+  }
+
+
+  .network-mini-card.nsh-area-high-load-13e2
+  .network-mini-icon{
+
+    color:#ff942e !important;
+
+    border-color:
+      rgba(255,148,45,.44)
+      !important;
+
+    background:
+      rgba(35,18,5,.84)
+      !important;
+
+  }
+
+
+  .network-mini-card.nsh-area-high-load-13e2
+  > span{
+
+    color:#ff9c35 !important;
+
+    border-color:
+      rgba(255,150,45,.44)
+      !important;
+
+    background:
+      rgba(255,143,35,.10)
+      !important;
+
+  }
+
+
+
+  /* =====================================================
+     OUTAGE - RED
+     ===================================================== */
+
+  .network-mini-card.nsh-area-outage-13e2{
+
+    border-color:
+      rgba(255,73,89,.44)
+      !important;
+
+    background:
+      radial-gradient(
+        circle at 88% 8%,
+        rgba(255,65,82,.15),
+        transparent 43%
+      ),
+      linear-gradient(
+        145deg,
+        #261014,
+        #10090c
+      )
+      !important;
+
+  }
+
+
+  .network-mini-card.nsh-area-outage-13e2::after{
+
+    background:
+      linear-gradient(
+        90deg,
+        transparent,
+        rgba(255,74,91,.78),
+        transparent
+      )
+      !important;
+
+  }
+
+
+  .network-mini-card.nsh-area-outage-13e2
+  .network-mini-icon{
+
+    color:#ff5867 !important;
+
+    border-color:
+      rgba(255,81,96,.42)
+      !important;
+
+    background:
+      rgba(34,8,12,.85)
+      !important;
+
+  }
+
+
+  .network-mini-card.nsh-area-outage-13e2
+  > span{
+
+    color:#ff6673 !important;
+
+    border-color:
+      rgba(255,82,98,.44)
+      !important;
+
+    background:
+      rgba(255,75,91,.10)
+      !important;
+
+  }
+
+
+  `;
+
+
+  document.head
+    .appendChild(style);
+
+}
+
+
+
+/* =========================================================
+   BOOT
+   ========================================================= */
+
+injectDashboardAreaStatus13E2Styles();
+
+
+setTimeout(
+  nshFixDashboardAreaStatuses13E2,
+  350
+);
+
+
+setTimeout(
+  nshFixDashboardAreaStatuses13E2,
+  1000
+);
+
+
+/* =========================================================
+   END PART 13E-A.2
+   ========================================================= */
+
 injectPhoneAuthStyles();
 
 preparePhoneLoginUI();
