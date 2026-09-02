@@ -16336,6 +16336,2307 @@ async function(){
   }
 
 };
+
+/* =========================================================
+   PART 13B
+   NASHABEH FREE SMART METER OCR
+   ZERO PAID API
+   ========================================================= */
+
+let nshMeterOCRBusy=false;
+
+
+/* ---------------------------------------------------------
+   LOAD FREE OCR ENGINE
+   --------------------------------------------------------- */
+
+async function loadNashabehOCR(){
+
+  if(window.Tesseract){
+    return window.Tesseract;
+  }
+
+  if(window.__nshTesseractPromise){
+    return window.__nshTesseractPromise;
+  }
+
+  window.__nshTesseractPromise=
+    new Promise((resolve,reject)=>{
+
+      let s=document.createElement("script");
+
+      s.src=
+        "https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js";
+
+      s.onload=()=>{
+
+        if(window.Tesseract){
+          resolve(window.Tesseract);
+        }
+        else{
+          reject(
+            new Error(
+              "تعذر تشغيل محرك قراءة العداد"
+            )
+          );
+        }
+
+      };
+
+      s.onerror=()=>reject(
+        new Error(
+          "تعذر تحميل محرك قراءة العداد"
+        )
+      );
+
+      document.head.appendChild(s);
+
+    });
+
+  return window.__nshTesseractPromise;
+
+}
+
+
+/* ---------------------------------------------------------
+   IMAGE HELPERS
+   --------------------------------------------------------- */
+
+function nshLoadImage(file){
+
+  return new Promise((resolve,reject)=>{
+
+    let img=new Image();
+
+    let url=
+      URL.createObjectURL(file);
+
+    img.onload=()=>{
+
+      URL.revokeObjectURL(url);
+
+      resolve(img);
+
+    };
+
+    img.onerror=()=>{
+
+      URL.revokeObjectURL(url);
+
+      reject(
+        new Error(
+          "تعذر فتح صورة العداد"
+        )
+      );
+
+    };
+
+    img.src=url;
+
+  });
+
+}
+
+
+function nshCanvasToBlob(
+  canvas,
+  quality=.88
+){
+
+  return new Promise(resolve=>{
+
+    canvas.toBlob(
+      resolve,
+      "image/jpeg",
+      quality
+    );
+
+  });
+
+}
+
+
+/* ---------------------------------------------------------
+   COMPRESS IMAGE FOR STORAGE
+   --------------------------------------------------------- */
+
+async function nshCompressMeterPhoto(file){
+
+  let img=
+    await nshLoadImage(file);
+
+  let maxSide=1800;
+
+  let scale=
+    Math.min(
+      1,
+      maxSide/
+      Math.max(
+        img.naturalWidth,
+        img.naturalHeight
+      )
+    );
+
+  let canvas=
+    document.createElement("canvas");
+
+  canvas.width=
+    Math.round(
+      img.naturalWidth*
+      scale
+    );
+
+  canvas.height=
+    Math.round(
+      img.naturalHeight*
+      scale
+    );
+
+  let ctx=
+    canvas.getContext(
+      "2d"
+    );
+
+  ctx.drawImage(
+    img,
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
+
+  let blob=
+    await nshCanvasToBlob(
+      canvas,
+      .88
+    );
+
+  return blob||file;
+
+}
+
+
+/* ---------------------------------------------------------
+   CREATE OCR CROP
+   Customer should keep number window near center
+   --------------------------------------------------------- */
+
+function nshCreateMeterCrop(
+  img,
+  rotation=0,
+  threshold=false
+){
+
+  /*
+    Wide center crop.
+
+    This intentionally keeps a large area because
+    Nashabeh meters may appear vertically in photos.
+  */
+
+  let cropW=
+    Math.round(
+      img.naturalWidth*
+      .68
+    );
+
+  let cropH=
+    Math.round(
+      img.naturalHeight*
+      .48
+    );
+
+  let sx=
+    Math.max(
+      0,
+      Math.round(
+        (
+          img.naturalWidth-
+          cropW
+        )/2
+      )
+    );
+
+  let sy=
+    Math.max(
+      0,
+      Math.round(
+        (
+          img.naturalHeight-
+          cropH
+        )/2
+      )
+    );
+
+  let temp=
+    document.createElement(
+      "canvas"
+    );
+
+  temp.width=cropW;
+  temp.height=cropH;
+
+  let tctx=
+    temp.getContext(
+      "2d",
+      {
+        willReadFrequently:true
+      }
+    );
+
+  tctx.drawImage(
+    img,
+    sx,
+    sy,
+    cropW,
+    cropH,
+    0,
+    0,
+    cropW,
+    cropH
+  );
+
+
+  /*
+    grayscale + contrast
+  */
+
+  let imageData=
+    tctx.getImageData(
+      0,
+      0,
+      cropW,
+      cropH
+    );
+
+  let d=
+    imageData.data;
+
+  for(
+    let i=0;
+    i<d.length;
+    i+=4
+  ){
+
+    let gray=
+      (
+        d[i]*.299+
+        d[i+1]*.587+
+        d[i+2]*.114
+      );
+
+    if(threshold){
+
+      gray=
+        gray>125
+        ?255
+        :0;
+
+    }
+    else{
+
+      gray=
+        Math.max(
+          0,
+          Math.min(
+            255,
+            (
+              gray-128
+            )*1.8+
+            128
+          )
+        );
+
+    }
+
+    d[i]=gray;
+    d[i+1]=gray;
+    d[i+2]=gray;
+
+  }
+
+  tctx.putImageData(
+    imageData,
+    0,
+    0
+  );
+
+
+  /*
+    Rotate
+  */
+
+  let rad=
+    rotation*
+    Math.PI/
+    180;
+
+  let swap=
+    Math.abs(
+      rotation
+    )===90;
+
+  let canvas=
+    document.createElement(
+      "canvas"
+    );
+
+  canvas.width=
+    swap
+    ?cropH
+    :cropW;
+
+  canvas.height=
+    swap
+    ?cropW
+    :cropH;
+
+  let ctx=
+    canvas.getContext(
+      "2d"
+    );
+
+  ctx.save();
+
+  ctx.translate(
+    canvas.width/2,
+    canvas.height/2
+  );
+
+  ctx.rotate(rad);
+
+  ctx.drawImage(
+    temp,
+    -cropW/2,
+    -cropH/2
+  );
+
+  ctx.restore();
+
+  return canvas;
+
+}
+
+
+/* ---------------------------------------------------------
+   GET OCR DIGIT CANDIDATE
+   --------------------------------------------------------- */
+
+function nshExtractReadingCandidates(
+  text
+){
+
+  text=
+    String(
+      text||""
+    )
+    .replace(/[Oo]/g,"0")
+    .replace(/[Il|]/g,"1");
+
+  let raw=
+    text.match(
+      /\d{4,8}/g
+    )||[];
+
+  let results=[];
+
+  for(
+    let value of raw
+  ){
+
+    let n=
+      Number(value);
+
+    if(
+      Number.isFinite(n)&&
+      n>=0
+    ){
+
+      results.push({
+        raw:value,
+        reading:n
+      });
+
+    }
+
+  }
+
+  return results;
+
+}
+
+
+/* ---------------------------------------------------------
+   FREE OCR
+   Tries meter in multiple orientations
+   --------------------------------------------------------- */
+
+async function nshReadMeterFree(
+  file,
+  previousReading=0,
+  progressCallback=()=>{}
+){
+
+  let T=
+    await loadNashabehOCR();
+
+  let img=
+    await nshLoadImage(file);
+
+  let worker=
+    await T.createWorker(
+      "eng",
+      1,
+      {
+        logger:m=>{
+
+          if(
+            m?.status===
+            "recognizing text"
+          ){
+
+            progressCallback(
+              Math.round(
+                (
+                  m.progress||0
+                )*100
+              )
+            );
+
+          }
+
+        }
+      }
+    );
+
+
+  await worker.setParameters({
+
+    tessedit_char_whitelist:
+      "0123456789",
+
+    tessedit_pageseg_mode:
+      "7",
+
+    preserve_interword_spaces:
+      "1"
+
+  });
+
+
+  let variants=[
+
+    {
+      rotation:90,
+      threshold:false
+    },
+
+    {
+      rotation:-90,
+      threshold:false
+    },
+
+    {
+      rotation:0,
+      threshold:false
+    },
+
+    {
+      rotation:180,
+      threshold:false
+    },
+
+    {
+      rotation:90,
+      threshold:true
+    },
+
+    {
+      rotation:-90,
+      threshold:true
+    }
+
+  ];
+
+
+  let all=[];
+
+  for(
+    let v of variants
+  ){
+
+    let canvas=
+      nshCreateMeterCrop(
+        img,
+        v.rotation,
+        v.threshold
+      );
+
+    try{
+
+      let r=
+        await worker.recognize(
+          canvas
+        );
+
+      let text=
+        r?.data?.text||"";
+
+      let confidence=
+        Number(
+          r?.data?.confidence||0
+        )/100;
+
+      let candidates=
+        nshExtractReadingCandidates(
+          text
+        );
+
+      for(
+        let c of candidates
+      ){
+
+        let score=
+          confidence*100;
+
+        /*
+          prefer actual meter-style 5-7 digit windows
+        */
+
+        if(
+          c.raw.length>=5&&
+          c.raw.length<=7
+        ){
+          score+=15;
+        }
+
+        /*
+          prefer readings that did not go backwards
+        */
+
+        if(
+          c.reading>=
+          Number(
+            previousReading||0
+          )
+        ){
+          score+=20;
+        }
+        else{
+          score-=50;
+        }
+
+        let usage=
+          c.reading-
+          Number(
+            previousReading||0
+          );
+
+        /*
+          absurdly huge jump gets lower score
+        */
+
+        if(
+          usage>5000
+        ){
+          score-=30;
+        }
+
+        all.push({
+
+          reading:
+            c.reading,
+
+          raw:
+            c.raw,
+
+          confidence,
+
+          score,
+
+          rotation:
+            v.rotation,
+
+          threshold:
+            v.threshold,
+
+          text
+
+        });
+
+      }
+
+    }
+    catch(e){
+
+      console.warn(
+        "OCR variant failed",
+        v,
+        e
+      );
+
+    }
+
+  }
+
+
+  await worker.terminate();
+
+
+  if(!all.length){
+
+    return{
+      ok:false,
+      reading:null,
+      confidence:0
+    };
+
+  }
+
+
+  all.sort(
+    (
+      a,
+      b
+    )=>
+      b.score-
+      a.score
+  );
+
+
+  let best=
+    all[0];
+
+
+  /*
+    OCR confidence from Tesseract sometimes
+    becomes conservative on mechanical counters.
+    Cap score in a safe way.
+  */
+
+  let confidence=
+    Math.max(
+      0,
+      Math.min(
+        1,
+        best.confidence
+      )
+    );
+
+
+  return{
+
+    ok:true,
+
+    reading:
+      best.reading,
+
+    raw:
+      best.raw,
+
+    confidence,
+
+    rotation:
+      best.rotation,
+
+    candidates:
+      all.slice(
+        0,
+        5
+      )
+
+  };
+
+}
+
+
+/* ---------------------------------------------------------
+   CURRENT BILLING MONTH
+   --------------------------------------------------------- */
+
+function nshBillingMonth(){
+
+  let d=
+    new Date();
+
+  let y=
+    d.getFullYear();
+
+  let m=
+    String(
+      d.getMonth()+1
+    )
+    .padStart(
+      2,
+      "0"
+    );
+
+  return(
+    y+
+    "-"+
+    m+
+    "-01"
+  );
+
+}
+
+
+/* ---------------------------------------------------------
+   METER CAMERA INPUT
+   --------------------------------------------------------- */
+
+function openNashabehMeterCamera(){
+
+  let input=
+    A(
+      "nshMeterCameraInput"
+    );
+
+  if(!input){
+    return;
+  }
+
+  input.value="";
+
+  input.click();
+
+}
+
+
+/* ---------------------------------------------------------
+   SHOW PHOTO PREVIEW
+   --------------------------------------------------------- */
+
+function nshPreviewMeterPhoto(
+  file
+){
+
+  let preview=
+    A(
+      "nshMeterPhotoPreview"
+    );
+
+  if(!preview){
+    return;
+  }
+
+  let old=
+    preview.dataset.objectUrl;
+
+  if(old){
+
+    try{
+      URL.revokeObjectURL(
+        old
+      );
+    }
+    catch(e){}
+
+  }
+
+  let url=
+    URL.createObjectURL(
+      file
+    );
+
+  preview.dataset.objectUrl=
+    url;
+
+  preview.src=
+    url;
+
+  preview.classList.remove(
+    "hidden"
+  );
+
+}
+
+
+/* ---------------------------------------------------------
+   STATUS BOX
+   --------------------------------------------------------- */
+
+function nshMeterStatus(
+  html,
+  type="working"
+){
+
+  let box=
+    A(
+      "nshMeterOCRStatus"
+    );
+
+  if(!box){
+    return;
+  }
+
+  box.className=
+    "nsh-meter-status "+
+    type;
+
+  box.innerHTML=
+    html;
+
+}
+
+
+/* ---------------------------------------------------------
+   MAIN PHOTO PROCESS
+   --------------------------------------------------------- */
+
+async function processNashabehMeterPhoto(
+  input
+){
+
+  if(
+    nshMeterOCRBusy
+  ){
+    return;
+  }
+
+  let file=
+    input?.files?.[0];
+
+  if(!file){
+    return;
+  }
+
+
+  if(
+    !customer?.meter?.id
+  ){
+
+    return alert(
+      "لا يوجد عداد مربوط بهذا الحساب"
+    );
+
+  }
+
+
+  nshMeterOCRBusy=true;
+
+  let button=
+    A(
+      "nshMeterCaptureBtn"
+    );
+
+  if(button){
+    button.disabled=true;
+  }
+
+
+  try{
+
+    nshPreviewMeterPhoto(
+      file
+    );
+
+
+    /*
+      Check if current month was already submitted
+    */
+
+    let billingMonth=
+      nshBillingMonth();
+
+
+    let existing=
+      await sb
+      .from(
+        "meter_photo_submissions"
+      )
+      .select(
+        "id,status,invoice_id,error_message"
+      )
+      .eq(
+        "customer_id",
+        session.user.id
+      )
+      .eq(
+        "meter_id",
+        customer.meter.id
+      )
+      .eq(
+        "billing_month",
+        billingMonth
+      )
+      .maybeSingle();
+
+
+    if(existing.data?.id){
+
+      throw new Error(
+        existing.data.status===
+        "completed"
+        ?"تم إرسال قراءة هذا الشهر وإصدار الفاتورة مسبقاً."
+        :"تم إرسال صورة عداد لهذا الشهر مسبقاً وهي قيد المعالجة أو المراجعة."
+      );
+
+    }
+
+
+    let previousReading=
+      Number(
+        customer
+        ?.readings
+        ?.[0]
+        ?.reading_value
+        ||0
+      );
+
+
+    nshMeterStatus(
+      `
+        <div class="nsh-meter-spinner"></div>
+        <b>جاري تجهيز صورة العداد...</b>
+        <small>
+          أبقِ الصفحة مفتوحة لعدة ثوانٍ
+        </small>
+      `,
+      "working"
+    );
+
+
+    /*
+      Compress evidence photo
+    */
+
+    let compressed=
+      await nshCompressMeterPhoto(
+        file
+      );
+
+
+    let path=
+      session.user.id+
+      "/"+
+      customer.meter.id+
+      "/"+
+      Date.now()+
+      ".jpg";
+
+
+    nshMeterStatus(
+      `
+        <div class="nsh-meter-spinner"></div>
+        <b>جاري حفظ صورة العداد...</b>
+        <small>
+          الصورة ستبقى محفوظة كإثبات
+        </small>
+      `,
+      "working"
+    );
+
+
+    let upload=
+      await sb
+      .storage
+      .from(
+        "meter-images"
+      )
+      .upload(
+        path,
+        compressed,
+        {
+          contentType:
+            "image/jpeg",
+
+          upsert:false
+        }
+      );
+
+
+    if(upload.error){
+
+      throw new Error(
+        "فشل رفع صورة العداد: "+
+        upload.error.message
+      );
+
+    }
+
+
+    /*
+      Create database submission
+    */
+
+    let submission=
+      await sb
+      .from(
+        "meter_photo_submissions"
+      )
+      .insert({
+
+        customer_id:
+          session.user.id,
+
+        meter_id:
+          customer.meter.id,
+
+        image_path:
+          path,
+
+        billing_month:
+          billingMonth,
+
+        previous_reading:
+          previousReading,
+
+        status:
+          "processing"
+
+      })
+      .select(
+        "id"
+      )
+      .single();
+
+
+    if(submission.error){
+
+      /*
+        remove orphan image
+      */
+
+      await sb
+      .storage
+      .from(
+        "meter-images"
+      )
+      .remove(
+        [
+          path
+        ]
+      );
+
+      throw new Error(
+        submission.error.message
+      );
+
+    }
+
+
+    /*
+      FREE LOCAL OCR
+    */
+
+    nshMeterStatus(
+      `
+        <div class="nsh-meter-spinner"></div>
+
+        <b>
+          جاري قراءة أرقام العداد...
+        </b>
+
+        <strong id="nshOCRPercent">
+          0%
+        </strong>
+
+        <small>
+          القراءة تتم على جهازك مجاناً
+        </small>
+      `,
+      "working"
+    );
+
+
+    let ocr=
+      await nshReadMeterFree(
+        file,
+        previousReading,
+        percent=>{
+
+          let p=
+            A(
+              "nshOCRPercent"
+            );
+
+          if(p){
+            p.textContent=
+              percent+
+              "%";
+          }
+
+        }
+      );
+
+
+    if(
+      !ocr.ok||
+      ocr.reading===null
+    ){
+
+      /*
+        Can't update directly due RLS,
+        send zero-confidence candidate to backend.
+      */
+
+      let failed=
+        await sb.functions.invoke(
+          "finalize-meter-photo",
+          {
+            body:{
+              submission_id:
+                submission.data.id,
+
+              detected_reading:
+                previousReading,
+
+              ocr_confidence:
+                0
+            }
+          }
+        );
+
+
+      nshMeterStatus(
+        `
+          <i data-lucide="triangle-alert"></i>
+
+          <b>
+            لم نستطع قراءة الأرقام بوضوح
+          </b>
+
+          <small>
+            تم حفظ الصورة وإرسالها للمراجعة.
+          </small>
+        `,
+        "review"
+      );
+
+      icons();
+
+      return;
+
+    }
+
+
+    nshMeterStatus(
+      `
+        <div class="nsh-meter-spinner"></div>
+
+        <b>
+          تم التقاط قراءة
+          ${ocr.reading}
+        </b>
+
+        <small>
+          جاري التحقق والحساب...
+        </small>
+      `,
+      "working"
+    );
+
+
+    /*
+      SECURE BACKEND FINALIZATION
+    */
+
+    let result=
+      await sb.functions.invoke(
+        "finalize-meter-photo",
+        {
+          body:{
+
+            submission_id:
+              submission.data.id,
+
+            detected_reading:
+              ocr.reading,
+
+            ocr_confidence:
+              ocr.confidence
+
+          }
+        }
+      );
+
+
+    if(result.error){
+
+      throw new Error(
+        result.error.message||
+        "تعذر اعتماد قراءة العداد"
+      );
+
+    }
+
+
+    let data=
+      result.data||{};
+
+
+    if(
+      data.status===
+      "completed"
+    ){
+
+      nshMeterStatus(
+        `
+          <i data-lucide="circle-check-big"></i>
+
+          <b>
+            تم إصدار الفاتورة بنجاح
+          </b>
+
+          <div class="nsh-meter-result-grid">
+
+            <span>
+              القراءة السابقة
+              <strong>
+                ${data.previous_reading}
+              </strong>
+            </span>
+
+            <span>
+              القراءة الحالية
+              <strong>
+                ${data.detected_reading}
+              </strong>
+            </span>
+
+            <span>
+              الاستهلاك
+              <strong>
+                ${data.consumption_kwh}
+                kWh
+              </strong>
+            </span>
+
+            <span>
+              سعر الكيلوواط
+              <strong>
+                $${Number(
+                  data.kwh_price||0
+                ).toFixed(2)}
+              </strong>
+            </span>
+
+            <span class="full">
+              قيمة الفاتورة
+              <strong>
+                $${Number(
+                  data.amount||0
+                ).toFixed(2)}
+              </strong>
+            </span>
+
+          </div>
+        `,
+        "success"
+      );
+
+
+      await loadCustomer();
+
+      await showCustomerTab(
+        "readings"
+      );
+
+    }
+    else{
+
+      nshMeterStatus(
+        `
+          <i data-lucide="shield-alert"></i>
+
+          <b>
+            القراءة بحاجة إلى مراجعة
+          </b>
+
+          <small>
+            ${data.reason||
+              "تم حفظ الصورة والقراءة للمراجعة قبل إصدار الفاتورة."}
+          </small>
+        `,
+        "review"
+      );
+
+    }
+
+
+    icons();
+
+  }
+  catch(e){
+
+    console.error(
+      "METER OCR:",
+      e
+    );
+
+    nshMeterStatus(
+      `
+        <i data-lucide="circle-alert"></i>
+
+        <b>
+          تعذر إكمال قراءة العداد
+        </b>
+
+        <small>
+          ${e?.message||
+            "حاول مرة أخرى بصورة أوضح"}
+        </small>
+      `,
+      "error"
+    );
+
+    icons();
+
+  }
+  finally{
+
+    nshMeterOCRBusy=false;
+
+    if(button){
+      button.disabled=false;
+    }
+
+  }
+
+}
+
+
+/* ---------------------------------------------------------
+   PHOTO SUBMISSION HISTORY
+   --------------------------------------------------------- */
+
+async function nshMeterPhotoHistory(){
+
+  if(
+    !customer?.meter?.id
+  ){
+    return "";
+  }
+
+  let q=
+    await sb
+    .from(
+      "meter_photo_submissions"
+    )
+    .select(
+      "*"
+    )
+    .eq(
+      "customer_id",
+      session.user.id
+    )
+    .eq(
+      "meter_id",
+      customer.meter.id
+    )
+    .order(
+      "created_at",
+      {
+        ascending:false
+      }
+    )
+    .limit(
+      12
+    );
+
+
+  let rows=
+    q.data||[];
+
+  if(!rows.length){
+    return "";
+  }
+
+
+  let html=
+    `
+      <div class="nsh-photo-history">
+
+        <div class="nsh-photo-history-title">
+
+          <i data-lucide="history"></i>
+
+          <span>
+            سجل صور العداد
+          </span>
+
+        </div>
+    `;
+
+
+  for(
+    let x of rows
+  ){
+
+    let statusText=
+      x.status===
+      "completed"
+      ?"تمت القراءة والفاتورة"
+      :
+      x.status===
+      "review_required"
+      ?"بحاجة للمراجعة"
+      :
+      x.status===
+      "failed"
+      ?"تعذر التحليل"
+      :
+      "قيد المعالجة";
+
+
+    html+=
+      `
+        <div class="nsh-photo-history-row">
+
+          <div>
+
+            <strong>
+              ${x.billing_month}
+            </strong>
+
+            <small>
+              ${statusText}
+            </small>
+
+          </div>
+
+          <div>
+
+            ${
+              x.detected_reading!==null
+              ?`
+                <b>
+                  ${x.detected_reading}
+                </b>
+              `
+              :""
+            }
+
+            ${
+              x.calculated_amount!==null
+              ?`
+                <span>
+                  $${Number(
+                    x.calculated_amount
+                  ).toFixed(2)}
+                </span>
+              `
+              :""
+            }
+
+          </div>
+
+        </div>
+      `;
+
+  }
+
+
+  html+="</div>";
+
+  return html;
+
+}
+
+
+/* ---------------------------------------------------------
+   OVERRIDE CUSTOMER READINGS TAB
+   --------------------------------------------------------- */
+
+const __nshOldCustomerTab13B=
+  showCustomerTab;
+
+
+showCustomerTab=
+async function(
+  type,
+  btn
+){
+
+  if(
+    type!=="readings"
+  ){
+
+    return __nshOldCustomerTab13B(
+      type,
+      btn
+    );
+
+  }
+
+
+  setBottom(
+    btn
+  );
+
+
+  let p=
+    A(
+      "customerContent"
+    );
+
+
+  let previousReading=
+    Number(
+      customer
+      ?.readings
+      ?.[0]
+      ?.reading_value
+      ||0
+    );
+
+
+  let history=
+    await nshMeterPhotoHistory();
+
+
+  p.innerHTML=
+    `
+      <div class="nsh-meter-reading-page">
+
+        <div class="nsh-reading-head">
+
+          <div>
+
+            <span class="nsh-reading-eyebrow">
+              SMART METER READING
+            </span>
+
+            <h3>
+              قراءة العداد
+            </h3>
+
+            <p>
+              صوّر نافذة أرقام العداد بشكل واضح.
+              النظام سيقرأ الأرقام ويحسب الفاتورة تلقائياً.
+            </p>
+
+          </div>
+
+          <div class="nsh-last-reading">
+
+            <small>
+              آخر قراءة مسجلة
+            </small>
+
+            <strong>
+              ${previousReading}
+            </strong>
+
+            <span>
+              kWh
+            </span>
+
+          </div>
+
+        </div>
+
+
+        <div class="nsh-camera-card">
+
+          <div class="nsh-camera-icon">
+
+            <i data-lucide="camera"></i>
+
+          </div>
+
+
+          <h4>
+            صوّر عداد الكهرباء
+          </h4>
+
+
+          <p>
+            قرّب الكاميرا على نافذة الأرقام فقط
+            وخلي الأرقام واضحة داخل منتصف الصورة.
+          </p>
+
+
+          <div class="nsh-meter-guide">
+
+            <div class="nsh-guide-box">
+
+              <span>
+                0 0 0 3 5 0
+              </span>
+
+              <small>
+                ضع أرقام العداد هنا
+              </small>
+
+            </div>
+
+          </div>
+
+
+          <img
+            id="nshMeterPhotoPreview"
+            class="nsh-meter-photo-preview hidden"
+            alt="صورة العداد"
+          >
+
+
+          <input
+            id="nshMeterCameraInput"
+            type="file"
+            accept="image/*"
+            capture="environment"
+            hidden
+            onchange="processNashabehMeterPhoto(this)"
+          >
+
+
+          <button
+            id="nshMeterCaptureBtn"
+            class="nsh-meter-camera-btn"
+            onclick="openNashabehMeterCamera()"
+          >
+
+            <i data-lucide="camera"></i>
+
+            تصوير العداد
+
+          </button>
+
+
+          <div
+            id="nshMeterOCRStatus"
+            class="nsh-meter-status idle"
+          >
+
+            <i data-lucide="scan-line"></i>
+
+            <b>
+              جاهز لقراءة العداد
+            </b>
+
+            <small>
+              لا يوجد أي API مدفوع
+            </small>
+
+          </div>
+
+        </div>
+
+
+        <div class="nsh-photo-tips">
+
+          <div>
+
+            <i data-lucide="focus"></i>
+
+            <span>
+              صوّر نافذة الأرقام من قريب
+            </span>
+
+          </div>
+
+          <div>
+
+            <i data-lucide="sun"></i>
+
+            <span>
+              تجنب انعكاس الضوء القوي
+            </span>
+
+          </div>
+
+          <div>
+
+            <i data-lucide="rotate-cw"></i>
+
+            <span>
+              لا مشكلة إذا كان العداد عمودياً
+            </span>
+
+          </div>
+
+        </div>
+
+
+        ${history}
+
+
+        <div class="nsh-old-readings">
+
+          <h4>
+            القراءات السابقة
+          </h4>
+
+          ${
+            customer.readings.length
+            ?
+            customer.readings
+            .map(
+              x=>
+                `
+                  <div class="detail-row">
+
+                    <span>
+                      ${x.billing_month}
+                      ·
+                      ${x.reading_date}
+                    </span>
+
+                    <b>
+                      ${x.reading_value}
+                    </b>
+
+                  </div>
+                `
+            )
+            .join("")
+            :
+            `
+              <p>
+                لا توجد قراءات سابقة.
+              </p>
+            `
+          }
+
+        </div>
+
+      </div>
+    `;
+
+
+  icons();
+
+};
+
+
+/* ---------------------------------------------------------
+   PART 13B STYLES
+   --------------------------------------------------------- */
+
+function injectNashabehMeterOCRStyles(){
+
+  if(
+    document.getElementById(
+      "nshMeterOCRStyles"
+    )
+  ){
+    return;
+  }
+
+
+  let st=
+    document.createElement(
+      "style"
+    );
+
+  st.id=
+    "nshMeterOCRStyles";
+
+
+  st.textContent=
+  `
+
+  .nsh-meter-reading-page{
+    max-width:760px;
+    margin:auto;
+  }
+
+  .nsh-reading-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:20px;
+    margin-bottom:18px;
+  }
+
+  .nsh-reading-eyebrow{
+    color:#14d8ff;
+    font-size:11px;
+    font-weight:800;
+    letter-spacing:.11em;
+  }
+
+  .nsh-reading-head h3{
+    margin:5px 0 6px;
+    font-size:26px;
+  }
+
+  .nsh-reading-head p{
+    margin:0;
+    opacity:.72;
+    line-height:1.8;
+  }
+
+  .nsh-last-reading{
+    min-width:130px;
+    padding:13px 16px;
+    text-align:center;
+    border:1px solid rgba(18,216,255,.35);
+    border-radius:15px;
+    background:
+      linear-gradient(
+        180deg,
+        rgba(18,216,255,.09),
+        rgba(0,0,0,.14)
+      );
+  }
+
+  .nsh-last-reading small{
+    display:block;
+    opacity:.66;
+    font-size:10px;
+  }
+
+  .nsh-last-reading strong{
+    display:block;
+    color:#9aff71;
+    font-family:
+      "Courier New",
+      monospace;
+    font-size:25px;
+    letter-spacing:.08em;
+    margin:3px 0;
+  }
+
+  .nsh-last-reading span{
+    font-size:9px;
+    opacity:.6;
+  }
+
+  .nsh-camera-card{
+    position:relative;
+    overflow:hidden;
+    text-align:center;
+    padding:26px 20px;
+    border:1px solid rgba(18,216,255,.32);
+    border-radius:22px;
+    background:
+      radial-gradient(
+        circle at 50% 0%,
+        rgba(18,216,255,.13),
+        transparent 45%
+      ),
+      rgba(3,23,34,.85);
+    box-shadow:
+      0 15px 45px rgba(0,0,0,.30);
+  }
+
+  .nsh-camera-icon{
+    width:62px;
+    height:62px;
+    margin:0 auto 12px;
+    border-radius:18px;
+    display:grid;
+    place-items:center;
+    color:#13ddff;
+    background:
+      rgba(18,216,255,.11);
+    border:
+      1px solid rgba(18,216,255,.32);
+  }
+
+  .nsh-camera-icon svg{
+    width:29px;
+    height:29px;
+  }
+
+  .nsh-camera-card h4{
+    margin:4px 0;
+    font-size:20px;
+  }
+
+  .nsh-camera-card>p{
+    max-width:520px;
+    margin:7px auto 17px;
+    line-height:1.7;
+    opacity:.68;
+  }
+
+  .nsh-meter-guide{
+    position:relative;
+    width:min(100%,430px);
+    height:165px;
+    margin:18px auto;
+    border-radius:18px;
+    background:
+      linear-gradient(
+        135deg,
+        #071218,
+        #020708
+      );
+    border:
+      1px solid rgba(255,255,255,.12);
+    display:grid;
+    place-items:center;
+    overflow:hidden;
+  }
+
+  .nsh-meter-guide:before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:
+      linear-gradient(
+        90deg,
+        transparent 49.8%,
+        rgba(18,216,255,.08) 50%,
+        transparent 50.2%
+      ),
+      linear-gradient(
+        0deg,
+        transparent 49.8%,
+        rgba(18,216,255,.08) 50%,
+        transparent 50.2%
+      );
+  }
+
+  .nsh-guide-box{
+    position:relative;
+    z-index:1;
+    width:72%;
+    padding:17px 15px;
+    border:
+      2px solid #13dfff;
+    border-radius:10px;
+    box-shadow:
+      0 0 22px rgba(18,216,255,.24),
+      inset 0 0 20px rgba(18,216,255,.05);
+  }
+
+  .nsh-guide-box span{
+    display:block;
+    direction:ltr;
+    color:#a7ff76;
+    font-family:
+      "Courier New",
+      monospace;
+    font-size:27px;
+    font-weight:900;
+    letter-spacing:.16em;
+    text-shadow:
+      0 0 11px rgba(110,255,82,.45);
+  }
+
+  .nsh-guide-box small{
+    display:block;
+    margin-top:6px;
+    color:#fff;
+    opacity:.55;
+    font-size:9px;
+  }
+
+  .nsh-meter-photo-preview{
+    width:min(100%,430px);
+    max-height:430px;
+    object-fit:contain;
+    margin:15px auto;
+    border-radius:16px;
+    border:
+      1px solid rgba(18,216,255,.26);
+    background:#000;
+    display:block;
+  }
+
+  .nsh-meter-photo-preview.hidden{
+    display:none;
+  }
+
+  .nsh-meter-camera-btn{
+    width:min(100%,430px);
+    min-height:54px;
+    border:0;
+    border-radius:14px;
+    cursor:pointer;
+    color:#001017;
+    font-weight:900;
+    font-size:15px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:9px;
+    margin:0 auto;
+    background:
+      linear-gradient(
+        135deg,
+        #16e5ff,
+        #00a9d8
+      );
+    box-shadow:
+      0 8px 25px rgba(0,205,255,.24);
+  }
+
+  .nsh-meter-camera-btn:disabled{
+    opacity:.45;
+    cursor:wait;
+  }
+
+  .nsh-meter-camera-btn svg{
+    width:20px;
+  }
+
+  .nsh-meter-status{
+    width:min(100%,430px);
+    box-sizing:border-box;
+    margin:14px auto 0;
+    padding:13px;
+    border-radius:13px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-wrap:wrap;
+    gap:7px;
+  }
+
+  .nsh-meter-status b{
+    width:auto;
+  }
+
+  .nsh-meter-status small{
+    flex-basis:100%;
+    opacity:.7;
+  }
+
+  .nsh-meter-status.idle{
+    border:
+      1px solid rgba(255,255,255,.10);
+    background:
+      rgba(255,255,255,.035);
+  }
+
+  .nsh-meter-status.working{
+    color:#10dcff;
+    border:
+      1px solid rgba(16,220,255,.26);
+    background:
+      rgba(16,220,255,.07);
+  }
+
+  .nsh-meter-status.success{
+    color:#8fff67;
+    border:
+      1px solid rgba(91,255,83,.27);
+    background:
+      rgba(73,255,66,.075);
+  }
+
+  .nsh-meter-status.review{
+    color:#ffcf35;
+    border:
+      1px solid rgba(255,199,44,.30);
+    background:
+      rgba(255,199,44,.075);
+  }
+
+  .nsh-meter-status.error{
+    color:#ff697d;
+    border:
+      1px solid rgba(255,65,91,.32);
+    background:
+      rgba(255,65,91,.075);
+  }
+
+  .nsh-meter-spinner{
+    width:17px;
+    height:17px;
+    border-radius:50%;
+    border:
+      2px solid rgba(18,216,255,.2);
+    border-top-color:#13ddff;
+    animation:
+      nshMeterSpin .8s linear infinite;
+  }
+
+  @keyframes nshMeterSpin{
+    to{
+      transform:
+        rotate(360deg);
+    }
+  }
+
+  #nshOCRPercent{
+    color:#9fff76;
+    font-family:
+      "Courier New",
+      monospace;
+  }
+
+  .nsh-meter-result-grid{
+    flex-basis:100%;
+    display:grid;
+    grid-template-columns:
+      repeat(2,1fr);
+    gap:8px;
+    margin-top:7px;
+  }
+
+  .nsh-meter-result-grid span{
+    padding:8px;
+    border-radius:8px;
+    background:
+      rgba(0,0,0,.19);
+    font-size:10px;
+    color:#d5e4e8;
+  }
+
+  .nsh-meter-result-grid strong{
+    display:block;
+    color:#9eff72;
+    font-size:14px;
+    margin-top:3px;
+  }
+
+  .nsh-meter-result-grid .full{
+    grid-column:
+      1/-1;
+  }
+
+  .nsh-meter-result-grid .full strong{
+    color:#ffc72c;
+    font-size:21px;
+  }
+
+  .nsh-photo-tips{
+    display:grid;
+    grid-template-columns:
+      repeat(3,1fr);
+    gap:10px;
+    margin:14px 0 20px;
+  }
+
+  .nsh-photo-tips div{
+    min-height:64px;
+    padding:11px;
+    border-radius:12px;
+    border:
+      1px solid rgba(255,255,255,.09);
+    background:
+      rgba(255,255,255,.025);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-direction:column;
+    gap:6px;
+    text-align:center;
+  }
+
+  .nsh-photo-tips svg{
+    width:18px;
+    color:#10dfff;
+  }
+
+  .nsh-photo-tips span{
+    font-size:10px;
+    opacity:.72;
+  }
+
+  .nsh-photo-history{
+    margin-top:19px;
+    padding:16px;
+    border-radius:16px;
+    border:
+      1px solid rgba(255,199,44,.18);
+    background:
+      rgba(255,199,44,.025);
+  }
+
+  .nsh-photo-history-title{
+    display:flex;
+    align-items:center;
+    gap:7px;
+    color:#ffc72c;
+    font-weight:800;
+    margin-bottom:10px;
+  }
+
+  .nsh-photo-history-title svg{
+    width:17px;
+  }
+
+  .nsh-photo-history-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    padding:10px 2px;
+    border-bottom:
+      1px solid rgba(255,255,255,.055);
+  }
+
+  .nsh-photo-history-row:last-child{
+    border-bottom:0;
+  }
+
+  .nsh-photo-history-row strong,
+  .nsh-photo-history-row small,
+  .nsh-photo-history-row b,
+  .nsh-photo-history-row span{
+    display:block;
+  }
+
+  .nsh-photo-history-row small{
+    opacity:.55;
+    margin-top:2px;
+  }
+
+  .nsh-photo-history-row b{
+    color:#9eff72;
+  }
+
+  .nsh-photo-history-row span{
+    color:#ffc72c;
+    font-weight:800;
+    margin-top:2px;
+  }
+
+  .nsh-old-readings{
+    margin-top:18px;
+  }
+
+  .nsh-old-readings h4{
+    margin-bottom:10px;
+  }
+
+
+  @media(max-width:600px){
+
+    .nsh-reading-head{
+      align-items:stretch;
+      flex-direction:column;
+    }
+
+    .nsh-last-reading{
+      width:100%;
+      box-sizing:border-box;
+    }
+
+    .nsh-camera-card{
+      padding:
+        20px 12px;
+      border-radius:18px;
+    }
+
+    .nsh-meter-guide{
+      height:135px;
+    }
+
+    .nsh-guide-box span{
+      font-size:20px;
+    }
+
+    .nsh-photo-tips{
+      grid-template-columns:1fr;
+    }
+
+  }
+
+  `;
+
+
+  document.head
+  .appendChild(
+    st
+  );
+
+}
+
+
+injectNashabehMeterOCRStyles();
+
+/* =========================================================
+   END PART 13B
+   ========================================================= */
 injectPhoneAuthStyles();
 
 preparePhoneLoginUI();
