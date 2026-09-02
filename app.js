@@ -21789,6 +21789,1356 @@ injectNashabehMeterAdminStyles();
    END PART 13C
    ========================================================= */
 
+/* =========================================================
+   PART 13D
+   500+ SCALE UPGRADE - METER READING CONTROL CENTER V2
+   ========================================================= */
+
+const NSH_METER_ADMIN_PAGE_SIZE = 20;
+
+let nshMeterAdminState = {
+  page: 1,
+  search: "",
+  status: "all",
+  total: 0,
+  busy: false
+};
+
+function nshEsc13D(v) {
+  return String(v ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function nshStatus13D(s) {
+  return s === "completed"
+    ? "Completed"
+    : s === "review_required"
+    ? "Review Required"
+    : s === "processing"
+    ? "Processing"
+    : s === "pending"
+    ? "Pending"
+    : s === "failed"
+    ? "Failed"
+    : s || "-";
+}
+
+function nshSource13D(s) {
+  return s === "manual_corrected"
+    ? "تم التصحيح يدوياً"
+    : s === "manual"
+    ? "إدخال يدوي"
+    : "OCR";
+}
+
+async function nshSigned13D(path) {
+  if (!path) return "";
+
+  let r = await sb.storage
+    .from("meter-images")
+    .createSignedUrl(path, 600);
+
+  return r.data?.signedUrl || "";
+}
+
+
+/* =========================================================
+   LOAD METER PHOTO SUBMISSIONS
+   SERVER-SIDE PAGINATION
+   ========================================================= */
+
+async function nshRenderMeterPhotoControlCenter() {
+
+  const st = nshMeterAdminState;
+
+  const offset =
+    (st.page - 1) * NSH_METER_ADMIN_PAGE_SIZE;
+
+
+  let r = await sb.rpc(
+    "admin_meter_photo_page",
+    {
+      p_search: st.search || "",
+      p_status: st.status || "all",
+      p_limit: NSH_METER_ADMIN_PAGE_SIZE,
+      p_offset: offset
+    }
+  );
+
+
+  if (r.error) {
+
+    console.error(
+      "PART 13D:",
+      r.error
+    );
+
+    return `
+      <article class="
+        panel
+        admin-card
+        nsh-meter-admin-center
+      ">
+
+        <h3>
+          Meter Reading Control Center
+        </h3>
+
+        <div class="nsh-scale-empty">
+          تعذر تحميل قراءات العدادات.
+        </div>
+
+      </article>
+    `;
+  }
+
+
+  let rows = r.data || [];
+
+
+  st.total =
+    Number(
+      rows[0]?.total_count || 0
+    );
+
+
+  let pages =
+    Math.max(
+      1,
+      Math.ceil(
+        st.total /
+        NSH_METER_ADMIN_PAGE_SIZE
+      )
+    );
+
+
+  if (
+    st.page > pages &&
+    st.total
+  ) {
+
+    st.page = pages;
+
+    return nshRenderMeterPhotoControlCenter();
+  }
+
+
+  /* =====================================================
+     ONLY CURRENT PAGE IMAGES
+     ===================================================== */
+
+  let pairs =
+    await Promise.all(
+      rows.map(
+        async x => [
+          x.id,
+          await nshSigned13D(
+            x.image_path
+          )
+        ]
+      )
+    );
+
+
+  let imgs =
+    Object.fromEntries(
+      pairs
+    );
+
+
+  /* =====================================================
+     CARDS
+     ===================================================== */
+
+  let cards =
+    rows.map(x => {
+
+      let im =
+        imgs[x.id] || "";
+
+
+      let fin =
+        x.final_reading ??
+        x.detected_reading ??
+        "-";
+
+
+      let amt =
+        x.calculated_amount != null
+          ? "$" +
+            Number(
+              x.calculated_amount
+            ).toFixed(2)
+          : "-";
+
+
+      let price =
+        x.kwh_price != null
+          ? "$" +
+            Number(
+              x.kwh_price
+            ).toFixed(2)
+          : "-";
+
+
+      return `
+
+        <div class="
+          nsh-meter-admin-card
+        ">
+
+          <div class="
+            nsh-meter-admin-image
+          ">
+
+            ${
+              im
+                ? `
+                  <img
+                    src="${im}"
+                    alt="Meter"
+                    loading="lazy"
+                    onclick="
+                      window.open(
+                        '${im}',
+                        '_blank'
+                      )
+                    "
+                  >
+                `
+                : `
+                  <div class="
+                    nsh-no-meter-image
+                  ">
+                    <i
+                      data-lucide="
+                        image-off
+                      "
+                    ></i>
+                  </div>
+                `
+            }
+
+
+            <span
+              class="
+                nsh-meter-admin-status
+                ${nshEsc13D(x.status)}
+              "
+            >
+              ${
+                nshEsc13D(
+                  nshStatus13D(
+                    x.status
+                  )
+                )
+              }
+            </span>
+
+          </div>
+
+
+          <div class="
+            nsh-meter-admin-body
+          ">
+
+
+            <div class="
+              nsh-meter-admin-customer
+            ">
+
+              <div>
+
+                <strong>
+                  ${
+                    nshEsc13D(
+                      x.customer_name ||
+                      "مشترك"
+                    )
+                  }
+                </strong>
+
+                <small>
+                  ${
+                    nshEsc13D(
+                      x.customer_phone ||
+                      ""
+                    )
+                  }
+                </small>
+
+              </div>
+
+
+              <span>
+                Meter
+                ${
+                  nshEsc13D(
+                    x.meter_number ||
+                    "-"
+                  )
+                }
+              </span>
+
+            </div>
+
+
+            <div class="
+              nsh-ocr-comparison
+            ">
+
+              <div>
+
+                <small>
+                  OCR
+                </small>
+
+                <strong
+                  class="ocr-value"
+                >
+                  ${
+                    nshEsc13D(
+                      x.ocr_raw_reading ??
+                      "-"
+                    )
+                  }
+                </strong>
+
+              </div>
+
+
+              <i
+                data-lucide="
+                  arrow-left
+                "
+              ></i>
+
+
+              <div>
+
+                <small>
+                  Final
+                </small>
+
+                <strong
+                  class="final-value"
+                >
+                  ${
+                    nshEsc13D(
+                      fin
+                    )
+                  }
+                </strong>
+
+              </div>
+
+            </div>
+
+
+            <div class="
+              nsh-meter-admin-info
+            ">
+
+
+              <div>
+
+                <span>
+                  القراءة السابقة
+                </span>
+
+                <b>
+                  ${
+                    nshEsc13D(
+                      x.previous_reading ??
+                      "-"
+                    )
+                  }
+                </b>
+
+              </div>
+
+
+              <div>
+
+                <span>
+                  الاستهلاك
+                </span>
+
+                <b>
+                  ${
+                    nshEsc13D(
+                      x.consumption_kwh ??
+                      "-"
+                    )
+                  }
+                  kWh
+                </b>
+
+              </div>
+
+
+              <div>
+
+                <span>
+                  السعر
+                </span>
+
+                <b>
+                  ${price}
+                </b>
+
+              </div>
+
+
+              <div>
+
+                <span>
+                  الفاتورة
+                </span>
+
+                <b class="amount">
+                  ${amt}
+                </b>
+
+              </div>
+
+            </div>
+
+
+            <div class="
+              nsh-meter-admin-footer
+            ">
+
+              <span>
+                ${
+                  nshEsc13D(
+                    x.billing_month ||
+                    "-"
+                  )
+                }
+              </span>
+
+
+              <span class="source">
+
+                ${
+                  nshEsc13D(
+                    nshSource13D(
+                      x.reading_source
+                    )
+                  )
+                }
+
+              </span>
+
+            </div>
+
+
+            ${
+              x.error_message
+                ? `
+                  <div class="
+                    nsh-meter-admin-error
+                  ">
+                    ${
+                      nshEsc13D(
+                        x.error_message
+                      )
+                    }
+                  </div>
+                `
+                : ""
+            }
+
+
+          </div>
+
+        </div>
+      `;
+
+    }).join("");
+
+
+  /* =====================================================
+     FULL CONTROL CENTER
+     ===================================================== */
+
+  return `
+
+    <article class="
+      panel
+      admin-card
+      nsh-meter-admin-center
+      nsh-scale-v2
+    ">
+
+
+      <div class="
+        nsh-meter-admin-head
+      ">
+
+
+        <div>
+
+          <span>
+            SMART METER CONTROL ·
+            500+ READY
+          </span>
+
+          <h3>
+            Meter Reading
+            Control Center
+          </h3>
+
+          <p>
+            بحث وفلترة وتقسيم صفحات
+            من Supabase —
+            بدون تحميل كل السجلات
+            دفعة واحدة.
+          </p>
+
+        </div>
+
+
+        <div class="
+          nsh-meter-admin-count
+        ">
+
+          <strong>
+            ${st.total}
+          </strong>
+
+          <small>
+            Submission
+          </small>
+
+        </div>
+
+      </div>
+
+
+
+      <!-- =========================
+           SEARCH + FILTER
+           ========================= -->
+
+      <div class="
+        nsh-scale-toolbar
+      ">
+
+
+        <div class="
+          nsh-scale-search
+        ">
+
+          <i
+            data-lucide="
+              search
+            "
+          ></i>
+
+
+          <input
+            id="
+              nshMeterAdminSearch
+            "
+            value="
+              ${nshEsc13D(st.search)}
+            "
+            placeholder="
+              بحث بالاسم، الهاتف
+              أو رقم العداد...
+            "
+            onkeydown="
+              if(
+                event.key === 'Enter'
+              )
+              nshMeterAdminApply13D()
+            "
+          >
+
+        </div>
+
+
+
+        <select
+          id="
+            nshMeterAdminStatus
+          "
+          onchange="
+            nshMeterAdminApply13D()
+          "
+        >
+
+          <option
+            value="all"
+            ${
+              st.status === "all"
+                ? "selected"
+                : ""
+            }
+          >
+            كل الحالات
+          </option>
+
+
+          <option
+            value="review_required"
+            ${
+              st.status ===
+              "review_required"
+                ? "selected"
+                : ""
+            }
+          >
+            بحاجة مراجعة
+          </option>
+
+
+          <option
+            value="completed"
+            ${
+              st.status ===
+              "completed"
+                ? "selected"
+                : ""
+            }
+          >
+            مكتمل
+          </option>
+
+
+          <option
+            value="pending"
+            ${
+              st.status ===
+              "pending"
+                ? "selected"
+                : ""
+            }
+          >
+            قيد الانتظار
+          </option>
+
+
+          <option
+            value="processing"
+            ${
+              st.status ===
+              "processing"
+                ? "selected"
+                : ""
+            }
+          >
+            قيد المعالجة
+          </option>
+
+
+          <option
+            value="failed"
+            ${
+              st.status ===
+              "failed"
+                ? "selected"
+                : ""
+            }
+          >
+            فشل
+          </option>
+
+        </select>
+
+
+
+        <button
+          class="
+            action-btn
+            nsh-scale-search-btn
+          "
+          onclick="
+            nshMeterAdminApply13D()
+          "
+        >
+
+          <i
+            data-lucide="
+              search
+            "
+          ></i>
+
+          بحث
+
+        </button>
+
+      </div>
+
+
+
+      <!-- =========================
+           RESULT SUMMARY
+           ========================= -->
+
+      <div class="
+        nsh-scale-summary
+      ">
+
+        <span>
+
+          عرض
+
+          ${
+            st.total
+              ? offset + 1
+              : 0
+          }
+
+          –
+
+          ${
+            Math.min(
+              offset +
+              rows.length,
+              st.total
+            )
+          }
+
+          من
+
+          ${st.total}
+
+        </span>
+
+
+        <span>
+          20 سجل بكل صفحة
+        </span>
+
+      </div>
+
+
+
+      ${
+        rows.length
+
+          ? `
+
+            <div class="
+              nsh-meter-admin-grid
+            ">
+
+              ${cards}
+
+            </div>
+
+          `
+
+          : `
+
+            <div class="
+              nsh-scale-empty
+            ">
+
+              <i
+                data-lucide="
+                  search-x
+                "
+              ></i>
+
+              <strong>
+                لا توجد نتائج
+              </strong>
+
+              <span>
+                غيّر البحث
+                أو الفلتر.
+              </span>
+
+            </div>
+
+          `
+      }
+
+
+
+      <!-- =========================
+           PAGINATION
+           ========================= -->
+
+      <div class="
+        nsh-scale-pagination
+      ">
+
+
+        <button
+          class="row-btn"
+          onclick="
+            nshMeterAdminPage13D(
+              ${st.page - 1}
+            )
+          "
+          ${
+            st.page <= 1
+              ? "disabled"
+              : ""
+          }
+        >
+
+          <i
+            data-lucide="
+              chevron-right
+            "
+          ></i>
+
+          السابق
+
+        </button>
+
+
+
+        <div class="
+          nsh-scale-page-number
+        ">
+
+          <small>
+            PAGE
+          </small>
+
+          <strong>
+            ${st.page}
+          </strong>
+
+          <span>
+            / ${pages}
+          </span>
+
+        </div>
+
+
+
+        <button
+          class="row-btn"
+          onclick="
+            nshMeterAdminPage13D(
+              ${st.page + 1}
+            )
+          "
+          ${
+            st.page >= pages
+              ? "disabled"
+              : ""
+          }
+        >
+
+          التالي
+
+          <i
+            data-lucide="
+              chevron-left
+            "
+          ></i>
+
+        </button>
+
+      </div>
+
+
+    </article>
+  `;
+}
+
+
+
+/* =========================================================
+   REFRESH CONTROL CENTER ONLY
+   ========================================================= */
+
+async function nshMeterAdminRefresh13D() {
+
+  if (
+    nshMeterAdminState.busy
+  ) return;
+
+
+  nshMeterAdminState.busy = true;
+
+
+  try {
+
+    let old =
+      document.querySelector(
+        ".nsh-meter-admin-center"
+      );
+
+
+    if (old) {
+
+      old.classList.add(
+        "nsh-scale-loading"
+      );
+
+    }
+
+
+    let html =
+      await nshRenderMeterPhotoControlCenter();
+
+
+    old =
+      document.querySelector(
+        ".nsh-meter-admin-center"
+      );
+
+
+    if (old) {
+
+      old.outerHTML = html;
+
+    }
+
+
+    icons();
+
+  }
+
+  finally {
+
+    nshMeterAdminState.busy =
+      false;
+
+  }
+
+}
+
+
+
+/* =========================================================
+   APPLY SEARCH / FILTER
+   ========================================================= */
+
+window.nshMeterAdminApply13D =
+async function() {
+
+  nshMeterAdminState.search =
+    A(
+      "nshMeterAdminSearch"
+    )?.value?.trim() || "";
+
+
+  nshMeterAdminState.status =
+    A(
+      "nshMeterAdminStatus"
+    )?.value || "all";
+
+
+  nshMeterAdminState.page = 1;
+
+
+  await nshMeterAdminRefresh13D();
+
+};
+
+
+
+/* =========================================================
+   CHANGE PAGE
+   ========================================================= */
+
+window.nshMeterAdminPage13D =
+async function(page) {
+
+  let pages =
+    Math.max(
+      1,
+      Math.ceil(
+        nshMeterAdminState.total /
+        NSH_METER_ADMIN_PAGE_SIZE
+      )
+    );
+
+
+  if (
+    page < 1 ||
+    page > pages ||
+    page ===
+      nshMeterAdminState.page
+  ) return;
+
+
+  nshMeterAdminState.page =
+    page;
+
+
+  await nshMeterAdminRefresh13D();
+
+
+  document
+    .querySelector(
+      ".nsh-meter-admin-center"
+    )
+    ?.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+
+};
+
+
+
+/* =========================================================
+   PART 13D STYLES
+   ========================================================= */
+
+function injectNshScale13D() {
+
+  if (
+    A(
+      "nshScale13DStyles"
+    )
+  ) return;
+
+
+  let e =
+    document.createElement(
+      "style"
+    );
+
+
+  e.id =
+    "nshScale13DStyles";
+
+
+  e.textContent = `
+
+    .nsh-scale-toolbar {
+
+      display: grid;
+
+      grid-template-columns:
+        minmax(260px, 1fr)
+        210px
+        auto;
+
+      gap: 12px;
+
+      align-items: center;
+
+      margin:
+        20px 0 10px;
+
+    }
+
+
+    .nsh-scale-search {
+
+      position: relative;
+
+    }
+
+
+    .nsh-scale-search > i {
+
+      position: absolute;
+
+      right: 14px;
+
+      top: 50%;
+
+      transform:
+        translateY(-50%);
+
+      width: 18px;
+
+      opacity: .65;
+
+    }
+
+
+    .nsh-scale-search input,
+    .nsh-scale-toolbar select {
+
+      width: 100%;
+
+      height: 46px;
+
+      border-radius: 12px;
+
+      padding:
+        0 42px 0 14px;
+
+      background:
+        rgba(
+          5,
+          18,
+          31,
+          .72
+        );
+
+      border:
+        1px solid
+        rgba(
+          75,
+          210,
+          255,
+          .16
+        );
+
+      color: inherit;
+
+      outline: none;
+
+    }
+
+
+    .nsh-scale-toolbar select {
+
+      padding:
+        0 14px;
+
+    }
+
+
+    .nsh-scale-search-btn {
+
+      height: 46px;
+
+      display: flex;
+
+      align-items: center;
+
+      justify-content:
+        center;
+
+      gap: 7px;
+
+    }
+
+
+    .nsh-scale-summary {
+
+      display: flex;
+
+      justify-content:
+        space-between;
+
+      gap: 12px;
+
+      flex-wrap: wrap;
+
+      font-size: 12px;
+
+      opacity: .68;
+
+      margin:
+        0 2px 16px;
+
+    }
+
+
+    .nsh-scale-pagination {
+
+      display: flex;
+
+      align-items: center;
+
+      justify-content:
+        center;
+
+      gap: 16px;
+
+      margin-top: 22px;
+
+      padding-top: 18px;
+
+      border-top:
+        1px solid
+        rgba(
+          255,
+          255,
+          255,
+          .07
+        );
+
+    }
+
+
+    .nsh-scale-pagination button {
+
+      display: flex;
+
+      align-items: center;
+
+      gap: 6px;
+
+      min-width: 105px;
+
+      justify-content:
+        center;
+
+    }
+
+
+    .nsh-scale-pagination
+    button:disabled {
+
+      opacity: .3;
+
+      cursor:
+        not-allowed;
+
+    }
+
+
+    .nsh-scale-page-number {
+
+      display: flex;
+
+      align-items:
+        baseline;
+
+      gap: 5px;
+
+      padding:
+        8px 14px;
+
+      border:
+        1px solid
+        rgba(
+          75,
+          210,
+          255,
+          .13
+        );
+
+      border-radius:
+        12px;
+
+    }
+
+
+    .nsh-scale-page-number
+    strong {
+
+      font-size:
+        18px;
+
+      color:
+        #53d8ff;
+
+    }
+
+
+    .nsh-scale-empty {
+
+      min-height:
+        150px;
+
+      display: flex;
+
+      flex-direction:
+        column;
+
+      align-items:
+        center;
+
+      justify-content:
+        center;
+
+      gap: 7px;
+
+      text-align:
+        center;
+
+      opacity: .7;
+
+      border:
+        1px dashed
+        rgba(
+          255,
+          255,
+          255,
+          .09
+        );
+
+      border-radius:
+        16px;
+
+      margin-top:
+        16px;
+
+    }
+
+
+    .nsh-scale-loading {
+
+      opacity: .55;
+
+      pointer-events:
+        none;
+
+    }
+
+
+
+    /* ==========================
+       MOBILE
+       ========================== */
+
+    @media(
+      max-width: 760px
+    ) {
+
+      .nsh-scale-toolbar {
+
+        grid-template-columns:
+          1fr;
+
+      }
+
+
+      .nsh-scale-search-btn {
+
+        width: 100%;
+
+      }
+
+
+      .nsh-scale-pagination {
+
+        gap: 8px;
+
+      }
+
+
+      .nsh-scale-pagination
+      button {
+
+        min-width:
+          88px;
+
+      }
+
+    }
+
+  `;
+
+
+  document.head
+    .appendChild(e);
+
+}
+
+
+injectNshScale13D();
+
+
+/* =========================================================
+   END PART 13D
+   ========================================================= */
+
 injectPhoneAuthStyles();
 
 preparePhoneLoginUI();
