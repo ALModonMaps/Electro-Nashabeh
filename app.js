@@ -15375,7 +15375,835 @@ function syncRateMonitor(){
 /* =========================================================
    LOAD V5
    ========================================================= */
+/* =========================================================
+   PART 13A
+   PHONE AUTH + CUSTOMER PHONE MANAGEMENT
+   ========================================================= */
 
+
+/* =========================================================
+   PHONE NORMALIZATION
+   ========================================================= */
+
+function normalizeNashabehPhone(value){
+
+  let phone=
+    String(
+      value||
+      ""
+    )
+    .trim()
+    .replace(
+      /[\s\-().]/g,
+      ""
+    );
+
+  if(!phone){
+    return "";
+  }
+
+  if(
+    phone.startsWith(
+      "00"
+    )
+  ){
+
+    phone=
+      "+"+
+      phone.slice(2);
+
+  }
+  else if(
+    phone.startsWith("+")
+  ){
+
+    /* already international */
+
+  }
+  else if(
+    phone.startsWith("961")
+  ){
+
+    phone=
+      "+"+
+      phone;
+
+  }
+  else if(
+    phone.startsWith("0")
+  ){
+
+    phone=
+      "+961"+
+      phone.slice(1);
+
+  }
+  else{
+
+    phone=
+      "+961"+
+      phone;
+
+  }
+
+  return phone;
+
+}
+
+
+/* =========================================================
+   LOGIN UI
+   customer = phone + password
+   admin can still use email + password
+   ========================================================= */
+
+function preparePhoneLoginUI(){
+
+  let field=
+    A("loginEmail");
+
+  if(!field)return;
+
+  field.type=
+    "text";
+
+  field.inputMode=
+    "tel";
+
+  field.autocomplete=
+    "username";
+
+  field.placeholder=
+    "رقم الهاتف للمشترك أو بريد الإدارة";
+
+  let label=
+    field.closest(
+      "label"
+    );
+
+  if(label){
+
+    let nodes=
+      [
+        ...label.childNodes
+      ];
+
+    let textNode=
+      nodes.find(
+        n=>
+          n.nodeType===
+          Node.TEXT_NODE
+          &&
+          n.textContent.trim()
+      );
+
+    if(textNode){
+
+      textNode.textContent=
+        " الهاتف / بريد الإدارة ";
+
+    }
+
+  }
+
+}
+
+
+/* =========================================================
+   NEW LOGIN
+   detects phone or email automatically
+   ========================================================= */
+
+login=
+async function(){
+
+  try{
+
+    let identity=
+      A("loginEmail")
+      ?.value
+      ?.trim()||
+      "";
+
+    let password=
+      A("loginPassword")
+      ?.value||
+      "";
+
+    if(
+      !identity||
+      !password
+    ){
+
+      return authMsg(
+        "أدخل رقم الهاتف وكلمة المرور"
+      );
+
+    }
+
+    let credentials={
+      password
+    };
+
+    /*
+      ADMIN:
+      email@example.com
+
+      CUSTOMER:
+      70xxxxxx
+      03xxxxxx
+      +961...
+    */
+
+    if(
+      identity.includes("@")
+    ){
+
+      credentials.email=
+        identity;
+
+    }
+    else{
+
+      let phone=
+        normalizeNashabehPhone(
+          identity
+        );
+
+      if(
+        !/^\+\d{8,15}$/
+        .test(phone)
+      ){
+
+        return authMsg(
+          "رقم الهاتف غير صحيح"
+        );
+
+      }
+
+      credentials.phone=
+        phone;
+
+    }
+
+    let{
+      error
+    }=
+    await sb.auth
+    .signInWithPassword(
+      credentials
+    );
+
+    if(error){
+
+      return authMsg(
+        identity.includes("@")
+        ?
+        "تعذر تسجيل الدخول. تحقق من البريد وكلمة المرور."
+        :
+        "تعذر تسجيل الدخول. تحقق من رقم الهاتف وكلمة المرور."
+      );
+
+    }
+
+    await boot();
+
+  }
+  catch(e){
+
+    authMsg(
+      e?.message||
+      "تعذر الاتصال بالخدمة. جرّب مجددًا."
+    );
+
+  }
+
+};
+
+
+/* =========================================================
+   NEW CUSTOMER CREATION
+   PHONE + PASSWORD ONLY
+   ========================================================= */
+
+createCustomer=
+async function(){
+
+  let full_name=
+    A("newName")
+    ?.value
+    ?.trim()||
+    "";
+
+  let phone=
+    normalizeNashabehPhone(
+      A("newPhone")
+      ?.value||
+      ""
+    );
+
+  let password=
+    A("newPassword")
+    ?.value||
+    "";
+
+  let area_id=
+    A("newArea")
+    ?.value||
+    "";
+
+  let meter_number=
+    A("newMeter")
+    ?.value
+    ?.trim()||
+    "";
+
+  let initial_reading=
+    A("newInitialReading")
+    ?.value
+    ?.trim()||
+    "";
+
+  if(!full_name){
+
+    return alert(
+      "أدخل اسم المشترك"
+    );
+
+  }
+
+  if(
+    !phone||
+    !/^\+\d{8,15}$/
+    .test(phone)
+  ){
+
+    return alert(
+      "أدخل رقم هاتف صحيح"
+    );
+
+  }
+
+  if(
+    !password||
+    password.length<8
+  ){
+
+    return alert(
+      "كلمة المرور يجب أن تكون 8 أحرف على الأقل"
+    );
+
+  }
+
+  if(!area_id){
+
+    return alert(
+      "اختر المنطقة"
+    );
+
+  }
+
+  if(!meter_number){
+
+    return alert(
+      "أدخل رقم العداد"
+    );
+
+  }
+
+  if(
+    initial_reading===""||
+    isNaN(
+      Number(
+        initial_reading
+      )
+    )||
+    Number(
+      initial_reading
+    )<0
+  ){
+
+    return alert(
+      "أدخل القراءة الحالية للعداد بشكل صحيح"
+    );
+
+  }
+
+  let body={
+
+    full_name,
+
+    phone,
+
+    password,
+
+    area_id,
+
+    meter_number,
+
+    initial_reading
+
+  };
+
+  let r=
+    await sb.functions
+    .invoke(
+      "create-customer",
+      {
+        body
+      }
+    );
+
+  if(r.error){
+
+    return alert(
+      r.error.message
+    );
+
+  }
+
+  if(
+    r.data?.error
+  ){
+
+    return alert(
+      r.data.error
+    );
+
+  }
+
+  alert(
+    "تم إنشاء المشترك بنجاح\n\n"+
+    "رقم الدخول: "+
+    phone+
+    "\n"+
+    "تم ربط العداد وحفظ القراءة الافتتاحية."
+  );
+
+  renderAdmin(
+    "subscribers"
+  );
+
+};
+
+
+/* =========================================================
+   SYNC OLD CUSTOMER TO PHONE AUTH
+   Keeps same account/password/data
+   ========================================================= */
+
+async function syncCustomerPhoneAuth(
+  customerId,
+  button
+){
+
+  if(
+    !customerId
+  )return;
+
+  let originalText=
+    button
+    ?.innerHTML||
+    "";
+
+  if(button){
+
+    button.disabled=
+      true;
+
+    button.innerHTML=
+      `
+        <i data-lucide="loader-circle"></i>
+        جاري تفعيل الدخول بالهاتف...
+      `;
+
+    icons();
+
+  }
+
+  try{
+
+    let r=
+      await sb.functions
+      .invoke(
+        "sync-customer-phone-auth",
+        {
+          body:{
+            customer_id:
+              customerId
+          }
+        }
+      );
+
+    if(r.error){
+
+      throw r.error;
+
+    }
+
+    if(
+      r.data?.error
+    ){
+
+      throw new Error(
+        r.data.error
+      );
+
+    }
+
+    if(button){
+
+      button.innerHTML=
+        `
+          <i data-lucide="circle-check"></i>
+          PHONE LOGIN ACTIVE
+        `;
+
+      button.classList
+      .add(
+        "phone-ready"
+      );
+
+      icons();
+
+    }
+
+    alert(
+      "تم تفعيل تسجيل الدخول بالهاتف بنجاح.\n\n"+
+      "رقم الدخول:\n"+
+      (
+        r.data?.phone||
+        ""
+      )+
+      "\n\n"+
+      "كلمة المرور بقيت نفسها."
+    );
+
+  }
+  catch(e){
+
+    if(button){
+
+      button.disabled=
+        false;
+
+      button.innerHTML=
+        originalText;
+
+      icons();
+
+    }
+
+    alert(
+      "تعذر تفعيل الدخول بالهاتف:\n"+
+      (
+        e?.message||
+        e
+      )
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   UPGRADE CUSTOMER MANAGEMENT UI
+   remove email + add phone-login button
+   ========================================================= */
+
+const subscribersPhoneBase=
+  subscribers;
+
+subscribers=
+async function(c){
+
+  await subscribersPhoneBase(
+    c
+  );
+
+  /*
+    Remove email field from
+    New Customer Terminal
+  */
+
+  let emailInput=
+    A("newEmail");
+
+  if(emailInput){
+
+    let field=
+      emailInput.closest(
+        ".customer-create-field"
+      );
+
+    if(field){
+
+      field.remove();
+
+    }
+
+  }
+
+
+  /*
+    Improve phone field
+  */
+
+  let phoneInput=
+    A("newPhone");
+
+  if(phoneInput){
+
+    phoneInput.type=
+      "tel";
+
+    phoneInput.inputMode=
+      "tel";
+
+    phoneInput.placeholder=
+      "مثال: 70330820";
+
+    phoneInput.autocomplete=
+      "off";
+
+  }
+
+
+  /*
+    Load customers in exact same order
+    as V5 cards
+  */
+
+  let result=
+    await sb
+    .from(
+      "profiles"
+    )
+    .select(
+      "id,full_name,phone"
+    )
+    .eq(
+      "role",
+      "customer"
+    )
+    .order(
+      "created_at",
+      {
+        ascending:false
+      }
+    );
+
+  let customers=
+    result.data||
+    [];
+
+  let cards=
+    [
+      ...document
+      .querySelectorAll(
+        ".customer-unit"
+      )
+    ];
+
+
+  cards.forEach(
+    (
+      card,
+      index
+    )=>{
+
+      let customer=
+        customers[index];
+
+      if(
+        !customer
+      )return;
+
+
+      let old=
+        card.querySelector(
+          ".phone-auth-btn"
+        );
+
+      if(old)return;
+
+
+      let button=
+        document
+        .createElement(
+          "button"
+        );
+
+      button.className=
+        "phone-auth-btn";
+
+      button.type=
+        "button";
+
+      button.innerHTML=
+        `
+          <i data-lucide="smartphone"></i>
+
+          تفعيل الدخول برقم الهاتف
+        `;
+
+      button.onclick=
+        ()=>syncCustomerPhoneAuth(
+          customer.id,
+          button
+        );
+
+
+      let toggle=
+        card.querySelector(
+          ".customer-toggle"
+        );
+
+      if(toggle){
+
+        toggle
+        .insertAdjacentElement(
+          "beforebegin",
+          button
+        );
+
+      }
+      else{
+
+        card
+        .appendChild(
+          button
+        );
+
+      }
+
+    }
+  );
+
+  icons();
+
+};
+
+
+/* =========================================================
+   PART 13A STYLES
+   ========================================================= */
+
+function injectPhoneAuthStyles(){
+
+  if(
+    A("nashabehPhoneAuthStyles")
+  )return;
+
+  let st=
+    document
+    .createElement(
+      "style"
+    );
+
+  st.id=
+    "nashabehPhoneAuthStyles";
+
+  st.textContent=`
+
+    .phone-auth-btn{
+
+      width:100%;
+
+      min-height:38px;
+
+      display:flex;
+
+      align-items:center;
+      justify-content:center;
+
+      gap:7px;
+
+      margin-top:8px;
+
+      padding:9px 11px;
+
+      border-radius:10px;
+
+      border:
+        1px solid
+        rgba(49,220,255,.30);
+
+      background:
+        linear-gradient(
+          145deg,
+          rgba(39,216,255,.10),
+          rgba(4,24,34,.95)
+        );
+
+      color:#43eaff;
+
+      font-size:8px;
+
+      font-weight:900;
+
+      cursor:pointer;
+
+      transition:.2s ease;
+
+    }
+
+    .phone-auth-btn:hover{
+
+      transform:
+        translateY(-1px);
+
+      box-shadow:
+        0 0 15px
+        rgba(55,224,255,.12);
+
+      border-color:#43eaff;
+
+    }
+
+    .phone-auth-btn:disabled{
+
+      cursor:default;
+
+      opacity:.72;
+
+    }
+
+    .phone-auth-btn.phone-ready{
+
+      color:#42ef78;
+
+      border-color:
+        rgba(66,239,120,.35);
+
+      background:
+        rgba(66,239,120,.06);
+
+    }
+
+    .phone-auth-btn svg{
+
+      width:14px;
+      height:14px;
+
+    }
+
+  `;
+
+  document.head
+  .appendChild(st);
+
+}
+
+
+/* =========================================================
+   INITIALIZE PART 13A
+   ========================================================= */
+
+injectPhoneAuthStyles();
+
+preparePhoneLoginUI();
 injectAdminPremiumV5Styles();
 
 injectAdminPremiumV4Styles();
