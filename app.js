@@ -32840,157 +32840,230 @@ function nshExtractCandidates13F(
       text
     );
 
-
-  /*
-    First try contiguous numbers
-  */
-
   let groups =
     normalized.match(
       /\d{4,8}/g
     ) || [];
 
-
   /*
-    Tesseract sometimes inserts spaces:
+    Tesseract can return:
     0 0 7 0 6 2
-
-    Join digit sequences as another candidate.
+    so also try all joined digits.
   */
-
   let joined =
-    normalized
-      .replace(
-        /\D/g,
-        ""
-      );
-
+    normalized.replace(
+      /\D/g,
+      ""
+    );
 
   if(
     joined.length >=
-      NSH_OCR_FINAL_13F
-      .minimumRawDigits
+      NSH_OCR_FINAL_13F.minimumRawDigits
     &&
     joined.length <=
-      NSH_OCR_FINAL_13F
-      .maximumRawDigits
+      NSH_OCR_FINAL_13F.maximumRawDigits
   ){
-
-    groups.push(
-      joined
-    );
-
+    groups.push(joined);
   }
 
-
   groups =
-    [
-      ...new Set(
-        groups
-      )
-    ];
-
+    [...new Set(groups)];
 
   let results=[];
+  let resultKeys=new Set();
+
+  function addCandidate(
+    raw,
+    blackDigits,
+    redDigit,
+    reading,
+    interpretation,
+    meterBonus=0
+  ){
+
+    reading=Number(reading);
+
+    if(
+      !Number.isFinite(reading)
+      ||
+      reading<0
+    ){
+      return;
+    }
+
+    let key =
+      raw+
+      "|" +
+      reading+
+      "|" +
+      interpretation;
+
+    if(resultKeys.has(key)){
+      return;
+    }
+
+    resultKeys.add(key);
+
+    results.push({
+      raw,
+      blackDigits,
+      redDigit,
+      reading,
+      interpretation,
+      meterBonus
+    });
+  }
 
 
   for(
     let raw of groups
   ){
 
+    raw=String(raw);
+
     if(
       raw.length <
-        NSH_OCR_FINAL_13F
-        .minimumRawDigits
+        NSH_OCR_FINAL_13F.minimumRawDigits
       ||
       raw.length >
-        NSH_OCR_FINAL_13F
-        .maximumRawDigits
+        NSH_OCR_FINAL_13F.maximumRawDigits
     ){
-
       continue;
-
     }
 
 
-    let blackDigits =
-      raw;
+    /*
+      =====================================================
+      NASHABEH DUAL INTERPRETATION
+      =====================================================
 
+      Real physical meter example:
 
-    let redDigit =
-      null;
+      0 0 7 0 6 2
+                ↑
+              RED wheel
+
+      Physical:
+      007062
+
+      Whole kWh:
+      00706 = 706
+
+      BUT OCR can miss the red wheel and return:
+
+      00706
+
+      In that case 00706 must ALSO mean 706,
+      not 70.
+
+      Therefore every OCR string can have:
+      A) FULL = red wheel was missed by OCR
+      B) DROP LAST = red wheel was captured
+    */
 
 
     /*
-      Nashabeh rule:
-      final physical red wheel = decimal.
+      -----------------------------------------------------
+      INTERPRETATION A
+      OCR MISSED RED WHEEL
+      -----------------------------------------------------
+    */
+
+    let fullReading =
+      Number(raw);
+
+    /*
+      Five digits is especially strong for our meter:
+      00706 = 706.
+
+      Six digits is less likely to be full reading because
+      our actual meter normally has 5 black + 1 red wheel.
+    */
+    let fullBonus=0;
+
+    if(raw.length===5){
+      fullBonus=34;
+    }
+    else if(raw.length===4){
+      fullBonus=18;
+    }
+    else if(raw.length===6){
+      fullBonus=-18;
+    }
+
+    addCandidate(
+      raw,
+      raw,
+      null,
+      fullReading,
+      "BLACK_ONLY_RED_MISSED",
+      fullBonus
+    );
+
+
+    /*
+      -----------------------------------------------------
+      INTERPRETATION B
+      OCR CAPTURED RED WHEEL
+      -----------------------------------------------------
     */
 
     if(
-      NSH_OCR_FINAL_13F
-      .redDecimalWheel
-      &&
-      raw.length >= 4
+      raw.length>=4
     ){
 
-      blackDigits =
+      let blackDigits =
         raw.slice(
           0,
           -1
         );
 
-
-      redDigit =
+      let redDigit =
         raw.slice(
           -1
         );
 
-    }
+      let decimalReading =
+        Number(
+          blackDigits
+        );
 
+      /*
+        Six physical digits is our strongest known layout:
+        007062 -> 00706 + red 2 -> 706
+      */
+      let redBonus=0;
 
-    let reading =
-      Number(
-        blackDigits
+      if(raw.length===6){
+        redBonus=38;
+      }
+      else if(raw.length===5){
+        /*
+          Could be 00706 where 6 is red,
+          but could also be 00706 with red wheel missing.
+          Give drop-last much less preference here.
+        */
+        redBonus=-8;
+      }
+      else if(raw.length===4){
+        redBonus=4;
+      }
+
+      addCandidate(
+        raw,
+        blackDigits,
+        redDigit,
+        decimalReading,
+        "RED_WHEEL_INCLUDED",
+        redBonus
       );
 
-
-    if(
-      !Number.isFinite(
-        reading
-      )
-      ||
-      reading<0
-    ){
-
-      continue;
-
     }
-
-
-    results.push({
-
-      raw,
-
-      blackDigits,
-
-      redDigit,
-
-      reading
-
-    });
 
   }
 
-
   return results;
-
 }
-
-
-
-/* =========================================================
-   SCORE CANDIDATE
-   ========================================================= */
 
 function nshScoreCandidate13F(
   candidate,
@@ -33003,7 +33076,17 @@ function nshScoreCandidate13F(
     Number(
       confidence||0
     ) * 100;
+  /*
+    Nashabeh meter interpretation bonus.
 
+    Example:
+    OCR 007062 -> prefer 706 after dropping red 2.
+    OCR 00706  -> prefer 706 because red wheel may be missed.
+  */
+  score +=
+    Number(
+      candidate.meterBonus||0
+    );
 
   let previous =
     Number(
