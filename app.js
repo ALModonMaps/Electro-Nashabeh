@@ -37343,81 +37343,416 @@ async function nshCaptureLiveMeterPhoto(){
   const input =
     A("nshMeterCameraInput");
 
+  const target =
+    document.querySelector(
+      ".nsh-live-target"
+    );
+
   if(
     !video ||
     !input ||
+    !target ||
     !video.videoWidth ||
     !video.videoHeight
   ){
     return;
   }
 
-  const canvas =
+
+  /* =====================================================
+     1) CAPTURE FULL ORIGINAL PHOTO
+     ===================================================== */
+
+  const fullCanvas =
     document.createElement(
       "canvas"
     );
 
-  canvas.width =
+  fullCanvas.width =
     video.videoWidth;
 
-  canvas.height =
+  fullCanvas.height =
     video.videoHeight;
 
-  const ctx =
-    canvas.getContext("2d");
+  const fullCtx =
+    fullCanvas.getContext(
+      "2d"
+    );
 
-  ctx.drawImage(
+  fullCtx.drawImage(
     video,
     0,
     0,
-    canvas.width,
-    canvas.height
+    fullCanvas.width,
+    fullCanvas.height
   );
 
-  const blob =
+
+  /* =====================================================
+     2) FIND EXACT TARGET FRAME POSITION
+        ON THE ORIGINAL CAMERA IMAGE
+
+     Important:
+     video uses object-fit: cover,
+     so screen coordinates are NOT the same
+     as camera pixel coordinates.
+     ===================================================== */
+
+  const videoRect =
+    video.getBoundingClientRect();
+
+  const targetRect =
+    target.getBoundingClientRect();
+
+
+  /*
+    Scale used by object-fit: cover
+  */
+
+  const coverScale =
+    Math.max(
+      videoRect.width /
+        video.videoWidth,
+
+      videoRect.height /
+        video.videoHeight
+    );
+
+
+  /*
+    Actual rendered video can extend
+    outside the visible stage.
+  */
+
+  const renderedWidth =
+    video.videoWidth *
+    coverScale;
+
+  const renderedHeight =
+    video.videoHeight *
+    coverScale;
+
+
+  const hiddenX =
+    (
+      renderedWidth -
+      videoRect.width
+    ) / 2;
+
+  const hiddenY =
+    (
+      renderedHeight -
+      videoRect.height
+    ) / 2;
+
+
+  /*
+    Target frame coordinates
+    translated back to original camera pixels.
+  */
+
+  let sx =
+    (
+      targetRect.left -
+      videoRect.left +
+      hiddenX
+    ) /
+    coverScale;
+
+  let sy =
+    (
+      targetRect.top -
+      videoRect.top +
+      hiddenY
+    ) /
+    coverScale;
+
+  let sw =
+    targetRect.width /
+    coverScale;
+
+  let sh =
+    targetRect.height /
+    coverScale;
+
+
+  /*
+    Small extra margin around meter digits.
+    Helps if user is not perfectly centered.
+  */
+
+  const marginX =
+    sw * .08;
+
+  const marginY =
+    sh * .18;
+
+  sx -= marginX;
+  sy -= marginY;
+
+  sw += marginX * 2;
+  sh += marginY * 2;
+
+
+  /*
+    Clamp crop inside original image.
+  */
+
+  sx =
+    Math.max(
+      0,
+      sx
+    );
+
+  sy =
+    Math.max(
+      0,
+      sy
+    );
+
+  sw =
+    Math.min(
+      fullCanvas.width - sx,
+      sw
+    );
+
+  sh =
+    Math.min(
+      fullCanvas.height - sy,
+      sh
+    );
+
+
+  /* =====================================================
+     3) CREATE OCR-ONLY TARGET IMAGE
+     ===================================================== */
+
+  const ocrCanvas =
+    document.createElement(
+      "canvas"
+    );
+
+
+  /*
+    Keep good OCR resolution
+    without making image unnecessarily huge.
+  */
+
+  const ocrScale =
+    Math.min(
+      3,
+      Math.max(
+        1,
+        1200 / sw
+      )
+    );
+
+
+  ocrCanvas.width =
+    Math.round(
+      sw * ocrScale
+    );
+
+  ocrCanvas.height =
+    Math.round(
+      sh * ocrScale
+    );
+
+
+  const ocrCtx =
+    ocrCanvas.getContext(
+      "2d"
+    );
+
+  ocrCtx.imageSmoothingEnabled =
+    true;
+
+  ocrCtx.imageSmoothingQuality =
+    "high";
+
+
+  ocrCtx.drawImage(
+    fullCanvas,
+
+    sx,
+    sy,
+    sw,
+    sh,
+
+    0,
+    0,
+    ocrCanvas.width,
+    ocrCanvas.height
+  );
+
+
+  /* =====================================================
+     4) CREATE BOTH FILES
+
+     originalFile:
+       full evidence photo
+
+     ocrFile:
+       only target area for OCR
+     ===================================================== */
+
+  const originalBlob =
     await new Promise(
       resolve=>
-        canvas.toBlob(
+        fullCanvas.toBlob(
           resolve,
           "image/jpeg",
           .92
         )
     );
 
-  if(!blob){
+
+  const ocrBlob =
+    await new Promise(
+      resolve=>
+        ocrCanvas.toBlob(
+          resolve,
+          "image/jpeg",
+          .95
+        )
+    );
+
+
+  if(
+    !originalBlob ||
+    !ocrBlob
+  ){
     return;
   }
 
-  const file =
+
+  const originalFile =
     new File(
-      [blob],
+      [originalBlob],
       "nashabeh-meter-"+Date.now()+".jpg",
       {
         type:"image/jpeg"
       }
     );
 
+
+  const ocrFile =
+    new File(
+      [ocrBlob],
+      "nashabeh-meter-ocr-"+Date.now()+".jpg",
+      {
+        type:"image/jpeg"
+      }
+    );
+
+
+  /*
+    Debug information only.
+  */
+
+  console.log(
+    "NASHABEH LIVE TARGET CROP:",
+    {
+      videoWidth:
+        video.videoWidth,
+
+      videoHeight:
+        video.videoHeight,
+
+      sx:
+        Math.round(sx),
+
+      sy:
+        Math.round(sy),
+
+      sw:
+        Math.round(sw),
+
+      sh:
+        Math.round(sh),
+
+      ocrWidth:
+        ocrCanvas.width,
+
+      ocrHeight:
+        ocrCanvas.height
+    }
+  );
+
+
+  /* =====================================================
+     5) SEND ONLY ROI TO EXISTING OCR WORKFLOW
+     ===================================================== */
+
   const transfer =
     new DataTransfer();
 
   transfer.items.add(
-    file
+    ocrFile
   );
 
   input.files =
     transfer.files;
 
+
   nshCloseLiveMeterCamera();
 
+
   /*
-    IMPORTANT:
-    Continue through the existing
-    meter photo / OCR workflow.
+    Existing Smart Assist does:
+    preview + OCR suggestion only.
+
+    It DOES NOT issue invoice here.
   */
 
   await processNashabehMeterPhoto(
     input
   );
+
+
+  /* =====================================================
+     6) RESTORE FULL ORIGINAL PHOTO
+
+     Important:
+     when user confirms reading,
+     this is the image saved as evidence.
+     ===================================================== */
+
+  if(
+    nshSmartAssistState
+  ){
+
+    nshSmartAssistState.file =
+      originalFile;
+
+  }
+
+
+  /*
+    Show customer the full original photo,
+    not only the OCR crop.
+  */
+
+  nshPreviewMeterPhoto(
+    originalFile
+  );
+
+
+  /*
+    Restore hidden file input to original too.
+  */
+
+  const originalTransfer =
+    new DataTransfer();
+
+  originalTransfer
+    .items
+    .add(
+      originalFile
+    );
+
+  input.files =
+    originalTransfer.files;
 
 }
 
