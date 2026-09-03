@@ -36153,32 +36153,7 @@ async function(
         threshold:
           null
       }
-},
 
-{
-  /*
-    TEST ONLY
-    Same exact crop.
-    Same correct +90 orientation.
-    Different black/white treatment.
-
-    IMPORTANT:
-    This pass is diagnostic only.
-    It CANNOT change the selected OCR reading yet.
-  */
-
-  name:
-    "PORTRAIT RIGHT DIGIT TEST",
-
-  rotation:
-    90,
-
-  threshold:
-    145,
-
-  useForSelection:
-    false
-}
     ];
 
   }
@@ -36318,53 +36293,41 @@ async function(
 
 
     for(
-  const candidate
-  of candidates
-){
+      const candidate
+      of candidates
+    ){
 
-  /*
-    Diagnostic OCR passes are logged in
-    window.__nshOCR13F.passes
+      all.push({
 
-    BUT they do not participate in choosing
-    the final reading until we approve them.
-  */
+        ...candidate,
 
-  if(
-    pass.useForSelection !== false
-  ){
+        confidence,
 
-    all.push({
+        pass:
+          pass.name,
 
-      ...candidate,
+        rotation:
+          pass.rotation,
 
-      confidence,
+        text:
+          text.trim(),
 
-      pass:
-        pass.name,
+        score:
+          nshFastScore13F1(
 
-      rotation:
-        pass.rotation,
+            candidate,
 
-      text:
-        text.trim(),
+            confidence,
 
-      score:
-        nshFastScore13F1(
+            previousReading
 
-          candidate,
+          )
 
-          confidence,
+      });
 
-          previousReading
-
-        )
-
-    });
+    }
 
   }
-
-}
 
 
 
@@ -36380,25 +36343,7 @@ async function(
       passes[1],
       55
     );
-/*
-  Extra digit-shape test for portrait Nashabeh meters.
 
-  Same crop.
-  Same +90 direction.
-  Diagnostic only.
-*/
-
-if(
-  portrait &&
-  passes[2]
-){
-
-  await runPass(
-    passes[2],
-    70
-  );
-
-}
 
     /* =====================================================
        RESCUE PASS
