@@ -36130,47 +36130,33 @@ async function(
 
   if(portrait){
 
-  passes = [
+    passes = [
 
-    {
-      name:
-        "PORTRAIT RIGHT",
+      {
+        name:
+          "PORTRAIT RIGHT",
 
-      rotation:
-        90,
+        rotation:
+          90,
 
-      threshold:
-        null
-    },
+        threshold:
+          null
+      },
 
-    {
-      name:
-        "PORTRAIT LEFT",
+      {
+        name:
+          "PORTRAIT LEFT",
 
-      rotation:
-        -90,
+        rotation:
+          -90,
 
-      threshold:
-        null
-    },
+        threshold:
+          null
+      }
 
-    {
-      name:
-        "PORTRAIT RIGHT DIGIT TEST",
+    ];
 
-      rotation:
-        90,
-
-      threshold:
-        145,
-
-      useForSelection:
-        false
-    }
-
-  ];
-
-}
+  }
   else{
 
     passes = [
@@ -36306,80 +36292,57 @@ async function(
       });
 
 
-   for(
-  const candidate
-  of candidates
-){
+    for(
+      const candidate
+      of candidates
+    ){
 
-  if(
-    pass.useForSelection !== false
-  ){
+      all.push({
 
-    all.push({
+        ...candidate,
 
-      ...candidate,
+        confidence,
 
-      confidence,
+        pass:
+          pass.name,
 
-      pass:
-        pass.name,
+        rotation:
+          pass.rotation,
 
-      rotation:
-        pass.rotation,
+        text:
+          text.trim(),
 
-      text:
-        text.trim(),
+        score:
+          nshFastScore13F1(
 
-      score:
-        nshFastScore13F1(
+            candidate,
 
-          candidate,
+            confidence,
 
-          confidence,
+            previousReading
 
-          previousReading
+          )
 
-        )
+      });
 
-    });
+    }
 
   }
-
-}
 
 
 
   try{
 
     await runPass(
-  passes[0],
-  20
-);
+      passes[0],
+      20
+    );
 
 
-await runPass(
-  passes[1],
-  55
-);
-
-
-/*
-  Diagnostic digit pass.
-  Same crop + same +90 orientation.
-  It is logged only and cannot change
-  the final selected reading.
-*/
-if(
-  portrait &&
-  passes[2]
-){
-
-  await runPass(
-    passes[2],
-    70
-  );
-
-}
+    await runPass(
+      passes[1],
+      55
+    );
 
 
     /* =====================================================
