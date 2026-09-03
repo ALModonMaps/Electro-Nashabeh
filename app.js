@@ -36771,3 +36771,657 @@ injectAdminPremiumV2Styles();
 injectEnhancedStyles();
 
 boot();
+
+
+/* =========================================================
+   NASHABEH LIVE METER CAMERA
+   SAFE OVERLAY CAMERA
+   DOES NOT CHANGE OCR ENGINE
+   ========================================================= */
+
+let nshLiveCameraStream = null;
+
+
+/* ---------------------------------------------------------
+   INJECT LIVE CAMERA STYLES
+   --------------------------------------------------------- */
+
+function nshInjectLiveCameraStyles(){
+
+  if(
+    document.getElementById(
+      "nshLiveCameraStyles"
+    )
+  ){
+    return;
+  }
+
+  const style =
+    document.createElement("style");
+
+  style.id =
+    "nshLiveCameraStyles";
+
+  style.textContent = `
+
+    .nsh-live-camera{
+      position:fixed;
+      inset:0;
+      z-index:999999;
+      display:flex;
+      flex-direction:column;
+      background:#02080d;
+      color:#fff;
+    }
+
+    .nsh-live-camera.hidden{
+      display:none;
+    }
+
+    .nsh-live-camera-head{
+      height:64px;
+      flex:0 0 64px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:0 16px;
+      box-sizing:border-box;
+      background:#03131d;
+      border-bottom:1px solid rgba(18,216,255,.22);
+    }
+
+    .nsh-live-camera-title{
+      display:flex;
+      flex-direction:column;
+      gap:3px;
+    }
+
+    .nsh-live-camera-title strong{
+      color:#fff;
+      font-size:15px;
+    }
+
+    .nsh-live-camera-title small{
+      color:#13ddff;
+      font-size:9px;
+      letter-spacing:.08em;
+    }
+
+    .nsh-live-close{
+      width:42px;
+      height:42px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.18);
+      background:#071b26;
+      color:#fff;
+      cursor:pointer;
+      font-size:22px;
+    }
+
+    .nsh-live-stage{
+      position:relative;
+      flex:1;
+      min-height:0;
+      overflow:hidden;
+      background:#000;
+    }
+
+    #nshLiveMeterVideo{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      background:#000;
+    }
+
+    .nsh-live-shade{
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      background:
+        linear-gradient(
+          rgba(0,0,0,.42),
+          rgba(0,0,0,.16) 26%,
+          rgba(0,0,0,.16) 74%,
+          rgba(0,0,0,.48)
+        );
+    }
+
+    .nsh-live-target{
+      position:absolute;
+
+      left:50%;
+      top:50%;
+
+      width:min(82vw,520px);
+      aspect-ratio:2.6 / 1;
+
+      transform:
+        translate(-50%,-50%);
+
+      border-radius:16px;
+
+      border:
+        2px solid #13e4ff;
+
+      box-shadow:
+        0 0 0 9999px rgba(0,0,0,.30),
+        0 0 22px rgba(18,216,255,.52),
+        inset 0 0 24px rgba(18,216,255,.10);
+
+      pointer-events:none;
+    }
+
+    .nsh-live-target:before,
+    .nsh-live-target:after{
+      content:"";
+      position:absolute;
+      width:38px;
+      height:38px;
+      border-color:#91ff67;
+      border-style:solid;
+    }
+
+    .nsh-live-target:before{
+      left:-3px;
+      top:-3px;
+      border-width:4px 0 0 4px;
+      border-radius:12px 0 0 0;
+    }
+
+    .nsh-live-target:after{
+      right:-3px;
+      bottom:-3px;
+      border-width:0 4px 4px 0;
+      border-radius:0 0 12px 0;
+    }
+
+    .nsh-live-target-line{
+      position:absolute;
+      left:5%;
+      right:5%;
+      top:50%;
+      height:1px;
+      background:
+        linear-gradient(
+          90deg,
+          transparent,
+          #71ff5f,
+          transparent
+        );
+      box-shadow:
+        0 0 8px #71ff5f;
+      animation:
+        nshLiveScan 2s ease-in-out infinite;
+    }
+
+    .nsh-live-target-text{
+      position:absolute;
+      left:50%;
+      top:calc(50% - min(18vw,95px) - 45px);
+      transform:translateX(-50%);
+      width:90%;
+      text-align:center;
+      pointer-events:none;
+    }
+
+    .nsh-live-target-text strong{
+      display:block;
+      color:#fff;
+      font-size:15px;
+      text-shadow:0 2px 8px #000;
+    }
+
+    .nsh-live-target-text small{
+      display:block;
+      margin-top:5px;
+      color:#9cff77;
+      font-size:11px;
+      text-shadow:0 2px 8px #000;
+    }
+
+    .nsh-live-meter-digits{
+      position:absolute;
+      left:50%;
+      top:50%;
+      transform:translate(-50%,-50%);
+      direction:ltr;
+      color:rgba(255,255,255,.26);
+      font-family:"Courier New",monospace;
+      font-size:clamp(18px,5vw,31px);
+      font-weight:900;
+      letter-spacing:.22em;
+      white-space:nowrap;
+      pointer-events:none;
+    }
+
+    .nsh-live-camera-foot{
+      flex:0 0 auto;
+      padding:
+        16px
+        18px
+        max(18px,env(safe-area-inset-bottom));
+
+      background:#03131d;
+      border-top:1px solid rgba(18,216,255,.22);
+    }
+
+    .nsh-live-camera-help{
+      margin-bottom:12px;
+      display:flex;
+      justify-content:center;
+      gap:16px;
+      flex-wrap:wrap;
+      color:#94aeb9;
+      font-size:10px;
+    }
+
+    .nsh-live-capture{
+      width:min(100%,520px);
+      min-height:58px;
+      margin:auto;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+
+      border:0;
+      border-radius:16px;
+
+      background:
+        linear-gradient(
+          135deg,
+          #8cff61,
+          #32dc4d
+        );
+
+      color:#001408;
+      font-size:15px;
+      font-weight:900;
+      cursor:pointer;
+
+      box-shadow:
+        0 8px 28px rgba(79,255,94,.23);
+    }
+
+    .nsh-live-capture-dot{
+      width:14px;
+      height:14px;
+      border-radius:50%;
+      background:#fff;
+      box-shadow:
+        0 0 0 5px rgba(255,255,255,.22);
+    }
+
+    @keyframes nshLiveScan{
+
+      0%,100%{
+        transform:translateY(-35px);
+        opacity:.45;
+      }
+
+      50%{
+        transform:translateY(35px);
+        opacity:1;
+      }
+
+    }
+
+    @media(max-width:700px){
+
+      .nsh-live-target{
+        width:88vw;
+        aspect-ratio:2.45 / 1;
+      }
+
+      .nsh-live-camera-head{
+        height:58px;
+        flex-basis:58px;
+      }
+
+    }
+
+  `;
+
+  document.head.appendChild(
+    style
+  );
+
+}
+
+
+/* ---------------------------------------------------------
+   CREATE CAMERA UI
+   --------------------------------------------------------- */
+
+function nshEnsureLiveCamera(){
+
+  nshInjectLiveCameraStyles();
+
+  let old =
+    document.getElementById(
+      "nshLiveMeterCamera"
+    );
+
+  if(old){
+    return old;
+  }
+
+  const camera =
+    document.createElement("div");
+
+  camera.id =
+    "nshLiveMeterCamera";
+
+  camera.className =
+    "nsh-live-camera hidden";
+
+  camera.innerHTML = `
+
+    <div class="nsh-live-camera-head">
+
+      <div class="nsh-live-camera-title">
+        <strong>تصوير عداد الكهرباء</strong>
+        <small>NASHABEH SMART CAPTURE</small>
+      </div>
+
+      <button
+        type="button"
+        class="nsh-live-close"
+        onclick="nshCloseLiveMeterCamera()"
+        aria-label="إغلاق"
+      >
+        ×
+      </button>
+
+    </div>
+
+    <div class="nsh-live-stage">
+
+      <video
+        id="nshLiveMeterVideo"
+        autoplay
+        playsinline
+        muted
+      ></video>
+
+      <div class="nsh-live-shade"></div>
+
+      <div class="nsh-live-target">
+
+        <div class="nsh-live-target-line"></div>
+
+        <div class="nsh-live-meter-digits">
+          0 0 0 0 0 0
+        </div>
+
+      </div>
+
+      <div class="nsh-live-target-text">
+
+        <strong>
+          ضع نافذة أرقام العداد داخل الإطار
+        </strong>
+
+        <small>
+          قرّب الكاميرا حتى تملأ الأرقام معظم الإطار
+        </small>
+
+      </div>
+
+    </div>
+
+    <div class="nsh-live-camera-foot">
+
+      <div class="nsh-live-camera-help">
+        <span>ثبّت الهاتف</span>
+        <span>تجنب انعكاس الضوء</span>
+        <span>خلي الأرقام واضحة</span>
+      </div>
+
+      <button
+        type="button"
+        class="nsh-live-capture"
+        onclick="nshCaptureLiveMeterPhoto()"
+      >
+
+        <span class="nsh-live-capture-dot"></span>
+
+        التقاط صورة العداد
+
+      </button>
+
+    </div>
+
+  `;
+
+  document.body.appendChild(
+    camera
+  );
+
+  return camera;
+
+}
+
+
+/* ---------------------------------------------------------
+   OPEN LIVE CAMERA
+   OVERRIDES OLD BUTTON BEHAVIOR
+   --------------------------------------------------------- */
+
+openNashabehMeterCamera =
+async function(){
+
+  const fallbackInput =
+    A("nshMeterCameraInput");
+
+  try{
+
+    if(
+      !navigator.mediaDevices ||
+      !navigator.mediaDevices.getUserMedia
+    ){
+
+      fallbackInput?.click();
+      return;
+    }
+
+    const camera =
+      nshEnsureLiveCamera();
+
+    const video =
+      document.getElementById(
+        "nshLiveMeterVideo"
+      );
+
+    camera.classList.remove(
+      "hidden"
+    );
+
+    nshLiveCameraStream =
+      await navigator.mediaDevices
+      .getUserMedia({
+
+        audio:false,
+
+        video:{
+
+          facingMode:{
+            ideal:"environment"
+          },
+
+          width:{
+            ideal:1920
+          },
+
+          height:{
+            ideal:1080
+          }
+
+        }
+
+      });
+
+    video.srcObject =
+      nshLiveCameraStream;
+
+    await video.play();
+
+  }
+  catch(error){
+
+    console.warn(
+      "NASHABEH LIVE CAMERA:",
+      error
+    );
+
+    nshCloseLiveMeterCamera();
+
+    /*
+      Safe fallback:
+      use the old native camera/file picker.
+    */
+
+    fallbackInput?.click();
+
+  }
+
+};
+
+
+/* ---------------------------------------------------------
+   CLOSE CAMERA
+   --------------------------------------------------------- */
+
+function nshCloseLiveMeterCamera(){
+
+  if(nshLiveCameraStream){
+
+    nshLiveCameraStream
+      .getTracks()
+      .forEach(
+        track=>track.stop()
+      );
+
+  }
+
+  nshLiveCameraStream =
+    null;
+
+  const video =
+    document.getElementById(
+      "nshLiveMeterVideo"
+    );
+
+  if(video){
+    video.srcObject=null;
+  }
+
+  document
+    .getElementById(
+      "nshLiveMeterCamera"
+    )
+    ?.classList
+    .add("hidden");
+
+}
+
+
+/* ---------------------------------------------------------
+   CAPTURE PHOTO
+   SENDS IT THROUGH EXISTING WORKFLOW
+   --------------------------------------------------------- */
+
+async function nshCaptureLiveMeterPhoto(){
+
+  const video =
+    document.getElementById(
+      "nshLiveMeterVideo"
+    );
+
+  const input =
+    A("nshMeterCameraInput");
+
+  if(
+    !video ||
+    !input ||
+    !video.videoWidth ||
+    !video.videoHeight
+  ){
+    return;
+  }
+
+  const canvas =
+    document.createElement(
+      "canvas"
+    );
+
+  canvas.width =
+    video.videoWidth;
+
+  canvas.height =
+    video.videoHeight;
+
+  const ctx =
+    canvas.getContext("2d");
+
+  ctx.drawImage(
+    video,
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
+
+  const blob =
+    await new Promise(
+      resolve=>
+        canvas.toBlob(
+          resolve,
+          "image/jpeg",
+          .92
+        )
+    );
+
+  if(!blob){
+    return;
+  }
+
+  const file =
+    new File(
+      [blob],
+      "nashabeh-meter-"+Date.now()+".jpg",
+      {
+        type:"image/jpeg"
+      }
+    );
+
+  const transfer =
+    new DataTransfer();
+
+  transfer.items.add(
+    file
+  );
+
+  input.files =
+    transfer.files;
+
+  nshCloseLiveMeterCamera();
+
+  /*
+    IMPORTANT:
+    Continue through the existing
+    meter photo / OCR workflow.
+  */
+
+  await processNashabehMeterPhoto(
+    input
+  );
+
+}
+
+
+/* =========================================================
+   END NASHABEH LIVE METER CAMERA
+   ========================================================= */
