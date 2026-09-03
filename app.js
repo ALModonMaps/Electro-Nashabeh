@@ -36130,33 +36130,47 @@ async function(
 
   if(portrait){
 
-    passes = [
+  passes = [
 
-      {
-        name:
-          "PORTRAIT RIGHT",
+    {
+      name:
+        "PORTRAIT RIGHT",
 
-        rotation:
-          90,
+      rotation:
+        90,
 
-        threshold:
-          null
-      },
+      threshold:
+        null
+    },
 
-      {
-        name:
-          "PORTRAIT LEFT",
+    {
+      name:
+        "PORTRAIT LEFT",
 
-        rotation:
-          -90,
+      rotation:
+        -90,
 
-        threshold:
-          null
-      }
+      threshold:
+        null
+    },
 
-    ];
+    {
+      name:
+        "PORTRAIT RIGHT DIGIT TEST",
 
-  }
+      rotation:
+        90,
+
+      threshold:
+        145,
+
+      useForSelection:
+        false
+    }
+
+  ];
+
+}
   else{
 
     passes = [
@@ -36292,57 +36306,80 @@ async function(
       });
 
 
-    for(
-      const candidate
-      of candidates
-    ){
+   for(
+  const candidate
+  of candidates
+){
 
-      all.push({
+  if(
+    pass.useForSelection !== false
+  ){
 
-        ...candidate,
+    all.push({
 
-        confidence,
+      ...candidate,
 
-        pass:
-          pass.name,
+      confidence,
 
-        rotation:
-          pass.rotation,
+      pass:
+        pass.name,
 
-        text:
-          text.trim(),
+      rotation:
+        pass.rotation,
 
-        score:
-          nshFastScore13F1(
+      text:
+        text.trim(),
 
-            candidate,
+      score:
+        nshFastScore13F1(
 
-            confidence,
+          candidate,
 
-            previousReading
+          confidence,
 
-          )
+          previousReading
 
-      });
+        )
 
-    }
+    });
 
   }
+
+}
 
 
 
   try{
 
     await runPass(
-      passes[0],
-      20
-    );
+  passes[0],
+  20
+);
 
 
-    await runPass(
-      passes[1],
-      55
-    );
+await runPass(
+  passes[1],
+  55
+);
+
+
+/*
+  Diagnostic digit pass.
+  Same crop + same +90 orientation.
+  It is logged only and cannot change
+  the final selected reading.
+*/
+if(
+  portrait &&
+  passes[2]
+){
+
+  await runPass(
+    passes[2],
+    70
+  );
+
+}
 
 
     /* =====================================================
