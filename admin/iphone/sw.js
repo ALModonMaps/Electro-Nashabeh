@@ -1,4 +1,4 @@
-const CACHE='nsh-admin-5-3';
+const CACHE='nsh-admin-5-5';
 const CORE=['./manifest.json?v=53','./icons/apple-touch-icon.png?v=53','./icons/icon-192.png?v=53','./icons/icon-512.png?v=53'];
 self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)))})
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())))
